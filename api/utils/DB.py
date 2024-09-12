@@ -67,6 +67,26 @@ class DB:
         except ValueError as ve:
             print(ve)
             self.db_connection.rollback()
+            
+    def remove_file(self, user_id: int, file_name: str) -> None:
+
+        file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
+
+        try:
+            self.cursor.execute(file_count_sql, (user_id, file_name))
+            count = self.cursor.fetchone()[0]
+
+            if count > 0:
+                file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND file_name = ?"
+                self.cursor.execute(file_deletion_sql, (user_id, file_name))
+                self.db_connection.commit()
+
+        except sqlite3.Error as e:
+            self.db_connection.rollback()
+            raise e
+        except ValueError as ve:
+            print(ve)
+            self.db_connection.rollback()
 
     def session_auth(self, username: str, password: str) -> int:
         id_retrieving_sql = "SELECT id FROM users WHERE username = ? AND password = ?"
@@ -78,7 +98,7 @@ class DB:
         else:
             raise MyException("Wrong login information")
 
-    def get_files_summary(self, user_id: int):
+    def get_files_summary(self, user_id: int) -> str:
         get_files_sql = "SELECT file_name, extension, LENGTH(content) as size FROM files WHERE owner_id = ?"
         self.cursor.execute(get_files_sql, (user_id,))
         rows = self.cursor.fetchall()
@@ -92,5 +112,16 @@ class DB:
             }
             files_summary.append(file_summary)
 
-        return json.dumps(files_summary, indent=1)
+        return json.dumps(files_summary, indent=4)
+    
+    def get_file(self, user_id: int, file_name: str) -> bytes:
+        get_files_sql = "SELECT content FROM files WHERE owner_id = ? AND file_name = ?"
+        self.cursor.execute(get_files_sql, (user_id, file_name))
+        try:
+            file_content = self.cursor.fetchone()[0]
+            return file_content
+        except TypeError:
+            raise MyException("file does not exist")
+
+
 
