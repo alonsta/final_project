@@ -37,7 +37,7 @@ if __name__ == "__main__":
     global PORT
     dotenv.load_dotenv  
 
-    PATH = "final_project\\api\\database\\data"
-    print(PATH)
+    PATH = os.path.abspath('database\data')
     PORT = 12345
+    
     main()
