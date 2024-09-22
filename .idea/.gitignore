@@ -3,3 +3,5 @@
 /workspace.xml/
 /data/
 /.env/
+/server.key/
+/server.crt/

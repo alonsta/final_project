@@ -2,6 +2,7 @@ import sqlite3
 import json
 from utils.Custom_exception import MyException
 import datetime
+import uuid
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -13,7 +14,7 @@ class DB:
 
         users_table_check_sql = """
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY NOT NULL UNIQUE,
             username TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL
         )
@@ -40,9 +41,10 @@ class DB:
         return None
 
     def add_user(self, username: str, password: str) -> None:
-        user_adding_sql = "INSERT INTO users (username, password) VALUES (?, ?)"
+        user_adding_sql = "INSERT INTO users (username, password, user_id) VALUES (?, ?, ?)"
         try:
-            self.cursor.execute(user_adding_sql, (username, password))
+            user_id = str(uuid.uuid4())
+            self.cursor.execute(user_adding_sql, (username, password, user_id))
             self.db_connection.commit()
         except sqlite3.Error as e:
             self.db_connection.rollback()
