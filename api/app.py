@@ -4,6 +4,7 @@ import json
 import dotenv
 import socket
 import threading
+import datetime
 
 def main():
     global PATH, PORT
@@ -28,7 +29,9 @@ def main():
 
 
 def serve_client(client_socket, client_address):
-    print("serving: " + client_address[0])
+    print(str(datetime.datetime.now()) +  " - " + client_address[0] + " connected")
+    
+    
 
 
 
@@ -37,7 +40,8 @@ if __name__ == "__main__":
     global PORT
     dotenv.load_dotenv  
 
-    PATH = os.path.abspath('database\data')
+    PATH = os.getcwd() + r"\final_project\api\utils\database\data"
+    print(PATH)
     PORT = 12345
     
     main()

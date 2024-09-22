@@ -22,7 +22,6 @@ class DB:
         files_table_check_sql = """
         CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            owner_id INTEGER NOT NULL,
             last_changed TEXT NOT NULL,
             file_name TEXT NOT NULL,
             extension TEXT NOT NULL,
