@@ -1,7 +1,7 @@
 import sqlite3
 import json
 from utils.Custom_exception import MyException
-
+import datetime
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -23,12 +23,15 @@ class DB:
         CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             owner_id INTEGER NOT NULL,
+            last_changed TEXT NOT NULL,
             file_name TEXT NOT NULL,
             extension TEXT NOT NULL,
             content BLOB NOT NULL,
-            FOREIGN KEY (owner_id) REFERENCES users(id)
+            owner_id INTEGER NOT NULL,
+            FOREIGN KEY (owner_id) REFERENCES users (id)
         )
         """
+        
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
@@ -57,8 +60,8 @@ class DB:
             if count > 0:
                 raise MyException("file already exists")
 
-            file_insertion_sql = "INSERT INTO files (owner_id, file_name, extension, content) VALUES (?, ?, ?, ?)"
-            self.cursor.execute(file_insertion_sql, (user_id, file_name, file_extension, file_content))
+            file_insertion_sql = "INSERT INTO files (owner_id, file_name, extension, content, last_changed) VALUES (?, ?, ?, ?, ?)"
+            self.cursor.execute(file_insertion_sql, (user_id, file_name, file_extension, file_content, str(datetime.datetime.now)))
             self.db_connection.commit()
 
         except sqlite3.Error as e:
@@ -99,7 +102,7 @@ class DB:
             raise MyException("Wrong login information")
 
     def get_files_summary(self, user_id: int) -> str:
-        get_files_sql = "SELECT file_name, extension, LENGTH(content) as size FROM files WHERE owner_id = ?"
+        get_files_sql = "SELECT file_name, extension, LENGTH(content) as size , last_changed FROM files WHERE owner_id = ?"
         self.cursor.execute(get_files_sql, (user_id,))
         rows = self.cursor.fetchall()
 
@@ -108,7 +111,8 @@ class DB:
             file_summary = {
                 'file_name': row[0],
                 'extension': row[1],
-                'size': row[2]
+                'size': row[2],
+                'last_changed': row[3]
             }
             files_summary.append(file_summary)
 

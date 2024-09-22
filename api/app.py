@@ -1,14 +1,43 @@
 from utils.DB import DB
-import dotenv
 import os
+import json
+import dotenv
+import socket
+import threading
 
-dotenv.load_dotenv()
+def main():
+    global PATH, PORT
 
-path = os.environ.get("DB_PATH")
-print(path)
-database = DB(path)
-print(database.session_auth(username="alon", password="*********"))
+    database = DB(PATH)
+    print("database initialized")
 
-print(database.get_file(user_id=1, file_name="mys_string"))
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('0.0.0.0', PORT))
+    print("Server running")
+
+    while True:
+        try:
+            server_socket.listen()
+            client_socket, client_address = server_socket.accept()
+            print(client_address[0] + " connected")
+            th1 = threading.Thread(target=serve_client, args=(client_socket, client_address))
+            th1.daemon = True
+            th1.start()
+        except Exception as e:
+            print(e)
 
 
+def serve_client(client_socket, client_address):
+    print("serving: " + client_address[0])
+
+
+
+if __name__ == "__main__":
+    global PATH
+    global PORT
+    dotenv.load_dotenv  
+
+    PATH = "final_project\\api\\database\\data"
+    print(PATH)
+    PORT = 12345
+    main()
