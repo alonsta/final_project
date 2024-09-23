@@ -15,11 +15,7 @@ def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(("0.0.0.0", 12345))
 
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile=r"final_project\api\utils\ssl_info\server.crt", 
-                            keyfile=r"final_project\api\utils\ssl_info\server.key")
 
-    server_socket = context.wrap_socket(server_socket, server_side=True)
     print("Server running " + str(datetime.datetime.now()), end="\n\n")
 
     while True:
@@ -83,7 +79,7 @@ def serve_client(client_socket, client_address):
         data_length = int(client_socket.recv(header_length).decode())
         data = b64decode(client_socket.recv(data_length)).decode()
         data = json.loads(data)
-        print("request: " + data["reason"])
+        print("request: " + data["action"] + f" {client_address}")
         return data
 
     try:
@@ -93,18 +89,20 @@ def serve_client(client_socket, client_address):
             response = ACTIONS_DICT[action](data)
             send(response)
     except Exception as e:
-        print(f"Error serving client: {e}")
+        print(f"Connection aborted {client_address}")
     
     
 def add_user(data: json) -> str:
-    global DATABASE
+    global PATH
+    db = DB(PATH)
     
     response = '{"action": "add_user", "status": "completed", "info" : {"exeption": None}}'
     try:
-        DATABASE.add_user(data["info"]["username"], data["info"]["password"] )
+        db.add_user(data["info"]["username"], data["info"]["password"])
     except Exception as e:
         response = '{"action": "add_user", "status": "failed", "info" : {"exeption":' + str(e) + '}}'
     finally:
+        print(response)
         return response
     
 

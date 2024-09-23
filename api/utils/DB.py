@@ -41,10 +41,10 @@ class DB:
         return None
 
     def add_user(self, username: str, password: str) -> None:
-        user_adding_sql = "INSERT INTO users (username, password, user_id) VALUES (?, ?, ?)"
+        user_adding_sql = "INSERT INTO users (id, username, password) VALUES (?, ?, ?)"
         try:
             user_id = str(uuid.uuid4())
-            self.cursor.execute(user_adding_sql, (username, password, user_id))
+            self.cursor.execute(user_adding_sql, (user_id, username, password))
             self.db_connection.commit()
         except sqlite3.Error as e:
             self.db_connection.rollback()
