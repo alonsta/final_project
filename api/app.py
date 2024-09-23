@@ -31,8 +31,8 @@ def main():
 
 
 def serve_client(client_socket, client_address):
-    global ACTIONS_DICT
-    
+    global ACTIONS_DICT, PATH
+    database = DB(PATH)
     print("new thread started...")
     
     
@@ -86,24 +86,63 @@ def serve_client(client_socket, client_address):
         data = get()
         action = data["action"]
         if action in ACTIONS_DICT:
-            response = ACTIONS_DICT[action](data)
+            response = ACTIONS_DICT[action](data,database)
             send(response)
     except Exception as e:
-        print(f"Connection aborted {client_address}")
+        print(f"Connection aborted {client_address} {e}")
     
     
-def add_user(data: json) -> str:
-    global PATH
-    db = DB(PATH)
+import json
+
+def add_user(data: dict, db: DB) -> str:
+    response = json.dumps({
+        "action": "add_user",
+        "status": "OK",
+        "info": {
+            "exeption": None
+        }
+    })
     
-    response = '{"action": "add_user", "status": "completed", "info" : {"exeption": None}}'
     try:
         db.add_user(data["info"]["username"], data["info"]["password"])
     except Exception as e:
-        response = '{"action": "add_user", "status": "failed", "info" : {"exeption":' + str(e) + '}}'
+        response = json.dumps({
+            "action": "add_user",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
     finally:
         print(response)
         return response
+
+    
+
+def login(data: dict, db: DB) -> str:
+    response = '{"action": "login", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        user_id = db.session_auth(data["info"]["username"], data["info"]["password"])
+        response = json.dumps({
+            "action": "login",
+            "status": "OK",
+            "info": {
+                "exeption": None,
+                "id": user_id
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "add_user",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        print(response)
+        return response
+
     
 
 
@@ -115,14 +154,17 @@ if __name__ == "__main__":
     PATH = os.getcwd() + r"\final_project\api\utils\database\data"
     try:
         DATABASE = DB(PATH)
+        del DATABASE
     except Exception as e:
         print("failed connecting to database. shutting down.")
         sys.exit()
     print("database connection established")
+    
     PORT = 12345
+
     ACTIONS_DICT = {
         "add_user" : add_user,
-        "login": lambda x: x,
+        "login": login,
         "delete_user": lambda x: x,
         "update_user_password" : lambda x: x,
         "get_user_info" : lambda x: x,

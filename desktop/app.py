@@ -9,7 +9,7 @@ client_socket.connect(("127.0.0.1", 12345))
 
 
 
-request = json.dumps({"action" : "add_user", "info": {"username": "alon", "password": "12345678"}})
+request = json.dumps({"action" : "login", "info": {"username": "alon12", "password": "12345678"}})
 
 request = b64encode(request.encode())
 request_length = len(request)
