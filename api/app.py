@@ -187,6 +187,30 @@ def update_password(data: dict, db:DB) -> json:
         print(response)
         return response
     
+def user_info(data: dict, db:DB) -> json:
+    response = '{"action": "user_info", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        user_information = db.get_user_info(data["info"]["user_id"])
+        response = json.dumps({
+            "action": "update_password",
+            "status": "OK",
+            "info": {
+                "user_info": user_information,
+                "exeption": None,
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "user_info",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        print(response)
+        return response
+    
 
 
 if __name__ == "__main__":
@@ -210,8 +234,8 @@ if __name__ == "__main__":
         "signup" : add_user,
         "login": login,
         "delete_user": delete_user,
-        "update_user_password" : update_password,
-        "get_user_info" : lambda x: x,
+        "change_password" : update_password,
+        "user_info" : user_info,
         "add_file": lambda x: x,
         "delete_file": lambda x: x,
         "get_file": lambda x: x,

@@ -1,6 +1,6 @@
 import sqlite3
 import json
-import datetime
+from datetime import *
 import uuid
 from utils.Custom_exception import MyException
 
@@ -17,7 +17,7 @@ class DB:
             id TEXT PRIMARY KEY NOT NULL UNIQUE,
             username TEXT NOT NULL,
             password TEXT NOT NULL,
-            ceation_time TEXT NOT NULL,
+            creation_time TEXT NOT NULL,
             data_uploaded TEXT NOT NULL
         )
         """
@@ -39,10 +39,10 @@ class DB:
         self.db_connection.commit()
 
     def add_user(self, username: str, password: str) -> None:
-        user_adding_sql = "INSERT INTO users (id, username, password, creation_time) VALUES (?, ?, ?, ?)"
+        user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded) VALUES (?, ?, ?, ?, ?)"
         try:
             user_id = str(uuid.uuid4())
-            self.cursor.execute(user_adding_sql, (user_id, username, password,  datetime.datetime.now().isoformat()))
+            self.cursor.execute(user_adding_sql, (user_id, username, password,  datetime.now().strftime("%d/%m/%Y %H:%M"), "0KB"))
             self.db_connection.commit()
         except sqlite3.Error as e:
             self.db_connection.rollback()
@@ -80,6 +80,27 @@ class DB:
         except sqlite3 .Error as e:
             self.db_connection.rollback()
             raise e
+                
+    def get_user_info(self, user_id: str) -> str:
+        user_info_sql = """SELECT username, creation_time, data_uploaded FROM users WHERE id = ?"""
+        try:
+            self.cursor.execute(user_info_sql, (user_id,))
+            query_result = self.cursor.fetchone()
+            
+            if query_result:
+                user_info = {
+                    'username': query_result[0],
+                    'creation_time': query_result[1],
+                    'data_uploaded': query_result[2]
+                }
+                return user_info
+            else:
+                raise MyException("User not found")
+                
+        except sqlite3.Error as e:
+            raise e
+        except Exception as e:
+            raise MyException(f"An unexpected error occurred: {e}")
         
     def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
@@ -97,7 +118,7 @@ class DB:
             """
             self.cursor.execute(file_insertion_sql, (
                 user_id, file_name, file_extension, file_content,
-                datetime.datetime.now().isoformat())
+                datetime.now().strftime("%d/%m/%Y %H:%M"))
             )
             self.db_connection.commit()
         except sqlite3.Error as e:

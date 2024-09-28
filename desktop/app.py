@@ -9,7 +9,7 @@ client_socket.connect(("127.0.0.1", 12345))
 
 
 
-request = json.dumps({"action" : "delete_user", "info": {"username": "alon12", "user_id": "ba42e921-a4d4-4c25-bd0b-e4df819331b2"}})
+request = json.dumps({"action" : "user_info", "info": {"user_id": "3815ba4c-3ae9-4dfb-9879-959e9c099a13"}})
 
 request = b64encode(request.encode())
 request_length = len(request)
