@@ -69,7 +69,7 @@ def serve_client(client_socket, client_address):
         - Reads the header length from the socket.
         - Reads the data length based on the header information.
         - Decodes the received data using base64 decoding.
-        - Parses the decoded data as JSON and prints the reason field.
+        - Parses the decoded data as JSON and prints the action field.
         - Returns the parsed JSON data dictionary.
 
         Returns:
@@ -89,10 +89,8 @@ def serve_client(client_socket, client_address):
             response = ACTIONS_DICT[action](data,database)
             send(response)
     except Exception as e:
-        print(f"Connection aborted {client_address} {e}")
+        print(f"Connection aborted {client_address}")
     
-    
-import json
 
 def add_user(data: dict, db: DB) -> str:
     response = json.dumps({
@@ -142,7 +140,52 @@ def login(data: dict, db: DB) -> str:
     finally:
         print(response)
         return response
+    
+def delete_user(data: dict, db:DB) -> json:
+    response = '{"action": "delete_user", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        db.delete_user(data["info"]["user_id"], data["info"]["username"])
+        response = json.dumps({
+            "action": "delete_user",
+            "status": "OK",
+            "info": {
+                "exeption": None,
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "delete_user",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        print(response)
+        return response
 
+def update_password(data: dict, db:DB) -> json:
+    response = '{"action": "update_password", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        db.update_password(data["info"]["user_id"], data["info"]["password"])
+        response = json.dumps({
+            "action": "update_password",
+            "status": "OK",
+            "info": {
+                "exeption": None,
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "update_password",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        print(response)
+        return response
     
 
 
@@ -152,6 +195,7 @@ if __name__ == "__main__":
     
     
     PATH = os.getcwd() + r"\final_project\api\utils\database\data"
+
     try:
         DATABASE = DB(PATH)
         del DATABASE
@@ -163,10 +207,10 @@ if __name__ == "__main__":
     PORT = 12345
 
     ACTIONS_DICT = {
-        "add_user" : add_user,
+        "signup" : add_user,
         "login": login,
-        "delete_user": lambda x: x,
-        "update_user_password" : lambda x: x,
+        "delete_user": delete_user,
+        "update_user_password" : update_password,
         "get_user_info" : lambda x: x,
         "add_file": lambda x: x,
         "delete_file": lambda x: x,

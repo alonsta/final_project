@@ -1,8 +1,9 @@
 import sqlite3
 import json
-from utils.Custom_exception import MyException
 import datetime
 import uuid
+from utils.Custom_exception import MyException
+
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -11,12 +12,13 @@ class DB:
         self.check_tables()
 
     def check_tables(self) -> None:
-
         users_table_check_sql = """
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY NOT NULL UNIQUE,
-            username TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            ceation_time TEXT NOT NULL,
+            data_uploaded TEXT NOT NULL
         )
         """
 
@@ -27,31 +29,59 @@ class DB:
             file_name TEXT NOT NULL,
             extension TEXT NOT NULL,
             content BLOB NOT NULL,
-            owner_id INTEGER NOT NULL,
+            owner_id TEXT NOT NULL,
             FOREIGN KEY (owner_id) REFERENCES users (id)
         )
         """
-        
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
-
         self.db_connection.commit()
-        
-        return None
 
     def add_user(self, username: str, password: str) -> None:
-        user_adding_sql = "INSERT INTO users (id, username, password) VALUES (?, ?, ?)"
+        user_adding_sql = "INSERT INTO users (id, username, password, creation_time) VALUES (?, ?, ?, ?)"
         try:
             user_id = str(uuid.uuid4())
-            self.cursor.execute(user_adding_sql, (user_id, username, password))
+            self.cursor.execute(user_adding_sql, (user_id, username, password,  datetime.datetime.now().isoformat()))
             self.db_connection.commit()
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
+        
+    def session_auth(self, username: str, password: str) -> str:
+        id_retrieving_sql = "SELECT id FROM users WHERE username = ? AND password = ?"
+        self.cursor.execute(id_retrieving_sql, (username, password))
+        query_result = self.cursor.fetchone()
 
-    def add_file(self, user_id: int, file_name: str, file_extension: str, file_content: bytes) -> None:
+        if query_result is not None:
+            return query_result[0]
+        else:
+            raise MyException("Wrong login information")
+        
+    def update_password(self, user_id: str, password: str) -> str:
+        password_update_sql = "UPDATE users SET password = ? WHERE id = ?"
+        try:
+            self.cursor.execute(password_update_sql, (password, user_id))
+            if self.cursor.rowcount == 0:
+                raise MyException("User ID not found")
 
+            self.db_connection.commit()
+            return "Password updated successfully"
+        except sqlite3.Error as e:
+            self.db_connection.rollback()
+            raise e
+
+
+    def delete_user(self, user_id: str, username: str) -> None:
+        delete_user_sql = "DELETE FROM users WHERE id = ? AND username = ?"
+        try:
+            self.cursor.execute(delete_user_sql, (user_id, username))
+            self.db_connection.commit()
+        except sqlite3 .Error as e:
+            self.db_connection.rollback()
+            raise e
+        
+    def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
 
         try:
@@ -59,21 +89,25 @@ class DB:
             count = self.cursor.fetchone()[0]
 
             if count > 0:
-                raise MyException("file already exists")
+                raise MyException("File already exists")
 
-            file_insertion_sql = "INSERT INTO files (owner_id, file_name, extension, content, last_changed) VALUES (?, ?, ?, ?, ?)"
-            self.cursor.execute(file_insertion_sql, (user_id, file_name, file_extension, file_content, str(datetime.datetime.now)))
+            file_insertion_sql = """
+            INSERT INTO files (owner_id, file_name, extension, content, last_changed)
+            VALUES (?, ?, ?, ?, ?)
+            """
+            self.cursor.execute(file_insertion_sql, (
+                user_id, file_name, file_extension, file_content,
+                datetime.datetime.now().isoformat())
+            )
             self.db_connection.commit()
-
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
             print(ve)
             self.db_connection.rollback()
-            
-    def remove_file(self, user_id: int, file_name: str) -> None:
 
+    def remove_file(self, user_id: str, file_name: str) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
 
         try:
@@ -84,7 +118,6 @@ class DB:
                 file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND file_name = ?"
                 self.cursor.execute(file_deletion_sql, (user_id, file_name))
                 self.db_connection.commit()
-
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
@@ -92,22 +125,15 @@ class DB:
             print(ve)
             self.db_connection.rollback()
 
-    def session_auth(self, username: str, password: str) -> int:
-        id_retrieving_sql = "SELECT id FROM users WHERE username = ? AND password = ?"
-        self.cursor.execute(id_retrieving_sql, (username, password))
-        query_result = self.cursor.fetchone()
-
-        if query_result is not None:
-            return query_result[0]
-        else:
-            raise MyException("Wrong login information")
-
-    def get_files_summary(self, user_id: int) -> str:
-        get_files_sql = "SELECT file_name, extension, LENGTH(content) as size , last_changed FROM files WHERE owner_id = ?"
+    def get_files_summary(self, user_id: str) -> str:
+        get_files_sql = """
+        SELECT file_name, extension, LENGTH(content) as size, last_changed
+        FROM files WHERE owner_id = ?
+        """
         self.cursor.execute(get_files_sql, (user_id,))
         rows = self.cursor.fetchall()
 
-        files_summary = list()
+        files_summary = []
         for row in rows:
             file_summary = {
                 'file_name': row[0],
@@ -118,15 +144,14 @@ class DB:
             files_summary.append(file_summary)
 
         return json.dumps(files_summary, indent=4)
-    
-    def get_file(self, user_id: int, file_name: str) -> bytes:
-        get_files_sql = "SELECT content FROM files WHERE owner_id = ? AND file_name = ?"
-        self.cursor.execute(get_files_sql, (user_id, file_name))
+
+    def get_file(self, user_id: str, file_name: str) -> bytes:
+        get_file_sql = "SELECT content FROM files WHERE owner_id = ? AND file_name = ?"
+        self.cursor.execute(get_file_sql, (user_id, file_name))
         try:
             file_content = self.cursor.fetchone()[0]
             return file_content
         except TypeError:
-            raise MyException("file does not exist")
-
+            raise MyException("File does not exist")
 
 
