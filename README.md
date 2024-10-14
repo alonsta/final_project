@@ -1,9 +1,8 @@
 # Project idea: 
 A file management system with a windows app and a web client that can store data quickly and allow quick download to any pc.
 
-- Web client - can be used to download the app version and can be used on its own.(node.js + websocket + express.js).
-- App - allows quick upload after login. try to make it work through the windows quick action tab.(python kivy?).
-- Api - can serve both web and app version. manages the users database + the files system.(python socket).
+- Web server - used to signup/login. allowes to manually upload files to the cloud and download them + configure sync settings.
+- App - no gui python instance that updates local files when changed in the cloud, has a signiture so you dont have to enter password.
 
 
 - Encryptions: make sure the files are encrypted and compressed when uploaded in a way that only the original user can decode.
