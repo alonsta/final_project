@@ -125,8 +125,8 @@ class DB:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
-            print(ve)
             self.db_connection.rollback()
+            raise ve
 
     def remove_file(self, user_id: str, file_name: str) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
