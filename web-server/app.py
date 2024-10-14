@@ -1,4 +1,4 @@
-from utils.serialize_http import serialize_http
+from utils.http_utils.serialize_http import serialize_http
 from process_requests import process_req
 from utils.recvall import recvall
 import os

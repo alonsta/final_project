@@ -1,5 +1,3 @@
-import socket
-
 def recvall(sock):
     
     def recv_until(sock, terminator):

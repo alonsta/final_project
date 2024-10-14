@@ -217,24 +217,6 @@ def get_files_summary(data: dict, db: DB) -> str:
     finally:
         logging.log(response)
         return response
-    
-
-
-    #ACTIONS_DICT = {
-   #     "signup" : add_user,
-   #     "login": login,
-  #      "delete_user": delete_user,
-   #     "change_password" : update_password,
-    #    "get_user_info" : user_info,
-   #     "add_file": lambda x: x,
-    #    "delete_file": lambda x: x,
-    #    "get_file": lambda x: x,
-    #    "get_files_summery": lambda x: x,
-    #    "update_file": lambda x: x,
-    #    "ping": lambda x: x,
-    #    "list_commands": lambda x: x,
-    #    "uptime": lambda x: x
-    #}
 
 if __name__ == "__main__":
     main()
