@@ -1,5 +1,6 @@
 from utils.serialize_http import serialize_http
 from process_requests import process_req
+from utils.recvall import recvall
 import os
 import json
 import dotenv
@@ -39,9 +40,6 @@ def serve_client(client_socket, client_address):
         Encodes and sends a JSON-formatted data packet through a client socket.
 
         This function prepares a JSON-encoded string (`data2`) for transmission:
-        - Encodes the JSON string using base64 encoding.
-        - Determines the lengths of the header and data strings.
-        - Sends the header length, data length, and encoded data through the client socket.
 
         Args:
             data2 (dict): A dictionary containing data to be sent.
@@ -50,43 +48,32 @@ def serve_client(client_socket, client_address):
             None
         """
         data_str = json.dumps(data)
-        data_str = b64encode(data_str.encode())
-        data_length = len(data_str)
-        header_length = len(str(data_length))
-
-        client_socket.send(str(header_length).encode())
-        client_socket.send(str(data_length).encode())
-        client_socket.send(data_str)
+        data_str = data_str.encode()
+        client_socket.sendall(data_str)
 
     def get() -> json:
         """
-        Receives and decodes a JSON-formatted data packet from a client socket.
-
-        This function reads from a client socket expecting a prefixed data structure:
-        - Reads the header length from the socket.
-        - Reads the data length based on the header information.
-        - Decodes the received data using base64 decoding.
-        - Parses the decoded data as JSON and prints the action field.
-        - Returns the parsed JSON data dictionary.
-
+        Receives HTTP data from the socket and returns it as json
+        
         Returns:
             dict: A dictionary containing parsed JSON data received from the client socket.
         """
-        header_length = int(client_socket.recv(1).decode())
-        data_length = int(client_socket.recv(header_length).decode())
-        data = b64decode(client_socket.recv(data_length)).decode()
-        data = json.loads(data)
-        print("request: " + data["action"] + f" {client_address}")
+        print("trying to get")
+        data = recvall(client_socket).decode()
+        print(data)
+        data = serialize_http(data)
+        print("request: " + data + f" {client_address}")
         return data
 
     try:
         data = get()
-        data = serialize_http(data)
-        print(data)
         response = process_req(data)
         send(response)
     except Exception as e:
+        print(e)
         print(f"Connection aborted {client_address}")
+    finally:
+        client_socket.close()
     
-    
+if __name__ == "__main__":    
     main()

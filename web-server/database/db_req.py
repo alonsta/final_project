@@ -150,6 +150,75 @@ def add_file(data: dict, db:DB) -> json:
     finally:
         logging.log(response)
         return response
+    
+def delete_file(data: dict, db: DB) -> str:
+    response = '{"action": "delete_file", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        file_data = data["info"]
+        db.remove_file(file_data["user_id"], file_data["file_name"])
+    except Exception as e:
+        response = json.dumps({
+            "action": "delete_file",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        logging.log(response)
+        return response
+    
+def get_file(data: dict, db: DB) -> str:
+    response = '{"action": "get_file", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        file_data = data["info"]
+        file_content = db.get_file(file_data["user_id"], file_data["file_name"])
+        response = json.dumps({
+            "action": "get_file",
+            "status": "OK",
+            "info": {
+                "file_content": file_content.decode('utf-8'),
+                "exeption": None,
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "get_file",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        logging.log(response)
+        return response
+
+def get_files_summary(data: dict, db: DB) -> str:
+    response = '{"action": "get_files_summary", "status": "OK", "info" : {"exeption": None}}'
+    try:
+        user_id = data["info"]["user_id"]
+        summary = db.get_files_summary(user_id)
+        response = json.dumps({
+            "action": "get_files_summary",
+            "status": "OK",
+            "info": {
+                "files": json.loads(summary),
+                "exeption": None,
+            }
+        })
+    except Exception as e:
+        response = json.dumps({
+            "action": "get_files_summary",
+            "status": "failed",
+            "info": {
+                "exeption": str(e)
+            }
+        })
+    finally:
+        logging.log(response)
+        return response
+    
+
 
     #ACTIONS_DICT = {
    #     "signup" : add_user,
