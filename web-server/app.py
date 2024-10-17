@@ -15,7 +15,6 @@ def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(("0.0.0.0", 12345))
 
-
     print("Server running " + str(datetime.datetime.now()), end="\n\n")
 
     while True:
@@ -35,7 +34,7 @@ def serve_client(client_socket, client_address):
     
     
     
-    def send(data: json) -> None:
+    def send(http_response: str) -> None:
         """
         Encodes and sends a JSON-formatted data packet through a client socket.
 
@@ -47,9 +46,8 @@ def serve_client(client_socket, client_address):
         Returns:
             None
         """
-        data_str = json.dumps(data)
-        data_str = data_str.encode()
-        client_socket.sendall(data_str)
+        http_response = http_response.encode()
+        client_socket.sendall(http_response)
 
     def get() -> json:
         """
@@ -58,16 +56,15 @@ def serve_client(client_socket, client_address):
         Returns:
             dict: A dictionary containing parsed JSON data received from the client socket.
         """
-        print("trying to get")
         data = recvall(client_socket).decode()
-        print(data)
         data = serialize_http(data)
-        print("request: " + data + f" {client_address}")
-        return data
+        print("request: " + data  + f" {client_address}")
+        return json.loads(data)
 
     try:
         data = get()
         response = process_req(data)
+        print(response)
         send(response)
     except Exception as e:
         print(e)

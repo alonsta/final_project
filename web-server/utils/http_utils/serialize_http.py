@@ -9,7 +9,8 @@ def serialize_http(raw_request):
     request_line = lines[0].split(" ")
     method = request_line[0]
     path = request_line[1]
-    
+    if path == "/":
+        path = "/index.html"
     headers = {}
     for line in lines[1:]:
         if line == "":
