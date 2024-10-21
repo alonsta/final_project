@@ -35,7 +35,7 @@ def serve_client(client_socket, client_address):
     
     
     
-    def send(http_response: str) -> None:
+    def send(http_response: json) -> None:
         """
         Encodes and sends a JSON-formatted data packet through a client socket.
 
