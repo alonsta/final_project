@@ -1,4 +1,5 @@
 from utils.http_utils.serialize_http import serialize_http
+from utils.http_utils.unserialize_http import unserialize_http
 from process_requests import process_req
 from utils.recvall import recvall
 import os
@@ -46,7 +47,7 @@ def serve_client(client_socket, client_address):
         Returns:
             None
         """
-        http_response = http_response.encode()
+        http_response = unserialize_http(http_response)
         client_socket.sendall(http_response)
 
     def get() -> json:
@@ -64,7 +65,6 @@ def serve_client(client_socket, client_address):
     try:
         data = get()
         response = process_req(data)
-        print(response)
         send(response)
     except Exception as e:
         print(e)

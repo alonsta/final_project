@@ -15,3 +15,10 @@ I will start with a proof of concept to make sure the hardest parts are possible
 New things ill have to learn: sqlite3, node.js, html, css, electron.js windows, ++++.
 
 I think this project if executed to the fullest will take over 400h.
+
+
+
+TODO - build post handling in process_requests. add some pages for testing.
+
+
+

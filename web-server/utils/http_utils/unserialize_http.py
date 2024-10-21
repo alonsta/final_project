@@ -7,32 +7,39 @@ UTC = pytz.utc
 def main():
     pass
 
-def unserialize_http(dict: json) -> str:
+def unserialize_http(response: dict) -> bytes:
     """
     Unserializes an HTTP response from a dictionary.
 
     Args:
-        dict: A dictionary containing:
+        response: A dictionary containing:
             * response_code: The HTTP status code (e.g., 200).
-            * body: The body of the HTTP response.
+            * body: The body of the HTTP response (text or binary).
             * headers (optional): Additional HTTP headers.
 
     Returns:
-        The HTTP response as a string.
+        The HTTP response as bytes.
 
     Raises:
         ValueError: If the input dictionary is missing required keys.
     """
-
-    http_string = f"HTTP/1.1 {dict['response_code']}\r\n"
-    for key, value in dict["headers"].items():
-        http_string += f"{key}: {value}\r\n"
-    http_string += f"Date: {datetime.datetime.now(UTC).strftime('%Y:%m:%d %H:%M:%S %Z %z')}\r\n"
-    http_string += f"Content-Length: {len(dict['body'].encode())}\r\n\r\n"
-    http_string += dict["body"]
     
-    return http_string
+    http_headers = f"HTTP/1.1 {response['response_code']}\r\n"
+    
+    for key, value in response["headers"].items():
+        http_headers += f"{key}: {value}\r\n"
+    
+    http_headers += f"Date: {datetime.datetime.now(UTC).strftime('%Y:%m:%d %H:%M:%S %Z %z')}\r\n"
+    http_headers += f"Content-Length: {len(response['body'])}\r\n\r\n"
 
+    http_response = http_headers.encode('utf-8')
+
+    if isinstance(response['body'], str):
+        http_response += response['body'].encode('utf-8')
+    else:
+        http_response += response['body']
+    
+    return http_response
 
 
 if __name__ == "__main__":

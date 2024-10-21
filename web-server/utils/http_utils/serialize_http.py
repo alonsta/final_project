@@ -5,12 +5,19 @@ def main():
 
 def serialize_http(raw_request):
     lines = raw_request.split("\r\n")
-    
+
     request_line = lines[0].split(" ")
     method = request_line[0]
-    path = request_line[1]
-    if path == "/":
-        path = "/index.html"
+    full_path = request_line[1]
+    
+    if full_path == "/":
+        endpoint = "pages"
+        path = "index.html"
+    else:
+        path_parts = full_path[1:].split("/")
+        endpoint = path_parts[0]
+        path = "/".join(path_parts[1:])
+
     headers = {}
     for line in lines[1:]:
         if line == "":
@@ -19,11 +26,14 @@ def serialize_http(raw_request):
         headers[header.strip()] = value.strip()
 
     body_index = lines.index("") + 1
-    body = "\r\n".join(lines[body_index:]) if body_index < len(lines) else ""
-    
+    if body_index < len(lines):
+        body = "\r\n".join(lines[body_index:])
+    else:
+        body = ""
+
     query_string = ""
-    if "?" in path:
-        path, query_string = path.split("?", 1)
+    if "?" in full_path:
+        full_path, query_string = full_path.split("?", 1)
 
     query_params = {}
     if query_string:
@@ -31,6 +41,7 @@ def serialize_http(raw_request):
 
     request_info = {
         "method": method,
+        "endpoint": endpoint,
         "path": path,
         "query_params": query_params,
         "headers": headers,
