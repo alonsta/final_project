@@ -6,7 +6,7 @@ from utils.actions.get_resource import get_resource
 from utils.actions.get_style import get_style
 from utils.actions.get_script import get_script
 
-def process_req(http_request: json) -> str:
+def process_req(http_request: json) -> bytes:
     """
     Receives a JSON parsed HTTP request and sends back an HTTP response.
     """
