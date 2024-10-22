@@ -13,7 +13,7 @@ def unserialize_http(response: dict) -> bytes:
 
     Args:
         response: A dictionary containing:
-            * response_code: The HTTP status code (e.g., 200).
+            * response_code: The HTTP status code (e.g., 200, 400).
             * body: The body of the HTTP response (text or binary).
             * headers (optional): Additional HTTP headers.
 

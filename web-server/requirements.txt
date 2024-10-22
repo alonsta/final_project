@@ -12,3 +12,4 @@ ssl
 sys
 uuid
 logging
+libsass

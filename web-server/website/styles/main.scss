@@ -1,0 +1,65 @@
+// Main styles for the home page
+
+$font-stack: 'Arial', sans-serif;
+$primary-color: #f0f0f0;
+$secondary-color: #333;
+
+body {
+    font-family: $font-stack;
+    background-color: $primary-color;
+    margin: 0;
+    padding: 0;
+    color: $secondary-color;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+
+    header {
+        margin-bottom: 20px;
+
+        h1 {
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        nav {
+            margin-top: 10px;
+
+            a {
+                margin: 0 15px;
+                text-decoration: none;
+                color: $secondary-color;
+                font-weight: bold;
+
+                &:hover {
+                    color: darken($secondary-color, 10%);
+                }
+            }
+        }
+    }
+
+    main {
+        margin-bottom: 20px;
+
+        .welcome, .about {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+
+            h2 {
+                margin-top: 0;
+            }
+        }
+    }
+
+    footer {
+        font-size: 0.8em;
+        color: darken($secondary-color, 20%);
+    }
+}
