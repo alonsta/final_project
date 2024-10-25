@@ -22,7 +22,7 @@ def main():
         try:
             server_socket.listen()
             client_socket, client_address = server_socket.accept()
-            print(str(datetime.datetime.now()) +  " - " + client_address[0] + " connected")
+            print(str(datetime.datetime.now()) +  " - " + client_address[0] + " made a request")
             thread = threading.Thread(target=serve_client, args=(client_socket, client_address))
             thread.daemon = True
             thread.start()
@@ -31,9 +31,6 @@ def main():
 
 
 def serve_client(client_socket, client_address):
-    print("new thread started...")
-    
-    
     
     def send(http_response: json) -> None:
         """
@@ -59,7 +56,7 @@ def serve_client(client_socket, client_address):
         """
         data = recvall(client_socket).decode()
         data = serialize_http(data)
-        print("request: " + data  + f" {client_address}")
+        ("request: " + data  + f" {client_address}")
         return json.loads(data)
 
     try:

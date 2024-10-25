@@ -4,7 +4,7 @@ import sass
 def get_style(http_request: dict, response) -> dict:
     file_type = http_request['path'].split(".")[-1]
     file_path = f"{os.getcwd()}\\final_project\\web-server\\website\\styles\\{http_request['path'].split('.')[0]}.scss"
-    print(file_path)
+
     
     
     if not os.path.exists(file_path):
@@ -28,7 +28,6 @@ def get_style(http_request: dict, response) -> dict:
         case _:
             response["headers"]["Content-Type"] = "application/octet-stream"
             response["body"] = file_content
-    print(response)
     return response
 
 def main():

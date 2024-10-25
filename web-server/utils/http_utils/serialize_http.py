@@ -24,7 +24,14 @@ def serialize_http(raw_request):
             break
         header, value = line.split(":", 1)
         headers[header.strip()] = value.strip()
-
+    
+    cookies = []
+    if "Cookie" in headers.keys():
+        for cookie in headers["Cookies"]:
+            key, value = cookie.split("=")[0], cookie.split("=")[1]
+            cookies.append((key, value))
+            
+    
     body_index = lines.index("") + 1
     if body_index < len(lines):
         body = "\r\n".join(lines[body_index:])
@@ -44,6 +51,7 @@ def serialize_http(raw_request):
         "endpoint": endpoint,
         "path": path,
         "query_params": query_params,
+        "cookies": cookies,
         "headers": headers,
         "body": body
     }

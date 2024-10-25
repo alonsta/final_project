@@ -2,7 +2,6 @@ import os
 
 def get_page(http_request: dict, response) -> dict:
     file_path = f"{os.getcwd()}\\final_project\web-server\website\pages\{http_request['path']}"
-    print(file_path)
     if not os.path.exists(file_path):
         response["headers"]["Content-Type"] = "text/html"
         response["response_code"] = "404 Not Found"

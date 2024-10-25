@@ -33,6 +33,7 @@ class DB:
             FOREIGN KEY (owner_id) REFERENCES users (id)
         )
         """
+        
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
