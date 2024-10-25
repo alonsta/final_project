@@ -1,7 +1,3 @@
-document.getElementById('signupformbutton').addEventListener('click', function() {
-    alert('Login functionality coming soon!');
-});
-
-document.getElementById('signupformbutton').addEventListener('click', function() {
-    alert('Sign Up functionality coming soon!');
+document.getElementById('login_button').addEventListener('click', function() {
+    window.location.href = '/pages/login.html';
 });

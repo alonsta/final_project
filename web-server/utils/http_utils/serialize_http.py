@@ -33,7 +33,7 @@ def serialize_http(raw_request):
 
     query_string = ""
     if "?" in full_path:
-        full_path, query_string = full_path.split("?", 1)
+        path, query_string = path.split("?",1)
 
     query_params = {}
     if query_string:

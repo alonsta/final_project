@@ -17,25 +17,39 @@ def process_req(http_request: json) -> bytes:
         },
         "body": "<p>Bad Request</p>"
     }
-    if http_request["endpoint"] == "pages":
-        match http_request["method"]:
-            case "GET":
-                respone = get_page(http_request, response)
-                        
-    if http_request["endpoint"] == "resources":
-        match http_request["method"]:
-            case "GET":
-                respone = get_resource(http_request, response)
-                
-    if http_request["endpoint"] == "scripts":
-        match http_request["method"]:
-            case "GET":
-                respone = get_script(http_request, response)
-                
-    if http_request["endpoint"] == "styles":
-        match http_request["method"]:
-            case "GET":
-                respone = get_style(http_request, response)
+    match http_request["endpoint"]:
+        case "pages":
+            match http_request["method"]:
+                case "GET":
+                    response = get_page(http_request, response)
+                            
+        case "resources":
+            match http_request["method"]:
+                case "GET":
+                    response = get_resource(http_request, response)
+                    
+        case "scripts":
+            match http_request["method"]:
+                case "GET":
+                    response = get_script(http_request, response)
+                    
+        case "styles":
+            match http_request["method"]:
+                case "GET":
+                    response = get_style(http_request, response)
+                    
+        case "users":
+            match http_request["method"]:
+                case "POST":
+                    match http_request["path"]:
+                        case "/login":
+                            response = user_login(http_request, response)
+                        case "/signup":
+                            response = user_signup(http_request, response)
+                case "PUT":
+                    response = user_update(http_request, response)
+                case "GET":
+                    response = fetch_user_data(http_request, response)
     
 
     return response
