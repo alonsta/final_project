@@ -3,7 +3,7 @@ import sass
 
 def get_style(http_request: dict, response) -> dict:
     file_type = http_request['path'].split(".")[-1]
-    file_path = f"{os.getcwd()}\\final_project\\web-server\\website\\styles\\{http_request['path'].split('.')[0]}.scss"
+    file_path = f"{os.getcwd()}\\web-server\\website\\styles\\{http_request['path'].split('.')[0]}.scss"
 
     
     

@@ -2,7 +2,7 @@ import os
 
 def get_resource(http_request: dict, response) -> dict:
     file_type = http_request['path'].split(".")[-1]
-    file_path = f"{os.getcwd()}\\final_project\\web-server\\website\\resources\\{http_request['path']}"
+    file_path = f"{os.getcwd()}\\web-server\\website\\resources\\{http_request['path']}"
     if not os.path.exists(file_path):
         response["response_code"] = "404 Not Found"
         response["body"] = "<h1>404 Not Found</h1>"

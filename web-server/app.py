@@ -56,7 +56,6 @@ def serve_client(client_socket, client_address):
         """
         data = recvall(client_socket).decode()
         data = serialize_http(data)
-        ("request: " + data  + f" {client_address}")
         return json.loads(data)
 
     try:
