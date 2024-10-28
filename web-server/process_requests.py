@@ -1,6 +1,4 @@
-import os
 import json
-import base64
 from utils.actions.get_page import get_page
 from utils.actions.get_resource import get_resource
 from utils.actions.get_style import get_style

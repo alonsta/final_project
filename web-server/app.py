@@ -2,15 +2,11 @@ from utils.http_utils.serialize_http import serialize_http
 from utils.http_utils.unserialize_http import unserialize_http
 from process_requests import process_req
 from utils.recvall import recvall
-import os
 import json
-import dotenv
 import socket
 import threading
 import datetime
 from base64 import *
-import ssl
-import sys
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
