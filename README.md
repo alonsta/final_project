@@ -18,7 +18,5 @@ I think this project if executed to the fullest will take over 400h.
 
 
 
-TODO - build post handling in process_requests. add some pages for testing.
-
 
 
