@@ -9,10 +9,10 @@ def main():
     try:
         DATABASE = DB(PATH)
         del DATABASE
+        print("database connection established")
     except Exception as e:
-        print("failed connecting to database. shutting down.")
+        print("failed connecting to database. shutting down. " + e)
         sys.exit()
-    print("database connection established")
     pass
 
 def signup(data: dict, db: DB) -> str:

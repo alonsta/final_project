@@ -3,6 +3,7 @@ from utils.actions.get_page import get_page
 from utils.actions.get_resource import get_resource
 from utils.actions.get_style import get_style
 from utils.actions.get_script import get_script
+from utils.actions.user_signup import signup
 
 def process_req(http_request: json) -> bytes:
     """
@@ -39,15 +40,16 @@ def process_req(http_request: json) -> bytes:
         case "users":
             match http_request["method"]:
                 case "POST":
+                    print(http_request["path"])
                     match http_request["path"]:
-                        case "/login":
-                            response = user_login(http_request, response)
-                        case "/signup":
-                            response = user_signup(http_request, response)
+                        case "login":
+                            response = user_login(http_request["body"], response)
+                        case "signup":
+                            response = signup(http_request["body"], response)
                 case "PUT":
-                    response = user_update(http_request, response)
+                    response = user_update(http_request["body"], response)
                 case "GET":
-                    response = fetch_user_data(http_request, response)
+                    response = fetch_user_data(http_request["body"], response)
     
 
     return response
