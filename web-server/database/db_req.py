@@ -5,37 +5,19 @@ from db import DB
 import logging
 
 def main():
-    PATH = "\data"
-    try:
-        DATABASE = DB(PATH)
-        del DATABASE
-        print("database connection established")
-    except Exception as e:
-        print("failed connecting to database. shutting down. " + e)
-        sys.exit()
     pass
 
 def signup(data: dict, db: DB) -> str:
-    response = json.dumps({
-        "action": "add_user",
-        "status": "OK",
-        "info": {
-            "exeption": None
-        }
-    })
+    """
     
+    """
+    db = DB("/data")
     try:
-        db.add_user(data["info"]["username"], data["info"]["password"])
+        db.add_user(data["username"], data["password"])
     except Exception as e:
-        response = json.dumps({
-            "action": "add_user",
-            "status": "failed",
-            "info": {
-                "exeption": str(e)
-            }
-        })
+        raise e
     finally:
-        logging.log(response)
+        logging.log()
         return response
 
     

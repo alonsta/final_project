@@ -1,4 +1,5 @@
 async function hashString(input) {
+  
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
 

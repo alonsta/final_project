@@ -34,11 +34,25 @@ class DB:
         )
         """
         
+        cookie_table_check_sql = """
+        CREATE TABLE IF NOT EXISTS cookies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT NOT NULL,
+            value TEXT NOT NULL,
+            expiration TEXT NOT NULL,
+            owner_id TEXT NOT NULL,
+            FOREIGN KEY (owner_id) REFERENCES users (id)
+        )
+        """
+        
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
+        self.cursor.execute(cookie_table_check_sql)
         self.db_connection.commit()
-
+    def create_cookie(self):
+        pass
+    
     def add_user(self, username: str, password: str) -> None:
         user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded) VALUES (?, ?, ?, ?, ?)"
         try:
