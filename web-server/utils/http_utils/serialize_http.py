@@ -27,9 +27,15 @@ def serialize_http(raw_request):
     
     cookies = []
     if "Cookie" in headers.keys():
-        for cookie in headers["Cookies"]:
-            key, value = cookie.split("=")[0], cookie.split("=")[1]
-            cookies.append((key, value))
+        cookie_string = headers["Cookie"]
+        individual_cookies = cookie_string.split("; ")
+
+        for cookie in individual_cookies:
+            # Split each cookie by '='
+            parts = cookie.split("=")
+            if len(parts) == 2:
+                key, value = parts[0], parts[1]
+                cookies.append((key, value))
             
     
     body_index = lines.index("") + 1

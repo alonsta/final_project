@@ -16,7 +16,7 @@ def unserialize_http(response: dict) -> bytes:
             * response_code: The HTTP status code (e.g., 200, 400).
             * body: The body of the HTTP response (text or binary).
             * headers (optional): Additional HTTP headers.
-            * cookies (optional): cookies to set. list of tuples (key, value)
+            * cookies (optional): cookies to set. list of tuples (key, value, exp)
 
     Returns:
         The HTTP response as bytes.
@@ -32,7 +32,7 @@ def unserialize_http(response: dict) -> bytes:
     
     if "cookies" in response.keys():
         for cookie in response["cookies"]:
-            http_headers += f"Set-Cookie: {cookie[0]}={cookie[1]}"
+            http_headers += f"Set-Cookie: {cookie[0]}={cookie[1]};expires={cookie[2]};path=/\r\n"
     
     http_headers += f"Date: {datetime.datetime.now(UTC).strftime('%Y:%m:%d %H:%M:%S %Z %z')}\r\n"
     http_headers += f"Content-Length: {len(response['body'])}\r\n\r\n"
