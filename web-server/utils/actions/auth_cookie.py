@@ -13,7 +13,6 @@ def auth_cookie(info, response):
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     try:
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        print(auth_cookie_value)
         database_access.check_cookie(auth_cookie_value)
         response["body"] = json.dumps({"success": "logged in"})
         response["response_code"] = "200 OK"

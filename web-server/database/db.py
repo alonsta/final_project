@@ -2,7 +2,6 @@ import sqlite3
 import json
 from datetime import *
 import uuid
-from utils.Custom_exception import MyException
 
 
 class DB:
@@ -101,7 +100,7 @@ class DB:
             str: The unique ID of the user associated with the valid cookie.
 
         Raises:
-            MyException: If the cookie is invalid or has expired.
+            Exception: If the cookie is invalid or has expired.
         """
         
         check_cookie_sql = """SELECT owner_id, expiration FROM cookies WHERE value = ?
@@ -116,16 +115,16 @@ class DB:
             if expiration > current_time:
                 return user_id
             else:
-                raise MyException("Cookie has expired")
+                raise Exception("Cookie has expired")
         else:
-            raise MyException("Invalid cookie")
+            raise Exception("Invalid cookie")
     
     def add_user(self, username: str, password: str) -> None:
         """
         Adds a new user to the database and creates an authentication cookie for them.
 
         This method checks if a user with the specified username and password already exists in the 
-        `users` table. If the user does exist, a `MyException` is raised. If not, a new user is created 
+        `users` table. If the user does exist, a `Exception` is raised. If not, a new user is created 
         with a unique ID, and an authentication cookie is generated and stored in the database.
 
         Args:
@@ -136,7 +135,7 @@ class DB:
             tuple: A tuple containing the key, cookie value, and expiration date of the created cookie.
 
         Raises:
-            MyException: If the user already exists or if there is any issue during the database operation.
+            Exception: If the user already exists or if there is any issue during the database operation.
         sqlite3.Error: If there is an SQLite-related error.
         """
         user_check_sql = "SELECT 1 FROM users WHERE username = ? AND password = ?"
@@ -172,7 +171,7 @@ class DB:
 
         This method checks if the provided username and password match an existing user in the 
         `users` table. If the credentials are correct, it creates a new authentication cookie 
-        and returns it. If the credentials are incorrect, a `MyException` is raised.
+        and returns it. If the credentials are incorrect, an exception is raised.
 
         Args:
             username (str): The username of the user attempting to log in.
@@ -182,7 +181,7 @@ class DB:
             str: A tuple containing the key, cookie value, and expiration date of the created cookie.
 
         Raises:
-            MyException: If the login information is incorrect or if there is any issue during the 
+            Exception: If the login information is incorrect or if there is any issue during the 
                         database operation.
             sqlite3.Error: If there is an SQLite-related error.
     """
@@ -198,7 +197,7 @@ class DB:
 
                 return cookie
             else:
-                raise MyException("Wrong login information")
+                raise Exception("Wrong login information")
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
@@ -212,7 +211,7 @@ class DB:
         try:
             self.cursor.execute(password_update_sql, (password, user_id))
             if self.cursor.rowcount == 0:
-                raise MyException("User ID not found")
+                raise Exception("User ID not found")
 
             self.db_connection.commit()
             return "Password updated successfully"
@@ -244,12 +243,12 @@ class DB:
                 }
                 return user_info
             else:
-                raise MyException("User not found")
+                raise Exception("User not found")
                 
         except sqlite3.Error as e:
             raise e
         except Exception as e:
-            raise MyException(f"An unexpected error occurred: {e}")
+            raise Exception(f"An unexpected error occurred: {e}")
         
     def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
@@ -259,7 +258,7 @@ class DB:
             count = self.cursor.fetchone()[0]
 
             if count > 0:
-                raise MyException("File already exists")
+                raise Exception("File already exists")
 
             file_insertion_sql = """
             INSERT INTO files (owner_id, file_name, extension, content, last_changed)
@@ -322,6 +321,6 @@ class DB:
             file_content = self.cursor.fetchone()[0]
             return file_content
         except TypeError:
-            raise MyException("File does not exist")
+            raise Exception("File does not exist")
 
 
