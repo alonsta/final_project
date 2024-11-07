@@ -4,6 +4,8 @@ from utils.actions.get_resource import get_resource
 from utils.actions.get_style import get_style
 from utils.actions.get_script import get_script
 from utils.actions.user_signup import signup
+from utils.actions.user_login import login
+from utils.actions.auth_cookie import auth_cookie
 
 def process_req(http_request: json) -> bytes:
     """
@@ -17,6 +19,10 @@ def process_req(http_request: json) -> bytes:
         "body": "<p>Bad Request</p>"
     }
     match http_request["endpoint"]:
+        case "auth":
+            match http_request["method"]:
+                case "GET":
+                    response = auth_cookie(http_request, response)
         case "pages":
             match http_request["method"]:
                 case "GET":
@@ -43,7 +49,7 @@ def process_req(http_request: json) -> bytes:
                     print(http_request["path"])
                     match http_request["path"]:
                         case "login":
-                            response = user_login(http_request["body"], response)
+                            response = login(http_request["body"], response)
                         case "signup":
                             response = signup(http_request["body"], response)
                 case "PUT":

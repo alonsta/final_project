@@ -145,7 +145,7 @@ class DB:
         try:
             self.cursor.execute(user_check_sql, (username, password))
             if self.cursor.fetchone():
-                raise MyException("User already exists")
+                raise "user already exists"
             
             user_id = str(uuid.uuid4())
             

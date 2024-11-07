@@ -1,5 +1,5 @@
 import json
-import datetime
+from datetime import datetime
 import pytz 
 
 UTC = pytz.utc 
@@ -32,9 +32,11 @@ def unserialize_http(response: dict) -> bytes:
     
     if "cookies" in response.keys():
         for cookie in response["cookies"]:
-            http_headers += f"Set-Cookie: {cookie[0]}={cookie[1]};expires={cookie[2]};path=/\r\n"
+            expiration_date = datetime.strptime(cookie[2], "%Y-%m-%d %H:%M:%S")
+            formatted_expiration = expiration_date.strftime("%a, %d %b %Y %H:%M:%S GMT")
+            http_headers += f"Set-Cookie: {cookie[0]}={cookie[1]};expires={formatted_expiration};path=/\r\n"
     
-    http_headers += f"Date: {datetime.datetime.now(UTC).strftime('%Y:%m:%d %H:%M:%S %Z %z')}\r\n"
+    http_headers += f"Date: {datetime.now(UTC).strftime('%Y:%m:%d %H:%M:%S %Z %z')}\r\n"
     http_headers += f"Content-Length: {len(response['body'])}\r\n\r\n"
 
     http_response = http_headers.encode('utf-8')

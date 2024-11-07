@@ -5,20 +5,20 @@ from utils.recvall import recvall
 import json
 import socket
 import threading
-import datetime
+from datetime import datetime
 from base64 import *
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(("0.0.0.0", 12345))
 
-    print("Server running " + str(datetime.datetime.now()), end="\n\n")
+    print("Server running " + str(datetime.now()), end="\n\n")
 
     while True:
         try:
             server_socket.listen()
             client_socket, client_address = server_socket.accept()
-            print(str(datetime.datetime.now()) +  " - " + client_address[0] + " made a request")
+            print(str(datetime.now()) +  " - " + client_address[0] + " made a request")
             thread = threading.Thread(target=serve_client, args=(client_socket, client_address))
             thread.daemon = True
             thread.start()
