@@ -5,11 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/resources/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/styles/dashboard.css">
+    <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
     <title>Dashboard</title>
 </head>
 <body>
-    <h1>Protected Page</h1>
-    <p>This content is only visible to authenticated users.</p>
+    <div class="dashboard">
+        <div class="sidebar">
+            <div class="tab" id="overview-tab" onclick="switchTab('overview')">
+                <img src="/resources/chart-icon.png" alt="Overview" />
+            </div>
+            <div class="tab" id="files-tab" onclick="switchTab('files')">
+                <img src="/resources/file-icon.png" alt="Files" />
+            </div>
+            <div class="tab" id="account-tab" onclick="switchTab('account')">
+                <img src="/resources/gear-icon.png" alt="Account" />
+            </div>
+        </div>
+        <div class="content">
+            <div id="overview" class="content-section hidden">
+                your stats here
+            </div>
+            <div id="files" class="content-section hidden">
+                <input type="file" id="file" style="display: none;" multiple>
+                <h1>Your Files</h1> drag any file to upload
+                <div id="password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center;">
+                    <div style="background-color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                        <h2>Enter Password to Encrypt and Upload File</h2>
+                        <input type="password" id="password" placeholder="Enter password (128/192/256 bits)" style="margin: 10px; padding: 8px;">
+                        <button id="upload-button" style="padding: 10px 20px;">Upload</button>
+                        <button id="cancel-button" style="padding: 10px 20px; margin-left: 10px;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            <div id="account" class="content-section hidden">Account details go here.</div>
+        </div>
+    </div>
 
     <script src="/scripts/Authentication.js"></script>
     <script src="/scripts/dashboard.js"></script>
