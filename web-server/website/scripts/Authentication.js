@@ -8,7 +8,9 @@ async function checkAuthentication() {
         if (response.status === 401) {
             window.location.href = '/pages/login.html';
         } else if (response.ok) {
-            console.log("User is authenticated");
+            if (window.location.pathname === '/pages/login.html') {
+                window.location.href = '/pages/dashboard.html';
+            }
         } else {
             console.error("An error occurred:", response.status);
         }
@@ -16,4 +18,5 @@ async function checkAuthentication() {
         console.error("Network or server error:", error);
     }
 }
+
 checkAuthentication();

@@ -52,9 +52,12 @@ dropZone.addEventListener('drop', (e) => {
 const modal = document.getElementById('password-modal');
 const uploadButton = document.getElementById('upload-button');
 const cancelButton = document.getElementById('cancel-button');
+const password_input = document.getElementById('password')
 
 cancelButton.addEventListener('click', () => {
-    modal.style.display = 'none';  // Hide modal
+    modal.style.display = 'none';
+    passwordInput.setAttribute("value", "")
+    
 });
 
 uploadButton.addEventListener('click', () => {
@@ -75,4 +78,12 @@ uploadButton.addEventListener('click', () => {
 
     // Close modal after upload
     modal.style.display = 'none';
+});
+
+const passwordInput = document.getElementById('password');
+const charCountDisplay = document.getElementById('charCount');
+
+passwordInput.addEventListener('input', () => {
+        const charCount = passwordInput.value.length;
+        charCountDisplay.textContent = `${charCount} character${charCount !== 1 ? 's' : ''}`;
 });
