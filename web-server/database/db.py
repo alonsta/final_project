@@ -250,7 +250,7 @@ class DB:
         except Exception as e:
             raise Exception(f"An unexpected error occurred: {e}")
         
-    def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:
+    def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:# add a serial for reconstruction
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
 
         try:

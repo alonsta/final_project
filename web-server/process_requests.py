@@ -56,6 +56,16 @@ def process_req(http_request: json) -> bytes:
                     response = user_update(http_request["body"], response)
                 case "GET":
                     response = fetch_user_data(http_request["body"], response)
+                    
+        case "files":
+            match http_request["method"]:
+                case "POST":
+                    match http_request["path"]:
+                        case "upload":
+                            print(http_request)
+                    pass
+                case "GET":
+                    pass
     
 
     return response

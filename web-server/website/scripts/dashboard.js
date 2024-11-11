@@ -1,3 +1,11 @@
+// Elements
+const uploadButton = document.getElementById('upload-button');
+const cancelButton = document.getElementById('cancel-button');
+const dropZone = document.getElementById('files');
+const modal = document.getElementById('password-modal');
+const passwordInput = document.getElementById('password');
+const fileInput = document.getElementById('file');
+
 function switchTab(tabName) {
     const sections = document.querySelectorAll(".content-section");
     sections.forEach(section => section.classList.add("hidden"));
@@ -8,82 +16,114 @@ function switchTab(tabName) {
     }
 }
 
-const dropZone = document.querySelector('#files');
+dropZone.addEventListener('dragenter', (e) => e.preventDefault());
+dropZone.addEventListener('dragover', (e) => e.preventDefault());
+dropZone.addEventListener('drop', handleFileDrop);
 
-dropZone.addEventListener('dragenter', (e) => {
-    e.preventDefault(); 
-});
-
-dropZone.addEventListener('dragover', (e) => {
+function handleFileDrop(e) {
     e.preventDefault();
-});
+    fileInput.files = e.dataTransfer.files;
+    previewFiles(Array.from(fileInput.files));
+    modal.style.display = 'flex';
+}
 
-dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    document.getElementById('file').files = e.dataTransfer.files;
-    const fileInput = document.getElementById('file');
-
-    const files = fileInput.files;
-
-    for (const file of files) {
-        const fileName = file.name;
-
-        const fileType = file.type;
-
-        const fileSize = file.size;
-
+function previewFiles(files) {
+    files.forEach(file => {
+        console.log(`File Name: ${file.name}`);
+        console.log(`File Type: ${file.type}`);
+        console.log(`File Size: ${file.size} bytes`);
+        
         const fileReader = new FileReader();
-        fileReader.onload = function(e) {
-            const fileData = e.target.result;
-            console.log('File content:', fileData);
-        };
+        fileReader.onload = (e) => console.log('File content:', e.target.result);
         fileReader.readAsText(file);
-
-        console.log(`File Name: ${fileName}`);
-        console.log(`File Type: ${fileType}`);
-        console.log(`File Size: ${fileSize} bytes`);
-
-        modal.style.display = 'flex'
-    }
-});
-
-//tests
-
-const modal = document.getElementById('password-modal');
-const uploadButton = document.getElementById('upload-button');
-const cancelButton = document.getElementById('cancel-button');
-const password_input = document.getElementById('password')
+    });
+}
 
 cancelButton.addEventListener('click', () => {
     modal.style.display = 'none';
-    passwordInput.setAttribute("value", "")
-    
+    passwordInput.value = "";
 });
 
 uploadButton.addEventListener('click', () => {
-    const password = document.getElementById('password').value;
-
-    // Validate password length (128, 192, or 256 bits)
-    const isValidPassword = password.length === 16 || password.length === 24 || password.length === 32;
+    const password = passwordInput.value;
+    passwordInput.value = "";
+    const isValidPassword = password.length >= 8;
 
     if (!isValidPassword) {
-        alert('Password length must be 16, 24, or 32 bits long.');
+        alert('Password length must be 8 or more characters');
         return;
     }
 
-    // Encrypt the file and upload (your encryption logic would go here)
-    for (const file of droppedFiles) {
-        console.log('Encrypting and uploading file:', file.name);
-    }
-
-    // Close modal after upload
+    uploadFiles(password, Array.from(fileInput.files));
+    localStorage.setItem('masterPassword', password);
     modal.style.display = 'none';
 });
 
-const passwordInput = document.getElementById('password');
-const charCountDisplay = document.getElementById('charCount');
+async function uploadFiles(password, files) {
+    for (const file of files) {
+        const fileId = generateRandomId();
+        const aesKey = generateEncryptionKey(password, fileId);
 
-passwordInput.addEventListener('input', () => {
-        const charCount = passwordInput.value.length;
-        charCountDisplay.textContent = `${charCount} character${charCount !== 1 ? 's' : ''}`;
-});
+        const encryptedFile = await encryptFile(file, aesKey);
+        postEncryptedFile(fileId, encryptedFile);
+    }
+}
+
+function generateRandomId() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
+function generateEncryptionKey(password, fileId) {
+    const masterHash = CryptoJS.SHA256(password).toString();
+    const combined = fileId + masterHash;
+    return CryptoJS.MD5(combined).toString();
+}
+
+async function encryptFile(file, key) {
+    const fileReader = new FileReader();
+
+    return new Promise((resolve, reject) => {
+        fileReader.onload = (e) => {
+            const fileData = e.target.result;
+            const encryptedData = {
+                name: CryptoJS.AES.encrypt(file.name, key).toString(),
+                type: CryptoJS.AES.encrypt(file.type, key).toString(),
+                content: CryptoJS.AES.encrypt(fileData, key).toString()
+            };
+            resolve(encryptedData);
+        };
+
+        fileReader.onerror = reject;
+        fileReader.readAsText(file);
+    });
+}
+
+function compress(uncompressedString) {
+    const binaryString = pako.deflate(uncompressedString, { to: 'string' });
+    return btoa(binaryString);
+}
+
+function decompress(compressedString) {
+    const binaryString = atob(compressedString);
+    const decompressedString = pako.inflate(binaryString, { to: 'string' });
+    return decompressedString;
+}
+
+function postEncryptedFile(fileId, encryptedFile) {//need to slice into a bunch of smaller files with serial for reconstruction
+    fetch('/files/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            id: fileId,
+            name: encryptedFile.name,
+            type: encryptedFile.type,
+            content: compress(encryptedFile.content)
+        })
+    }).then(response => {
+        if (response.ok) {
+            console.log('File uploaded successfully');
+        } else {
+            console.error('Upload failed');
+        }
+    }).catch(error => console.error('Error uploading file:', error));
+}
