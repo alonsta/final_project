@@ -3,13 +3,12 @@ from database.db import DB
 import os
 
 def upload_file_info(info, response):
-    info = json.loads(info)
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
-    file_name = info.get('file_name')
-    server_key = info.get('server_key')
-    chunk_count = info.get('chunk_count')
+    file_name = json.loads(info["body"])['file_name']
+    server_key = json.loads(info["body"])['server_key']
+    chunk_count = json.loads(info["body"])['chunk_count']
 
-    if not file_name or not server_key or chunk_count is None:
+    if not (file_name and server_key and chunk_count):
         response["body"] = json.dumps({"failed": "boohoo "})
         return response
 
@@ -18,6 +17,7 @@ def upload_file_info(info, response):
         database_access.add_file(auth_cookie_value, file_name, server_key, chunk_count)
         
         response["body"] = json.dumps({"success": "your file info was uploaded "})
+        response["response_code"] = "200 OK"
         return response
 
     except Exception as e:

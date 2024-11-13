@@ -66,10 +66,10 @@ def process_req(http_request: json) -> bytes:
                 case "POST":
                     match http_request["path"]:
                         case "upload/file":
-                            response = upload_file_info(http_request["body"], response)
+                            response = upload_file_info(http_request, response)
 
                         case "upload/chunk":
-                            response = upload_chunk(http_request["body"], response)
+                            response = upload_chunk(http_request, response)
                 case "GET":
                     match http_request["path"]:
                         case "download":

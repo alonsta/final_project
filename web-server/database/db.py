@@ -40,10 +40,10 @@ class DB:
         file_chunks_table_check_sql ="""
         CREATE TABLE IF NOT EXISTS chunks(
             file_id INTEGER NOT NULL,
-            index INTEGER NOT NULL,
+            chunk_index INTEGER,
             content BLOB NOT NULL,
             FOREIGN KEY (file_id) REFERENCES files (id),
-            PRIMARY KEY (file_id, index)
+            PRIMARY KEY (file_id, chunk_index)
         )
         """
 
@@ -156,7 +156,7 @@ class DB:
         sqlite3.Error: If there is an SQLite-related error.
         """
         user_check_sql = "SELECT 1 FROM users WHERE username = ? AND password = ?"
-        user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded) VALUES (?, ?, ?, ?, ?)"
+        user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded, data_downloaded) VALUES (?, ?, ?, ?, ?, ?)"
         
         try:
             self.cursor.execute(user_check_sql, (username, password))
@@ -167,8 +167,7 @@ class DB:
             
             self.cursor.execute(user_adding_sql, (
                 user_id, username, password, 
-                datetime.now().strftime("%d/%m/%Y %H:%M"), 
-                "0KB"
+                datetime.now().strftime("%d/%m/%Y %H:%M"), 0, 0
             ))
             
             cookie = self.create_cookie(user_id)
@@ -316,7 +315,7 @@ class DB:
             file_id = result[0]
 
             chunk_insertion_sql = """
-            INSERT INTO chunks (file_id, index, content)
+            INSERT INTO chunks (file_id, chunk_index, content)
             VALUES (?, ?, ?)
             """
             self.cursor.execute(chunk_insertion_sql, (file_id, index, content))
