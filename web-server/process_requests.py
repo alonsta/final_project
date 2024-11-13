@@ -6,7 +6,8 @@ from utils.actions.get_script import get_script
 from utils.actions.user_signup import signup
 from utils.actions.user_login import login
 from utils.actions.auth_cookie import auth_cookie
-
+from utils.actions.upload_chunk import upload_chunk
+from utils.actions.upload_file import upload_file_info
 def process_req(http_request: json) -> bytes:
     """
     Receives a JSON parsed HTTP request and sends back an HTTP response.
@@ -18,6 +19,7 @@ def process_req(http_request: json) -> bytes:
         },
         "body": "<p>Bad Request</p>"
     }
+
     match http_request["endpoint"]:
         case "auth":
             match http_request["method"]:
@@ -46,7 +48,6 @@ def process_req(http_request: json) -> bytes:
         case "users":
             match http_request["method"]:
                 case "POST":
-                    print(http_request["path"])
                     match http_request["path"]:
                         case "login":
                             response = login(http_request["body"], response)
@@ -56,16 +57,26 @@ def process_req(http_request: json) -> bytes:
                     response = user_update(http_request["body"], response)
                 case "GET":
                     response = fetch_user_data(http_request["body"], response)
-                    
+        case "share":
+            #download a file 
+            pass
+
         case "files":
             match http_request["method"]:
                 case "POST":
                     match http_request["path"]:
-                        case "upload":
-                            print(http_request)
-                    pass
+                        case "upload/file":
+                            response = upload_file_info(http_request["body"], response)
+
+                        case "upload/chunk":
+                            response = upload_chunk(http_request["body"], response)
                 case "GET":
-                    pass
+                    match http_request["path"]:
+                        case "download":
+                            response = download_file(http_request["body"], response)
+                        case "info":
+                            response = get_file_info(http_request["body"], response)
+
     
 
     return response

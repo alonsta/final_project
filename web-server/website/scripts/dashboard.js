@@ -1,4 +1,3 @@
-// Elements
 const uploadButton = document.getElementById('upload-button');
 const cancelButton = document.getElementById('cancel-button');
 const dropZone = document.getElementById('files');
@@ -29,9 +28,7 @@ function handleFileDrop(e) {
 
 function previewFiles(files) {
     files.forEach(file => {
-        console.log(`File Name: ${file.name}`);
-        console.log(`File Type: ${file.type}`);
-        console.log(`File Size: ${file.size} bytes`);
+        
         
         const fileReader = new FileReader();
         fileReader.onload = (e) => console.log('File content:', e.target.result);

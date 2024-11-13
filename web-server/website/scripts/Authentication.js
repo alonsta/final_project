@@ -5,7 +5,7 @@ async function checkAuthentication() {
             credentials: 'include'
         });
 
-        if (response.status === 401) {
+        if (response.status === 401 && ! window.location.pathname === '/pages/login.html') {
             window.location.href = '/pages/login.html';
         } else if (response.ok) {
             if (window.location.pathname === '/pages/login.html') {

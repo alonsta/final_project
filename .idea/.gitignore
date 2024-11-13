@@ -1,7 +1,7 @@
 # Default ignored files
 /shelf/
 /workspace.xml/
-web-server/database/data/
+./web-server/database/data/
 /.env/
 /server.key/
 /server.crt/

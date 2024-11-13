@@ -17,21 +17,37 @@ class DB:
             username TEXT NOT NULL,
             password TEXT NOT NULL,
             creation_time TEXT NOT NULL,
-            data_uploaded TEXT NOT NULL
+            data_uploaded INTEGER NOT NULL,
+            data_downloaded INTEGER NOT NULL
         )
         """
 
         files_table_check_sql = """
         CREATE TABLE IF NOT EXISTS files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            server_key TEXT NOT NULL,
+            version INTEGER DEFAULT 1,
+            is_latest INTEGER DEFAULT 1,
+            chunk_count INTEGER,
             last_changed TEXT NOT NULL,
             file_name TEXT NOT NULL,
-            extension TEXT NOT NULL,
-            content BLOB NOT NULL,
-            owner_id TEXT NOT NULL,
-            FOREIGN KEY (owner_id) REFERENCES users (id)
+            owner_id INTEGER NOT NULL,
+            UNIQUE (server_key, version),
+            FOREIGN KEY (owner_id) REFERENCES users(id)
         )
         """
+
+        file_chunks_table_check_sql ="""
+        CREATE TABLE IF NOT EXISTS chunks(
+            file_id INTEGER NOT NULL,
+            index INTEGER NOT NULL,
+            content BLOB NOT NULL,
+            FOREIGN KEY (file_id) REFERENCES files (id),
+            PRIMARY KEY (file_id, index)
+        )
+        """
+
+
         
         cookie_table_check_sql = """
         CREATE TABLE IF NOT EXISTS cookies (
@@ -47,6 +63,7 @@ class DB:
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
+        self.cursor.execute(file_chunks_table_check_sql)
         self.cursor.execute(cookie_table_check_sql)
         self.db_connection.commit()
     
@@ -207,30 +224,20 @@ class DB:
 
             
     def update_password(self, user_id: str, password: str) -> str:
-        password_update_sql = "UPDATE users SET password = ? WHERE id = ?"
-        try:
-            self.cursor.execute(password_update_sql, (password, user_id))
-            if self.cursor.rowcount == 0:
-                raise Exception("User ID not found")
-
-            self.db_connection.commit()
-            return "Password updated successfully"
-        except sqlite3.Error as e:
-            self.db_connection.rollback()
-            raise e
+        pass
 
 
     def delete_user(self, user_id: str, username: str) -> None:
-        delete_user_sql = "DELETE FROM users WHERE id = ? AND username = ?"
-        try:
-            self.cursor.execute(delete_user_sql, (user_id, username))
-            self.db_connection.commit()
-        except sqlite3 .Error as e:
-            self.db_connection.rollback()
-            raise e
+        pass
                 
-    def get_user_info(self, user_id: str) -> str:
-        user_info_sql = """SELECT username, creation_time, data_uploaded FROM users WHERE id = ?"""
+    def get_user_info(self, cookie_value: str) -> str:
+
+        try:
+            user_id = self.check_cookie(cookie_value)
+        except Exception as e:
+            raise e
+        
+        user_info_sql = """SELECT username, creation_time, data_uploaded, data_downloaded FROM users WHERE id = ?"""
         try:
             self.cursor.execute(user_info_sql, (user_id,))
             query_result = self.cursor.fetchone()
@@ -239,7 +246,8 @@ class DB:
                 user_info = {
                     'username': query_result[0],
                     'creation_time': query_result[1],
-                    'data_uploaded': query_result[2]
+                    'data_uploaded': query_result[2],
+                    'data_downloaded': query_result[3]
                 }
                 return user_info
             else:
@@ -250,31 +258,79 @@ class DB:
         except Exception as e:
             raise Exception(f"An unexpected error occurred: {e}")
         
-    def add_file(self, user_id: str, file_name: str, file_extension: str, file_content: bytes) -> None:# add a serial for reconstruction
-        file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
 
+    def add_file(self, cookie_value: str, file_name: str, server_key: str, chunk_count: int) -> None:
         try:
-            self.cursor.execute(file_count_sql, (user_id, file_name))
-            count = self.cursor.fetchone()[0]
+            user_id = self.check_cookie(cookie_value)
+            
+            existing_file_sql = """
+            SELECT version FROM files 
+            WHERE server_key = ? AND owner_id = ? AND file_name = ? AND is_latest = 1
+            """
+            self.cursor.execute(existing_file_sql, (server_key, user_id, file_name))
+            result = self.cursor.fetchone()
+            
+            if result:
+                current_version = result[0]
+                new_version = current_version + 1
 
-            if count > 0:
-                raise Exception("File already exists")
-
+                update_old_version_sql = """
+                UPDATE files SET is_latest = 0 WHERE server_key = ? AND owner_id = ? AND file_name = ? AND version = ?
+                """
+                self.cursor.execute(update_old_version_sql, (server_key, user_id, file_name, current_version))
+            else:
+                new_version = 1
+            
             file_insertion_sql = """
-            INSERT INTO files (owner_id, file_name, extension, content, last_changed)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO files (owner_id, file_name, server_key, version, is_latest, chunk_count, last_changed)
+            VALUES (?, ?, ?, ?, 1, ?, ?)
             """
             self.cursor.execute(file_insertion_sql, (
-                user_id, file_name, file_extension, file_content,
-                datetime.now().strftime("%d/%m/%Y %H:%M"))
-            )
+                user_id, file_name, server_key, new_version, chunk_count,
+                datetime.now().strftime("%d/%m/%Y %H:%M")
+            ))
+            
             self.db_connection.commit()
+
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
             self.db_connection.rollback()
             raise ve
+        
+    def upload_chunk(self,cookie_value: str ,server_key: str, index: int, content: bytes) -> None:
+        try:
+
+            self.check_cookie(cookie_value)
+            latest_file_sql = """
+            SELECT id FROM files 
+            WHERE server_key = ? AND is_latest = 1
+            """
+            self.cursor.execute(latest_file_sql, (server_key,))
+            result = self.cursor.fetchone()
+            
+            if not result:
+                raise ValueError("No file found with the given server key for the latest version.")
+            
+            file_id = result[0]
+
+            chunk_insertion_sql = """
+            INSERT INTO chunks (file_id, index, content)
+            VALUES (?, ?, ?)
+            """
+            self.cursor.execute(chunk_insertion_sql, (file_id, index, content))
+            
+            self.db_connection.commit()
+
+        except sqlite3.Error as e:
+            self.db_connection.rollback()
+            raise e
+        except ValueError as ve:
+            self.db_connection.rollback()
+            raise ve
+
+
 
     def remove_file(self, user_id: str, file_name: str) -> None:
         file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
