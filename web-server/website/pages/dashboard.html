@@ -10,7 +10,7 @@
 <body>
     <div class="dashboard">
         <div class="sidebar">
-            <div class="tab" id="overview-tab" onclick="switchTab('overview')">
+            <div class="tab" id="overview-tab" onclick="switchTab('overview');">
                 <img src="/resources/chart-icon.png" alt="Overview">
             </div>
             <div class="tab" id="files-tab" onclick="switchTab('files')">
@@ -21,7 +21,10 @@
             </div>
         </div>
         <div class="content">
-            <div id="overview" class="content-section hidden">Your stats here.</div>
+            <div id="overview" class="content-section hidden">
+                <canvas id="statsChart" style="max-width: 90%; max-height: 90%;"></canvas>
+                <div id="file_count"></div>
+            </div>
             <div id="files" class="content-section hidden">
                 <input type="file" id="file" style="display: none;" multiple>
                 <h1>Your Files</h1> Drag any file to upload.
@@ -41,6 +44,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script src ="/scripts/Authentication.js"></script>
     <script src="/scripts/dashboard.js"></script>

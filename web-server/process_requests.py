@@ -8,6 +8,7 @@ from utils.actions.user_login import login
 from utils.actions.auth_cookie import auth_cookie
 from utils.actions.upload_chunk import upload_chunk
 from utils.actions.upload_file import upload_file_info
+from utils.actions.user_data import user_data as fetch_user_data
 def process_req(http_request: json) -> bytes:
     """
     Receives a JSON parsed HTTP request and sends back an HTTP response.
@@ -56,7 +57,9 @@ def process_req(http_request: json) -> bytes:
                 case "PUT":
                     response = user_update(http_request["body"], response)
                 case "GET":
-                    response = fetch_user_data(http_request["body"], response)
+                    match http_request["path"]:
+                        case "info":
+                            response = fetch_user_data(http_request["cookies"], response)
         case "share":
             #download a file 
             pass
