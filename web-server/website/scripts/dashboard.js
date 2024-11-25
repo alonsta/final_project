@@ -36,7 +36,7 @@ async function loadUserStats() {
             data: {
                 labels: ['Uploaded Data (MB)', 'Downloaded Data (MB)'],
                 datasets: [{
-                    data: [uploaded, downloaded],
+                    data: [uploaded/(1024*1024), downloaded/(1024*1024)],
                     backgroundColor: ['#4caf50', '#2196f3'],
                     hoverBackgroundColor: ['#45a049', '#1e88e5']
                 }]

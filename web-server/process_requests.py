@@ -59,7 +59,7 @@ def process_req(http_request: json) -> bytes:
                 case "GET":
                     match http_request["path"]:
                         case "info":
-                            response = fetch_user_data(http_request["cookies"], response)
+                            response = fetch_user_data(http_request, response)
         case "share":
             #download a file 
             pass

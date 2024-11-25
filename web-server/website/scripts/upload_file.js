@@ -53,7 +53,7 @@ async function processFiles(password, files) {
         const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
 
         // Send file metadata to server
-        const success = await sendFileMetadata(fileId, encryptedFileName, chunkCount);
+        const success = await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
         if (!success) {
             console.error(`Failed to send file metadata for ${file.name}`);
             return;
@@ -103,7 +103,7 @@ async function encryptAndCompressChunk(chunkData, key) {
 }
 
 // Send file metadata to the server
-async function sendFileMetadata(fileId, encryptedFileName, chunkCount) {
+async function sendFileMetadata(fileId, encryptedFileName, chunkCount, Size) {
     try {
         const response = await fetch('/files/upload/file', {
             method: 'POST',
@@ -111,7 +111,8 @@ async function sendFileMetadata(fileId, encryptedFileName, chunkCount) {
             body: JSON.stringify({
                 server_key: fileId,
                 file_name: encryptedFileName,
-                chunk_count: chunkCount
+                chunk_count: chunkCount,
+                size: Size
             })
         });
         return response.ok;

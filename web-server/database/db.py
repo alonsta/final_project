@@ -29,6 +29,7 @@ class DB:
             version INTEGER DEFAULT 1,
             is_latest INTEGER DEFAULT 1,
             chunk_count INTEGER,
+            size INTEGER,
             last_changed TEXT NOT NULL,
             file_name TEXT NOT NULL,
             owner_id INTEGER NOT NULL,
@@ -237,7 +238,9 @@ class DB:
             raise e
         
         user_info_sql = """SELECT username, creation_time, data_uploaded, data_downloaded FROM users WHERE id = ?"""
+        file_count_sql = """SELECT id FROM files WHERE owner_id = ? AND version = 1"""
         try:
+            fileCount = len(self.cursor.execute(file_count_sql,(user_id,)).fetchall())
             self.cursor.execute(user_info_sql, (user_id,))
             query_result = self.cursor.fetchone()
             
@@ -245,8 +248,10 @@ class DB:
                 user_info = {
                     'username': query_result[0],
                     'creation_time': query_result[1],
-                    'data_uploaded': query_result[2],
-                    'data_downloaded': query_result[3]
+                    'uploaded': query_result[2],
+                    'downloaded': query_result[3],
+                    'success': "logged in",
+                    'fileCount': fileCount
                 }
                 return user_info
             else:
@@ -258,7 +263,7 @@ class DB:
             raise Exception(f"An unexpected error occurred: {e}")
         
 
-    def add_file(self, cookie_value: str, file_name: str, server_key: str, chunk_count: int) -> None:
+    def add_file(self, cookie_value: str, file_name: str, server_key: str, chunk_count: int, size: int) -> None:
         try:
             user_id = self.check_cookie(cookie_value)
             
@@ -281,13 +286,22 @@ class DB:
                 new_version = 1
             
             file_insertion_sql = """
-            INSERT INTO files (owner_id, file_name, server_key, version, is_latest, chunk_count, last_changed)
-            VALUES (?, ?, ?, ?, 1, ?, ?)
+            INSERT INTO files (owner_id, file_name, server_key, version, is_latest, chunk_count, size, last_changed)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """
             self.cursor.execute(file_insertion_sql, (
-                user_id, file_name, server_key, new_version, chunk_count,
+                user_id, file_name, server_key, new_version, 1, chunk_count, size,
                 datetime.now().strftime("%d/%m/%Y %H:%M")
             ))
+
+            user_upload_sql = """
+            SELECT data_uploaded FROM users WHERE id = ?
+            """
+            data_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
+            update_user_upload = """
+            UPDATE users SET data_uploaded = ? WHERE id = ?
+            """
+            self.cursor.execute(update_user_upload, (data_uploaded, user_id))
             
             self.db_connection.commit()
 
