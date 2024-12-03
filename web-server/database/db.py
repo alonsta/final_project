@@ -23,33 +23,21 @@ class DB:
         """
 
         files_table_check_sql = """
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            server_key TEXT NOT NULL,
-            version INTEGER DEFAULT 1,
-            is_latest INTEGER DEFAULT 1,
-            chunk_count INTEGER,
-            size INTEGER,
-            last_changed TEXT NOT NULL,
-            file_name TEXT NOT NULL,
-            owner_id INTEGER NOT NULL,
-            UNIQUE (server_key, version),
-            FOREIGN KEY (owner_id) REFERENCES users(id)
-        )
-        """
+                CREATE TABLE IF NOT EXISTS files (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    server_key TEXT NOT NULL,
+                    size INTEGER,
+                    last_changed TEXT NOT NULL,
+                    file_name TEXT NOT NULL,
+                    owner_id INTEGER NOT NULL,
+                    parent_id INTEGER,
+                    type INTEGER,
+                    status INTEGER,
+                    UNIQUE (server_key, version),
+                    FOREIGN KEY (owner_id) REFERENCES users(id)
+                )
+                """
 
-        file_chunks_table_check_sql ="""
-        CREATE TABLE IF NOT EXISTS chunks(
-            file_id INTEGER NOT NULL,
-            chunk_index INTEGER,
-            content BLOB NOT NULL,
-            FOREIGN KEY (file_id) REFERENCES files (id),
-            PRIMARY KEY (file_id, chunk_index)
-        )
-        """
-
-
-        
         cookie_table_check_sql = """
         CREATE TABLE IF NOT EXISTS cookies (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +52,6 @@ class DB:
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
-        self.cursor.execute(file_chunks_table_check_sql)
         self.cursor.execute(cookie_table_check_sql)
         self.db_connection.commit()
     
