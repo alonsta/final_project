@@ -5,10 +5,8 @@ const modal = document.getElementById('password-modal');
 const passwordInput = document.getElementById('password');
 const fileInput = document.getElementById('file');
 
-// Chunk size in bytes (e.g., 2 MB per chunk)
-const CHUNK_SIZE = 1024 * 1024 * 2;  // 2 MB
+const CHUNK_SIZE = 1024 * 1024 * 0.1;  // 100KB
 
-// Handle file drop events
 dropZone.addEventListener('dragenter', (e) => e.preventDefault());
 dropZone.addEventListener('dragover', (e) => e.preventDefault());
 dropZone.addEventListener('drop', handleFileDrop);
@@ -18,7 +16,6 @@ function handleFileDrop(e) {
     fileInput.files = e.dataTransfer.files;
     modal.style.display = 'flex';
     modal.classList.remove('hidden');
-    // Show the modal to enter password
 }
 
 cancelButton.addEventListener('click', () => {
@@ -27,7 +24,6 @@ cancelButton.addEventListener('click', () => {
     modal.style.display = 'none';
 });
 
-// Upload Button Click
 uploadButton.addEventListener('click', () => {
     const password = passwordInput.value;
     if (password.length < 8) {
@@ -40,98 +36,70 @@ uploadButton.addEventListener('click', () => {
     passwordInput.value = "";
 });
 
-// Process files by chunk and send metadata to server
 async function processFiles(password, files) {
     files.forEach(async (file) => {
         const fileId = generateRandomId();
         const key = generateEncryptionKey(password, fileId);
 
-        // Encrypt the file name
         const encryptedFileName = CryptoJS.AES.encrypt(file.name, key).toString();
 
-        // Calculate the number of chunks
-        const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+        const fileData = await readFile(file);
 
-        // Send file metadata to server
+        const processedFile = await encryptAndCompressFile(fileData, key);
+
+        const chunkCount = Math.ceil(processedFile.byteLength / CHUNK_SIZE);
+
         const success = await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
         if (!success) {
             console.error(`Failed to send file metadata for ${file.name}`);
             return;
         }
 
-        // Process and upload each chunk
-        for (let start = 0; start < file.size; start += CHUNK_SIZE) {
-            const chunk = file.slice(start, start + CHUNK_SIZE);
-            const chunkIndex = start / CHUNK_SIZE;
-
-            // Read each chunk as binary data (ArrayBuffer)
-            const chunkData = await readFileChunk(chunk);
-
-            // Encrypt and compress the chunk
-            const processedChunk = await encryptAndCompressChunk(chunkData, key);
-
-            // Upload the chunk to the server
-            await uploadChunkToServer(fileId, chunkIndex, processedChunk);
+        for (let start = 0; start < processedFile.byteLength; start += CHUNK_SIZE) {
+            const chunk = processedFile.slice(start, Math.min(start + CHUNK_SIZE, processedFile.byteLength));
+            const chunkIndex = Math.floor(start / CHUNK_SIZE);
+        
+            await uploadChunkToServer(fileId, chunkIndex, chunk);
         }
     });
 }
 
-// Read file chunk as ArrayBuffer
-function readFileChunk(chunk) {
+
+async function encryptAndCompressFile(fileData, key) {
+    try {
+        const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(fileData));
+
+        const encryptedData = CryptoJS.AES.encrypt(wordArray, key).toString();
+
+        const compressedData = pako.deflate(encryptedData);
+
+        return compressedData;
+    } catch (error) {
+        console.error("Error encrypting or compressing file:", error);
+        throw new Error('Failed to encrypt or compress file');
+    }
+}
+
+function readFile(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
         reader.onerror = reject;
-        reader.readAsArrayBuffer(chunk);  // Use readAsArrayBuffer for binary data
+        reader.readAsArrayBuffer(file);
     });
 }
 
-// Encrypt and compress the chunk
-async function encryptAndCompressChunk(chunkData, key) {
-    try {
-        // Encrypt the chunk using AES
-        const encryptedChunk = CryptoJS.AES.encrypt(CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(chunkData)), key).toString();
-
-        // Compress the encrypted chunk using pako (Deflate)
-        const compressedChunk = btoa(pako.deflate(encryptedChunk, { to: 'string' }));
-
-        return compressedChunk;
-    } catch (error) {
-        console.error("Error encrypting or compressing chunk:", error);
-        throw new Error('Failed to encrypt or compress chunk');
-    }
-}
-
-// Send file metadata to the server
-async function sendFileMetadata(fileId, encryptedFileName, chunkCount, Size) {
-    try {
-        const response = await fetch('/files/upload/file', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                server_key: fileId,
-                file_name: encryptedFileName,
-                chunk_count: chunkCount,
-                size: Size
-            })
-        });
-        return response.ok;
-    } catch (error) {
-        console.error('Error sending file metadata:', error);
-        return false;
-    }
-}
-
-// Upload chunk to the server
 async function uploadChunkToServer(fileId, chunkIndex, chunkData) {
     try {
+        const base64Chunk = btoa(String.fromCharCode.apply(null, chunkData));
+
         const response = await fetch('/files/upload/chunk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 server_key: fileId,
                 index: chunkIndex,
-                content: chunkData
+                content: base64Chunk
             })
         });
         if (response.ok) {
@@ -144,7 +112,6 @@ async function uploadChunkToServer(fileId, chunkIndex, chunkData) {
     }
 }
 
-// Helper functions
 function generateRandomId() {
     return Math.random().toString(36).substring(2, 15);
 }
@@ -154,3 +121,24 @@ function generateEncryptionKey(password, fileId) {
     const combined = fileId + masterHash;
     return CryptoJS.MD5(combined).toString();
 }
+
+async function sendFileMetadata(fileId, encryptedFileName, chunkCount, Size) {
+    try {
+        const response = await fetch('/files/upload/file', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                server_key: fileId,
+                file_name: encryptedFileName,
+                chunk_count: chunkCount,
+                size: Size
+            })
+        }); 
+        console.log("file metadata uploaded")
+        return response.ok;
+    } catch (error) {
+        console.error('Error sending file metadata:', error);
+        return false;
+    }
+}
+

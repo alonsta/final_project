@@ -11,7 +11,6 @@ def user_data(info, response):
     try:
         response["body"] = json.dumps(database_access.get_user_info(auth_cookie_value))
         response["response_code"] = "200"
-        print(response['body'])
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt create account","message": str(e)})
         print(e)

@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import *
 import uuid
-
+from os import makedirs
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -24,30 +24,30 @@ class DB:
 
         files_table_check_sql = """
                 CREATE TABLE IF NOT EXISTS files (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    server_key TEXT NOT NULL,
-                    size INTEGER,
-                    last_changed TEXT NOT NULL,
-                    file_name TEXT NOT NULL,
-                    owner_id INTEGER NOT NULL,
-                    parent_id INTEGER,
-                    type INTEGER,
-                    status INTEGER,
-                    UNIQUE (server_key, version),
-                    FOREIGN KEY (owner_id) REFERENCES users(id)
-                )
-                """
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                server_key TEXT NOT NULL,
+                size INTEGER,
+                created TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                chunk_count INTEGER NOT NULL,
+                owner_id INTEGER NOT NULL,
+                parent_id INTEGER,
+                type INTEGER,
+                status INTEGER,
+                FOREIGN KEY (owner_id) REFERENCES users(id)
+            )
+            """
 
         cookie_table_check_sql = """
-        CREATE TABLE IF NOT EXISTS cookies (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key TEXT NOT NULL,
-            value TEXT NOT NULL,
-            expiration TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            FOREIGN KEY (owner_id) REFERENCES users (id)
-        )
-        """
+            CREATE TABLE IF NOT EXISTS cookies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL,
+                expiration TEXT NOT NULL,
+                owner_id TEXT NOT NULL,
+                FOREIGN KEY (owner_id) REFERENCES users (id)
+            )
+            """
         
 
         self.cursor.execute(users_table_check_sql)
@@ -145,7 +145,6 @@ class DB:
         """
         user_check_sql = "SELECT 1 FROM users WHERE username = ? AND password = ?"
         user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded, data_downloaded) VALUES (?, ?, ?, ?, ?, ?)"
-        
         try:
             self.cursor.execute(user_check_sql, (username, password))
             if self.cursor.fetchone():
@@ -159,6 +158,7 @@ class DB:
             ))
             
             cookie = self.create_cookie(user_id)
+            
             self.db_connection.commit()
             return cookie
         
@@ -225,7 +225,7 @@ class DB:
             raise e
         
         user_info_sql = """SELECT username, creation_time, data_uploaded, data_downloaded FROM users WHERE id = ?"""
-        file_count_sql = """SELECT id FROM files WHERE owner_id = ? AND version = 1"""
+        file_count_sql = """SELECT id FROM files WHERE owner_id = ?"""
         try:
             fileCount = len(self.cursor.execute(file_count_sql,(user_id,)).fetchall())
             self.cursor.execute(user_info_sql, (user_id,))
@@ -250,36 +250,30 @@ class DB:
             raise Exception(f"An unexpected error occurred: {e}")
         
 
-    def add_file(self, cookie_value: str, file_name: str, server_key: str, chunk_count: int, size: int) -> None:
+    def add_file(self, cookie_value: str, file_name: str, parent_name: str,server_key: str, chunk_count: int, size: int) -> None:
         try:
             user_id = self.check_cookie(cookie_value)
-            
-            existing_file_sql = """
-            SELECT version FROM files 
-            WHERE server_key = ? AND owner_id = ? AND file_name = ? AND is_latest = 1
+            username = self.cursor.execute("SELECT username FROM users WHERE id = ?",(user_id,)).fetchone()[0]
+            seek_parent_id_sql = """
+            SELECT id FROM files WHERE file_name = ?
             """
-            self.cursor.execute(existing_file_sql, (server_key, user_id, file_name))
-            result = self.cursor.fetchone()
-            
-            if result:
-                current_version = result[0]
-                new_version = current_version + 1
-
-                update_old_version_sql = """
-                UPDATE files SET is_latest = 0 WHERE server_key = ? AND owner_id = ? AND file_name = ? AND version = ?
-                """
-                self.cursor.execute(update_old_version_sql, (server_key, user_id, file_name, current_version))
+            parent_id = self.cursor.execute(seek_parent_id_sql,(parent_name,)).fetchone()
+            if parent_id == None:
+                parent_id = None
             else:
-                new_version = 1
-            
+                parent_name = parent_name[0]
+
             file_insertion_sql = """
-            INSERT INTO files (owner_id, file_name, server_key, version, is_latest, chunk_count, size, last_changed)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             self.cursor.execute(file_insertion_sql, (
-                user_id, file_name, server_key, new_version, 1, chunk_count, size,
-                datetime.now().strftime("%d/%m/%Y %H:%M")
+                user_id, file_name, server_key, chunk_count, size,
+                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, 1, 0
             ))
+            makedirs(f"web-server\\database\\files\\{user_id}",exist_ok=True)
+            open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "wb")
+            
 
             user_upload_sql = """
             SELECT data_uploaded FROM users WHERE id = ?
@@ -299,30 +293,20 @@ class DB:
             self.db_connection.rollback()
             raise ve
         
-    def upload_chunk(self,cookie_value: str ,server_key: str, index: int, content: bytes) -> None:
+    def upload_chunk(self,cookie_value: str ,server_key: str, index: int, content: str) -> None:
         try:
 
-            self.check_cookie(cookie_value)
-            latest_file_sql = """
-            SELECT id FROM files 
-            WHERE server_key = ? AND is_latest = 1
+            user_id = self.check_cookie(cookie_value)
+            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "wb") as file:
+                file.write(content.encode())
+            
+            check_file_complete = """
+            SELECT chunk_count FROM files where server_key = ?
             """
-            self.cursor.execute(latest_file_sql, (server_key,))
-            result = self.cursor.fetchone()
-            
-            if not result:
-                raise ValueError("No file found with the given server key for the latest version.")
-            
-            file_id = result[0]
-
-            chunk_insertion_sql = """
-            INSERT INTO chunks (file_id, chunk_index, content)
-            VALUES (?, ?, ?)
-            """
-            self.cursor.execute(chunk_insertion_sql, (file_id, index, content))
-            
-            self.db_connection.commit()
-
+            count = self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0]
+            if index == count:
+                self.cursor.execute("UPDATE files SET status = 1 WHERE server_key = ?", (server_key,))
+                self.db_connection.commit()
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
