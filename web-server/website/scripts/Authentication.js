@@ -20,3 +20,6 @@ async function checkAuthentication() {
 }
 
 checkAuthentication();
+setInterval(()=>{
+    checkAuthentication();
+},100000)

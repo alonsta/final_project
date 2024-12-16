@@ -334,25 +334,34 @@ class DB:
             print(ve)
             self.db_connection.rollback()
 
-    def get_files_summary(self, user_id: str) -> str:
-        get_files_sql = """
-        SELECT file_name, extension, LENGTH(content) as size, last_changed
-        FROM files WHERE owner_id = ?
-        """
-        self.cursor.execute(get_files_sql, (user_id,))
-        rows = self.cursor.fetchall()
+    def get_files_summary(self, cookie_value: str, key: str = None) -> str:
+        try:
+            user_id = self.check_cookie(cookie_value)
+            get_files_sql = """
+            SELECT id, server_key, file_name, size, created, parent_id, type
+            FROM files WHERE owner_id = ?
+            """
+            self.cursor.execute(get_files_sql, (user_id,))
+            rows = self.cursor.fetchall()
 
-        files_summary = []
-        for row in rows:
-            file_summary = {
-                'file_name': row[0],
-                'extension': row[1],
-                'size': row[2],
-                'last_changed': row[3]
-            }
-            files_summary.append(file_summary)
+            files_summary = []
+            for row in rows:
+                file_summary = {
+                    'id': row[0],
+                    'server_key': row[1],
+                    'file_name': row[2],
+                    'size': row[3],
+                    'created': row[4],
+                    'parent_id': row[5],
+                    'type': row[6]
+                }
+                files_summary.append(file_summary)
+            return json.dumps(files_summary, indent=4)
+        except sqlite3.Error as e:
+            raise e
+        except Exception as e:
+            raise e
 
-        return json.dumps(files_summary, indent=4)
 
     def get_file(self, user_id: str, file_name: str) -> bytes:
         get_file_sql = "SELECT content FROM files WHERE owner_id = ? AND file_name = ?"

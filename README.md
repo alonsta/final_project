@@ -38,3 +38,5 @@ def create_custom_exe(client_name, env_path):
         "--add-data", f"{env_path};.",
         "main.py"
     ])
+
+אני אתחיל לעבוד על האפליקציה כי ירדה לי קצת המוטיבציה לווב.

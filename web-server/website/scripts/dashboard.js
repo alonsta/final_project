@@ -27,10 +27,8 @@ async function loadUserStats() {
         const stats = await response.json();
         const { username, uploaded, downloaded, fileCount } = stats;
 
-        // Update the file count display
         fileCountDiv.innerHTML = `<strong>Total Files: </strong>${fileCount}`;
 
-        // Create the pie chart
         new Chart(ctx, {
             type: 'pie',
             data: {
@@ -58,6 +56,7 @@ async function loadUserStats() {
         });
 
     } catch (error) {
+        console.log(error)
         console.error('Error loading user stats:', error);
         overviewDiv.innerHTML = `<p>Sorry, we couldn't load your stats. Please try again later.</p>`;
     }
