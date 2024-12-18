@@ -9,6 +9,7 @@ from utils.actions.auth_cookie import auth_cookie
 from utils.actions.upload_chunk import upload_chunk
 from utils.actions.upload_file import upload_file_info
 from utils.actions.user_data import user_data as fetch_user_data
+from utils.actions.get_app import get_app
 def process_req(http_request: json) -> bytes:
     """
     Receives a JSON parsed HTTP request and sends back an HTTP response.
@@ -79,7 +80,10 @@ def process_req(http_request: json) -> bytes:
                             response = download_file(http_request["body"], response)
                         case "info":
                             response = get_file_info(http_request["body"], response)
-
+        case "app":
+            match http_request["method"]:
+                case "GET":
+                    response = get_app(http_request["body"], response)
     
 
     return response
