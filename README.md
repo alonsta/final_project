@@ -29,14 +29,4 @@ I think this project if executed to the fullest will take over 400h.
 
 זה שובר לי את המוח רצח אוקיי? אז בעצם כשהיוזר פותח תיקייה חדשה בשרת זה מתווסף לדאטאבייס אבל לא לאחסון 
 במציאות כל קובץ בינארי ישמר בתיקייה אחת של הרוט של היוזר
-import subprocess
-
-def create_custom_exe(client_name, env_path):
-    subprocess.run([
-        "pyinstaller",
-        "--onefile",
-        "--add-data", f"{env_path};.",
-        "main.py"
-    ])
-
 אני אתחיל לעבוד על האפליקציה כי ירדה לי קצת המוטיבציה לווב.
