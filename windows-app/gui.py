@@ -1,8 +1,17 @@
+from admin import is_admin, run_as_admin
+from config import Config
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from config import Config
-from admin import is_admin, run_as_admin
-from service import FileSyncService  # Import the service class
+from service import FileSyncService
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set logging level to INFO
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filename="app.log",  # Optional: log to a file (e.g., app.log)
+    filemode="a"         # Append to the log file
+)
 
 class Application(tk.Tk):
     def __init__(self):
@@ -42,7 +51,7 @@ class Application(tk.Tk):
         for row, (field, label, is_password, *args) in enumerate(field_configs):
             ttk.Label(main_frame, text=label).grid(row=row, column=0, sticky="w", pady=10)
             
-            entry = ttk.Entry(main_frame, show="●" if is_password else None)
+            entry = ttk.Entry(main_frame, show="●" if is_password else None, state="normal")
             entry.grid(row=row, column=1, sticky="ew", padx=5)
             self.fields[field] = entry
 
@@ -84,24 +93,37 @@ class Application(tk.Tk):
             return
 
         try:
+            logging.info(f"Saving configuration: {config_data}")
             self.config_manager.save(config_data)
             messagebox.showinfo("Success", "Configuration saved successfully")
         except Exception as e:
+            logging.error(f"Failed to save configuration: {e}")
             messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
 
     def load_config(self):
         try:
             config_data = self.config_manager.load()
+            logging.info(f"Loading configuration: {config_data}")
             for field, value in config_data.items():
                 if field in self.fields:
-                    self.fields[field].insert(0, value)
+                    self.fields[field].delete(0, tk.END)  # Clear existing text
+                    if value is not None:  # Ensure the value is not None
+                        self.fields[field].insert(0, value)  # Insert new value
+            messagebox.showinfo("Success", "Configuration loaded successfully")
         except Exception as e:
+            logging.error(f"Failed to load configuration: {e}")
             messagebox.showerror("Error", f"Failed to load configuration: {str(e)}")
 
     def install_and_start_service(self):
         try:
-            FileSyncService.install_service()  # Install the service
-            FileSyncService.start_service()    # Start the service
-            messagebox.showinfo("Success", "Service installed and started successfully.")
+            FileSyncService.install()  # Install the service
+            FileSyncService.start()    # Start the service
+            logging.info("Service installed and started successfully.")
+            messagebox.showinfo("Success", "Service installed and started successfully. restart to start operation")
         except Exception as e:
+            logging.error(f"Failed to install or start service: {e}")
             messagebox.showerror("Error", f"Failed to install or start service: {e}")
+
+if __name__ == "__main__":
+    app = Application()
+    app.mainloop()

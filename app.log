@@ -1,0 +1,66 @@
+2024-12-23 17:49:59,462 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 17:49:59,463 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 17:49:59,463 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 17:49:59,466 - INFO - Configuration file loaded successfully
+2024-12-23 17:49:59,468 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 17:49:59,468 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 17:50:10,065 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
+2024-12-23 17:50:10,093 - INFO - Passwords saved securely in keyring
+2024-12-23 17:50:10,093 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
+2024-12-23 17:54:29,495 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 17:54:29,496 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 17:54:29,496 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 17:54:29,500 - INFO - Configuration file loaded successfully
+2024-12-23 17:54:29,502 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 17:54:29,502 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 17:54:32,129 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
+2024-12-23 17:54:32,156 - INFO - Passwords saved securely in keyring
+2024-12-23 17:54:32,156 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
+2024-12-23 17:54:34,016 - ERROR - Failed to install service: (1073, 'CreateService', 'The specified service already exists.')
+2024-12-23 17:54:34,016 - ERROR - Failed to install or start service: (1073, 'CreateService', 'The specified service already exists.')
+2024-12-23 17:56:19,497 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 17:56:19,497 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 17:56:19,497 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 17:56:19,501 - INFO - Configuration file loaded successfully
+2024-12-23 17:56:19,503 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 17:56:19,503 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 17:56:22,929 - INFO - Service installed successfully.
+2024-12-23 17:56:22,968 - INFO - Service started successfully.
+2024-12-23 17:56:22,968 - INFO - Service installed and started successfully.
+2024-12-23 18:00:44,899 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 18:00:44,899 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 18:00:44,899 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 18:00:44,903 - INFO - Configuration file loaded successfully
+2024-12-23 18:00:44,905 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 18:00:44,905 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 18:00:46,890 - INFO - Service installed successfully.
+2024-12-23 18:00:46,942 - INFO - Service started successfully.
+2024-12-23 18:00:46,943 - INFO - Service installed and started successfully.
+2024-12-23 18:40:33,819 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 18:40:33,819 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 18:40:33,819 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 18:40:33,823 - INFO - Configuration file loaded successfully
+2024-12-23 18:40:33,825 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 18:40:33,825 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 18:40:37,210 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
+2024-12-23 18:40:37,223 - INFO - Passwords saved securely in keyring
+2024-12-23 18:40:37,224 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
+2024-12-23 18:40:39,064 - INFO - Service installed successfully.
+2024-12-23 18:40:39,107 - INFO - Service started successfully.
+2024-12-23 18:40:39,107 - INFO - Service installed and started successfully.
+2024-12-23 18:58:52,251 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 18:58:52,260 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 18:58:52,260 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 18:58:52,268 - INFO - Configuration file loaded successfully
+2024-12-23 18:58:52,270 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 18:58:52,270 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 18:58:56,776 - ERROR - Failed to install or start service: type object 'FileSyncService' has no attribute 'install_service'
+2024-12-23 19:00:28,047 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
+2024-12-23 19:00:28,047 - INFO - Program directory ensured: C:\ProgramData\SyncApp
+2024-12-23 19:00:28,047 - INFO - Keyring backend set to Windows.WinVaultKeyring
+2024-12-23 19:00:28,050 - INFO - Configuration file loaded successfully
+2024-12-23 19:00:28,052 - INFO - Passwords retrieved from keyring successfully
+2024-12-23 19:00:28,052 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
+2024-12-23 19:00:31,873 - INFO - Service installed successfully
+2024-12-23 19:00:31,915 - INFO - Service started successfully
+2024-12-23 19:00:31,915 - INFO - Service installed and started successfully.
