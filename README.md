@@ -30,3 +30,6 @@ I think this project if executed to the fullest will take over 400h.
 זה שובר לי את המוח רצח אוקיי? אז בעצם כשהיוזר פותח תיקייה חדשה בשרת זה מתווסף לדאטאבייס אבל לא לאחסון 
 במציאות כל קובץ בינארי ישמר בתיקייה אחת של הרוט של היוזר
 אני אתחיל לעבוד על האפליקציה כי ירדה לי קצת המוטיבציה לווב.
+
+
+pyinstaller --onefile --hidden-import httpx --hidden-import servicemanager --hidden-import win32serviceutil --hidden-import win32service --hidden-import win32event --hidden-import win32timezone --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import ctypes --hidden-import socket --name "SyncApp" --icon=app.ico final.py

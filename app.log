@@ -1,66 +1,33 @@
-2024-12-23 17:49:59,462 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 17:49:59,463 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 17:49:59,463 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 17:49:59,466 - INFO - Configuration file loaded successfully
-2024-12-23 17:49:59,468 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 17:49:59,468 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 17:50:10,065 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
-2024-12-23 17:50:10,093 - INFO - Passwords saved securely in keyring
-2024-12-23 17:50:10,093 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
-2024-12-23 17:54:29,495 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 17:54:29,496 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 17:54:29,496 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 17:54:29,500 - INFO - Configuration file loaded successfully
-2024-12-23 17:54:29,502 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 17:54:29,502 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 17:54:32,129 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
-2024-12-23 17:54:32,156 - INFO - Passwords saved securely in keyring
-2024-12-23 17:54:32,156 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
-2024-12-23 17:54:34,016 - ERROR - Failed to install service: (1073, 'CreateService', 'The specified service already exists.')
-2024-12-23 17:54:34,016 - ERROR - Failed to install or start service: (1073, 'CreateService', 'The specified service already exists.')
-2024-12-23 17:56:19,497 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 17:56:19,497 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 17:56:19,497 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 17:56:19,501 - INFO - Configuration file loaded successfully
-2024-12-23 17:56:19,503 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 17:56:19,503 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 17:56:22,929 - INFO - Service installed successfully.
-2024-12-23 17:56:22,968 - INFO - Service started successfully.
-2024-12-23 17:56:22,968 - INFO - Service installed and started successfully.
-2024-12-23 18:00:44,899 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 18:00:44,899 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 18:00:44,899 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 18:00:44,903 - INFO - Configuration file loaded successfully
-2024-12-23 18:00:44,905 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 18:00:44,905 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 18:00:46,890 - INFO - Service installed successfully.
-2024-12-23 18:00:46,942 - INFO - Service started successfully.
-2024-12-23 18:00:46,943 - INFO - Service installed and started successfully.
-2024-12-23 18:40:33,819 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 18:40:33,819 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 18:40:33,819 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 18:40:33,823 - INFO - Configuration file loaded successfully
-2024-12-23 18:40:33,825 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 18:40:33,825 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 18:40:37,210 - INFO - Saving configuration: {'username': 'alon', 'password': '12345678', 'file_password': '12345678', 'file_location': 'C:/Users/alons/Documents'}
-2024-12-23 18:40:37,223 - INFO - Passwords saved securely in keyring
-2024-12-23 18:40:37,224 - INFO - Configuration saved to C:\ProgramData\SyncApp\config.json
-2024-12-23 18:40:39,064 - INFO - Service installed successfully.
-2024-12-23 18:40:39,107 - INFO - Service started successfully.
-2024-12-23 18:40:39,107 - INFO - Service installed and started successfully.
-2024-12-23 18:58:52,251 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 18:58:52,260 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 18:58:52,260 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 18:58:52,268 - INFO - Configuration file loaded successfully
-2024-12-23 18:58:52,270 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 18:58:52,270 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 18:58:56,776 - ERROR - Failed to install or start service: type object 'FileSyncService' has no attribute 'install_service'
-2024-12-23 19:00:28,047 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 19:00:28,047 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 19:00:28,047 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 19:00:28,050 - INFO - Configuration file loaded successfully
-2024-12-23 19:00:28,052 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 19:00:28,052 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 19:00:31,873 - INFO - Service installed successfully
-2024-12-23 19:00:31,915 - INFO - Service started successfully
-2024-12-23 19:00:31,915 - INFO - Service installed and started successfully.
+2024-12-24 11:34:46,971 - INFO - No configuration file found at c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:35:07,715 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:35:15,301 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:51:13,479 - INFO - No configuration file found at c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:51:36,476 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:51:39,421 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:51:41,827 - INFO - Service FileSyncService does not exist or error: (1060, 'GetServiceKeyName', 'The specified service does not exist as an installed service.')
+2024-12-24 11:51:46,878 - ERROR - Error installing service: 'NoneType' object cannot be interpreted as an integer
+2024-12-24 11:51:46,879 - ERROR - Failed to install or start service: 'NoneType' object cannot be interpreted as an integer
+2024-12-24 11:52:07,732 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:54:37,863 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:54:40,231 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:54:41,523 - WARNING - Error stopping service: (1062, 'ControlService', 'The service has not been started.')
+2024-12-24 11:54:41,540 - INFO - Service FileSyncService removed successfully
+2024-12-24 11:54:48,543 - ERROR - Failed to install or start service: type object 'FileSyncService' has no attribute 'install'
+2024-12-24 11:55:14,158 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:55:15,414 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 11:55:16,744 - INFO - Service FileSyncService does not exist or error: (1060, 'GetServiceKeyName', 'The specified service does not exist as an installed service.')
+2024-12-24 11:55:21,797 - ERROR - Error installing service: 'NoneType' object cannot be interpreted as an integer
+2024-12-24 11:55:21,798 - ERROR - Failed to install or start service: 'NoneType' object cannot be interpreted as an integer
+2024-12-24 12:01:13,108 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:01:14,753 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:01:16,022 - INFO - Service FileSyncService does not exist or error: (1060, 'GetServiceKeyName', 'The specified service does not exist as an installed service.')
+2024-12-24 12:01:26,062 - ERROR - Failed to install or start service: type object 'FileSyncService' has no attribute 'start_service'
+2024-12-24 12:02:59,375 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:03:00,424 - INFO - Configuration saved successfully to c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:03:03,484 - INFO - Service FileSyncService does not exist or error: (1072, 'DeleteService', 'The specified service has been marked for deletion.')
+2024-12-24 12:03:13,509 - ERROR - Error starting service: (1058, 'StartService', 'The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.')
+2024-12-24 12:03:13,511 - ERROR - Failed to install or start service: (1058, 'StartService', 'The service cannot be started, either because it is disabled or because it has no enabled devices associated with it.')
+2024-12-24 12:05:08,771 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:06:47,831 - INFO - Configuration loaded successfully from c:\Users\alons\.vscode\vs_code-projects\final_project\windows-app\config\config.json
+2024-12-24 12:06:49,603 - INFO - Service FileSyncService does not exist or error: (1060, 'GetServiceKeyName', 'The specified service does not exist as an installed service.')
+2024-12-24 12:06:59,874 - INFO - Service FileSyncService started successfully

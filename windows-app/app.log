@@ -1,9 +1,0 @@
-2024-12-23 19:20:59,622 - INFO - Initializing Config. Program directory: C:\ProgramData\SyncApp, Config path: C:\ProgramData\SyncApp\config.json
-2024-12-23 19:20:59,623 - INFO - Program directory ensured: C:\ProgramData\SyncApp
-2024-12-23 19:20:59,623 - INFO - Keyring backend set to Windows.WinVaultKeyring
-2024-12-23 19:20:59,626 - INFO - Configuration file loaded successfully
-2024-12-23 19:20:59,628 - INFO - Passwords retrieved from keyring successfully
-2024-12-23 19:20:59,628 - INFO - Loading configuration: {'username': 'alon', 'file_location': 'C:/Users/alons/Documents', 'password': '12345678', 'file_password': '12345678'}
-2024-12-23 19:21:01,466 - INFO - Service installed successfully
-2024-12-23 19:21:01,507 - INFO - Service started successfully
-2024-12-23 19:21:01,507 - INFO - Service installed and started successfully.
