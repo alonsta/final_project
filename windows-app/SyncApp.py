@@ -11,6 +11,10 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import sys
 import pyuac
+import httpx
+import win32event
+import win32api
+import winerror
 
 # Set keyring backend
 keyring.set_keyring(WinVaultKeyring())
@@ -120,11 +124,15 @@ class FileEventHandler(FileSystemEventHandler):
 
 def add_to_startup():
     try:
+        if not pyuac.isUserAdmin():
+            pyuac.runAsAdmin()
+            return
+
         shell = win32com.client.Dispatch("WScript.Shell")
         startup_folder = shell.SpecialFolders("Startup")
         shortcut_path = os.path.join(startup_folder, f"{APP_NAME}.lnk")
 
-        exe_path = sys.executable  # Path to the current executable
+        exe_path = sys.executable
         if exe_path.endswith(".exe"):
             target_path = exe_path
         else:
@@ -132,7 +140,7 @@ def add_to_startup():
 
         shortcut = shell.CreateShortCut(shortcut_path)
         shortcut.TargetPath = target_path
-        shortcut.Arguments = "--background"  # Add argument for background mode
+        shortcut.Arguments = "--background"
         shortcut.WorkingDirectory = os.path.dirname(target_path)
         shortcut.IconLocation = target_path
         shortcut.save()
@@ -141,6 +149,17 @@ def add_to_startup():
     except Exception as e:
         logger.error(f"Failed to create startup shortcut: {e}")
         raise RuntimeError(f"Failed to create startup shortcut: {e}")
+
+def is_another_instance_running():
+    mutex_name = f"{APP_NAME}_MUTEX"
+    try:
+        mutex = win32event.CreateMutex(None, False, mutex_name)
+        if win32api.GetLastError() == winerror.ERROR_ALREADY_EXISTS:
+            return True
+    except Exception as e:
+        logger.error(f"Failed to check mutex: {e}")
+        return False
+    return False
 
 
 class Application(tk.Tk):
@@ -225,18 +244,18 @@ class Application(tk.Tk):
 
 
 def main():
+    if is_another_instance_running():
+        logger.error("Another instance of the application is already running.")
+        sys.exit(1)
+
     logger.info("Starting FileSyncApp")
     
-    # Check if running in background mode
     if "--background" in sys.argv:
         if not pyuac.isUserAdmin():
             logger.error("Background mode requires admin privileges")
-            try:
-                pyuac.runAsAdmin()
-            except Exception as e:
-                logger.error(f"Failed to obtain admin privileges: {e}")
-                sys.exit(1)
-        
+            pyuac.runAsAdmin()
+            return
+
         logger.info("Running in background mode")
         try:
             config = Config()
@@ -263,7 +282,6 @@ def main():
             logger.error(f"Background mode failed: {e}")
         sys.exit(0)
 
-    # Manual launch logic
     if not pyuac.isUserAdmin():
         logger.info("Manual launch without admin - opening GUI")
         try:
