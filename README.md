@@ -32,4 +32,4 @@ I think this project if executed to the fullest will take over 400h.
 אני אתחיל לעבוד על האפליקציה כי ירדה לי קצת המוטיבציה לווב.
 
 
-pyinstaller --onefile --hidden-import httpx --hidden-import servicemanager --hidden-import win32serviceutil --hidden-import win32service --hidden-import win32event --hidden-import win32timezone --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import ctypes --hidden-import socket --name "SyncApp" --icon=app.ico final.py
+pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import socket --hidden-import pyuac --name "SyncApp" --icon=app.ico --noconsole SyncApp.py

@@ -2,17 +2,16 @@
 
 
 a = Analysis(
-    ['final.py'],
+    ['SyncApp.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=['httpx', 'servicemanager', 'win32serviceutil', 'win32service', 'win32event', 'win32timezone', 'keyring.backends.Windows', 'watchdog', 'watchdog.events', 'watchdog.observers', 'tkinter', 'ctypes', 'socket'],
+    hiddenimports=['httpx', 'win32event', 'keyring.backends.Windows', 'watchdog', 'watchdog.events', 'watchdog.observers', 'tkinter', 'socket', 'pyuac'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
 )
 pyz = PYZ(a.pure)
 
@@ -29,7 +28,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

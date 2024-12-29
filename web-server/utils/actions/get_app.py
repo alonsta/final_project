@@ -11,7 +11,7 @@ def get_app(http_request: dict, response: dict) -> dict:
     :return: The response dictionary containing file content and headers.
     """
     # Path to the .exe file
-    path_to_app = f"{os.getcwd()}\\windows-app\\fake.exe"
+    path_to_app = f"{os.getcwd()}\\windows-app\\dist\\SyncApp.exe"
 
     try:
         # Ensure the file exists
