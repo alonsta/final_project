@@ -47,7 +47,7 @@ pyinstaller --onefile \
 A file management system with a Windows app and a web client that can store data quickly and allow quick download to any PC.
 
 - **Web Server**: Used for signup/login, allows manual file upload to the cloud and download, and configure sync settings.
-- **App**: No GUI Python instance that updates local files when changed in the cloud, has a signature so you don't have to enter a password.
+- **App**: Python instance that updates local files when changed in the cloud, has a signature so you don't have to enter a password. (feat' gui elements for var setting.)
 
 ### Key Features
 
