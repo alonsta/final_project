@@ -1,35 +1,40 @@
-# Project idea: 
-A file management system with a windows app and a web client that can store data quickly and allow quick download to any pc.
+# File Sharing System
 
-- Web server - used to signup/login. allowes to manually upload files to the cloud and download them + configure sync settings.
-- App - no gui python instance that updates local files when changed in the cloud, has a signiture so you dont have to enter password.
+A file management system with a Windows app and web client for quick data storage and cross-PC downloads.
 
+## Components
 
-- Encryptions: make sure the files are encrypted and compressed when uploaded in a way that only the original user can decode.
-- Storage: support most popular files and zips them automatically for better performance.
+- **Web Server**: Used for signup/login, manual file upload/download, and sync settings configuration
+- **Windows App**: Background Python process that syncs local files with cloud changes, using signature-based authentication
 
-## Hardest part: the windows app will be very hard to make. it will need an installer and admin priv to change registry level files.
+## Key Features
 
-I will start with a proof of concept to make sure the hardest parts are possible. it will be minimalistic. then ill create the api - the web server and lastly the app.
+- **Encryption**: Files are encrypted and compressed so only the original user can decode
+- **Storage**: Supports most popular file types with automatic compression for better performance
 
-New things ill have to learn: sqlite3, node.js, html, css, electron.js windows, ++++.
+## Technical Notes
 
-I think this project if executed to the fullest will take over 400h.
+### Building the Windows App
 
+To build the executable, run:
 
-
-
-דיברתי עם מוטי. הבנו דרך מעניינת לבצע הצפנה ואת השיתוף של קבצים.
-בזמן העלאה ראשונה המשתמש יזין מאסטר פסוורד בגאווה אני אעשה האש לסיסמאת מאסטר והאש לאיי די מגונרט של הקובץ. אני אחבר אותם ואמעך בעזרת האש כדי להשיג סיסמה מיוחדת לאיי אי אס להצפנת הקובץ. שם הקובץ שישלח לשרת והתוכן יוצפנו עם הסיסמא המיוחדת.
-בזמן שיתוף המשתמש יקבל מייל עם יו אר אל עם ה איי די הספציפי של הקובץ המשותף וסיסמא לתוכן שלו לאחר פתיחת הקישור יתבקש להזין את הסיסמא ויקבל קובץ להורדה.
-
-
-בעקרון עכשיו אני אעבוד על החיבור של כל פעולה בסרבר לדאטאבייס ועל הדפי איץ טי אמ אל בו זמנית בפיתוח מקביל
-יש לי רעיון לאיך לעשות את הקובץ הרצה המיוחד
-
-זה שובר לי את המוח רצח אוקיי? אז בעצם כשהיוזר פותח תיקייה חדשה בשרת זה מתווסף לדאטאבייס אבל לא לאחסון 
-במציאות כל קובץ בינארי ישמר בתיקייה אחת של הרוט של היוזר
-אני אתחיל לעבוד על האפליקציה כי ירדה לי קצת המוטיבציה לווב.
-
-
-pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import winerror --hidden-import win32api --hidden-import win32event --hidden-import socket --hidden-import pyuac --hidden-import httpx --name "SyncApp" --icon=app.ico --noconsole SyncApp.py
+```bash
+pyinstaller --onefile \
+    --hidden-import httpx \
+    --hidden-import win32event \
+    --hidden-import keyring.backends.Windows \
+    --hidden-import watchdog \
+    --hidden-import watchdog.events \
+    --hidden-import watchdog.observers \
+    --hidden-import tkinter \
+    --hidden-import socket \
+    --hidden-import pyuac \
+    --hidden-import tendo \
+    --hidden-import psutil \
+    --hidden-import time \
+    --hidden-import subprocess \
+    --name "SyncApp" \
+    --icon=app.ico \
+    --noconsole \
+    SyncApp.py
+```
