@@ -27,6 +27,9 @@ pyinstaller --onefile \
     --hidden-import watchdog.events \
     --hidden-import watchdog.observers \
     --hidden-import tkinter \
+    --hidden-import winerror \
+    --hidden-import win32api \
+    --hidden-import win32event \
     --hidden-import socket \
     --hidden-import pyuac \
     --hidden-import tendo \
@@ -38,3 +41,48 @@ pyinstaller --onefile \
     --noconsole \
     SyncApp.py
 ```
+
+## Project Idea
+
+A file management system with a Windows app and a web client that can store data quickly and allow quick download to any PC.
+
+- **Web Server**: Used for signup/login, allows manual file upload to the cloud and download, and configure sync settings.
+- **App**: No GUI Python instance that updates local files when changed in the cloud, has a signature so you don't have to enter a password.
+
+### Key Features
+
+- **Encryption**: Ensure the files are encrypted and compressed when uploaded in a way that only the original user can decode.
+- **Storage**: Support most popular files and zip them automatically for better performance.
+
+### Challenges
+
+The Windows app will be very hard to make. It will need an installer and admin privileges to change registry level files.
+
+### Development Plan
+
+1. Start with a proof of concept to make sure the hardest parts are possible. It will be minimalistic.
+2. Create the API - the web server.
+3. Lastly, develop the app.
+
+### New Technologies to Learn
+
+- SQLite3
+- Node.js
+- HTML
+- CSS
+- Electron.js Windows
+
+### Estimated Time
+
+I think this project, if executed to the fullest, will take over 400 hours.
+
+### Encryption and File Sharing
+
+דיברתי עם מוטי. הבנו דרך מעניינת לבצע הצפנה ואת השיתוף של קבצים.
+בזמן העלאה ראשונה המשתמש יזין מאסטר פסוורד בגאווה אני אעשה האש לסיסמאת מאסטר והאש לאיי די מגונרט של הקובץ. אני אחבר אותם ואמעך בעזרת האש כדי להשיג סיסמה מיוחדת לאיי אי אס להצפנת הקובץ. שם הקובץ שישלח לשרת והתוכן יוצפנו עם הסיסמא המיוחדת.
+בזמן שיתוף המשתמש יקבל מייל עם יו אר אל עם ה איי די הספציפי של הקובץ המשותף וסיסמא לתוכן שלו לאחר פתיחת הקישור יתבקש להזין את הסיסמא ויקבל קובץ להורדה.
+
+### Current Focus
+
+right now ill be focusing on the app since i dont really feel like working to the html gui and i can learn about the reconstruction 
+and decryption easier with this type of application.
