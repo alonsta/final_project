@@ -2,8 +2,12 @@
 /shelf/
 /workspace.xml/
 ./web-server/database/data/
+.web-server/
 /.env/
 /server.key/
 /server.crt/
 /test.py/
+.__pycache__/
+*.pyc
 /.gitignore/
+/.idea/
