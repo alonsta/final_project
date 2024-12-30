@@ -85,4 +85,4 @@ I think this project, if executed to the fullest, will take over 400 hours.
 ### Current Focus
 
 right now ill be focusing on the app since i dont really feel like working to the html gui and i can learn about the reconstruction 
-and decryption easier with this type of application.
+and decryption easier with this type of applicatio
