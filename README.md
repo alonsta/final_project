@@ -67,11 +67,12 @@ i dont think there's a specific part where ill have much more trouble but the wh
 
 ### New Technologies to Learn
 
+- encryptions
 - SQLite3
-- Node.js
+- js
 - HTML
 - CSS
-- Electron.js Windows
+- py => windows
 
 ### Estimated Time
 
