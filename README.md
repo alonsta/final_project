@@ -56,7 +56,8 @@ A file management system with a Windows app and a web client that can store data
 
 ### Challenges
 
-The Windows app will be very hard to make. It will need an installer and admin privileges to change registry level files.
+just the sheer amount of different things i have to do. this is a big project. ill need to do encryptions, python js html windows and so many more things alone. 
+i dont think there's a specific part where ill have much more trouble but the whole thing will take time and is complicated for my level.
 
 ### Development Plan
 
