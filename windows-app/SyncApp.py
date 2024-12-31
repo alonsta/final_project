@@ -14,7 +14,7 @@ import pyuac
 import httpx
 import psutil
 import time
-from tendo import singleton
+from filelock import FileLock
 
 # Set keyring backend
 keyring.set_keyring(WinVaultKeyring())
@@ -24,6 +24,7 @@ APP_NAME = "FileSyncApp"
 CONFIG_DIR = os.path.join(os.getenv('APPDATA'), APP_NAME)  # Use APPDATA instead of home directory
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
 LOG_FILE = os.path.join(CONFIG_DIR, "filesync.log")
+LOCK_FILE = os.path.join(CONFIG_DIR, "filesync.lock")
 STARTUP_FOLDER = os.path.join(os.getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
 
 # Create necessary directories
@@ -34,6 +35,7 @@ except Exception as e:
     CONFIG_DIR = os.path.join(os.getenv('TEMP'), APP_NAME)
     CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
     LOG_FILE = os.path.join(CONFIG_DIR, "filesync.log")
+    LOCK_FILE = os.path.join(CONFIG_DIR, "filesync.lock")
     os.makedirs(CONFIG_DIR, exist_ok=True)
 
 # Logging setup
@@ -109,6 +111,35 @@ class Config:
             logger.error(f"Failed to load configuration: {e}")
             raise RuntimeError(f"Failed to load configuration: {e}") from e
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class FileEventHandler(FileSystemEventHandler):
     def on_modified(self, event):
         if not event.is_directory:
@@ -121,6 +152,36 @@ class FileEventHandler(FileSystemEventHandler):
     def on_deleted(self, event):
         if not event.is_directory:
             logger.info(f"File deleted: {event.src_path}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def add_to_startup():
     try:
@@ -253,42 +314,45 @@ class Application(tk.Tk):
 def main():
     if "--background" in sys.argv:
         try:
-            me = singleton.SingleInstance()
+            lock = FileLock(LOCK_FILE, timeout=0)
+            with lock:
+                if not pyuac.isUserAdmin():
+                    logger.error("Background mode requires admin privileges")
+                    pyuac.runAsAdmin()
+                    return
+
+                logger.info("Running in background mode")
+                try:
+                    config = Config()
+                    config_data = config.load()
+                    watch_path = config_data.get("file_location", "C:\\")
+                    
+                    if not os.path.exists(watch_path):
+                        logger.error(f"The directory to watch does not exist: {watch_path}")
+                        return
+
+                    event_handler = FileEventHandler()
+                    observer = Observer()
+                    observer.schedule(event_handler, watch_path, recursive=True)
+                    observer.start()
+
+                    try:
+                        while True:
+                            time.sleep(1)
+                    except KeyboardInterrupt:
+                        logger.info("Stopping FileSyncApp")
+                    finally:
+                        observer.stop()
+                        observer.join()
+                        
+                except Exception as e:
+                    logger.error(f"Background mode failed: {e}")
+                    sys.exit(0)
         except Exception as e:
-            logger.error("another instance is already running. ")
+            logger.error(f"another instance is already running: {e}")
             sys.exit(0)
+                
             
-        if not pyuac.isUserAdmin():
-            logger.error("Background mode requires admin privileges")
-            pyuac.runAsAdmin()
-            return
-
-        logger.info("Running in background mode")
-        try:
-            config = Config()
-            config_data = config.load()
-            watch_path = config_data.get("file_location", "C:\\")
-            
-            if not os.path.exists(watch_path):
-                logger.error(f"The directory to watch does not exist: {watch_path}")
-                return
-
-            event_handler = FileEventHandler()
-            observer = Observer()
-            observer.schedule(event_handler, watch_path, recursive=True)
-            observer.start()
-
-            try:
-                while True:
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                logger.info("Stopping FileSyncApp")
-            finally:
-                observer.stop()
-                observer.join()
-        except Exception as e:
-            logger.error(f"Background mode failed: {e}")
-        sys.exit(0)
 
     # GUI mode
     try:
