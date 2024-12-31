@@ -3,6 +3,29 @@ from database.db import DB
 import os
 
 def upload_chunk(info, response):
+    """
+    Upload a chunk of data to the server.
+    This function handles the upload of a file chunk to the server, associating it with a user's authentication
+    and a specific server key.
+    Args:
+        info (dict): A dictionary containing:
+            - body (str): JSON string with:
+                - index (int): The chunk index
+                - server_key (str): Unique identifier for the file
+                - content (str): The chunk data
+            - cookies (list): List of cookie tuples, must include auth_cookie
+        response (dict): The response object to be modified and returned
+    Returns:
+        dict: Modified response dictionary containing:
+            - body (str): JSON string with success/failure message
+            - response_code (str): HTTP status code
+            Success response includes:
+                - {"success": "your chunk was uploaded "}, "200 OK"
+            Failure response includes:
+                - {"failed": "boohoo "}
+    Raises:
+        Exception: Handles any errors during the upload process
+    """
     try:
         database_access = DB(os.getcwd() + "\\web-server\\database\\data")
         index = json.loads(info["body"])["index"] + 1

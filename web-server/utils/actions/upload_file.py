@@ -3,6 +3,30 @@ from database.db import DB
 import os
 
 def upload_file_info(info, response):
+    """
+    Uploads file information to the database.
+    This function processes file upload information and stores it in the database. It validates the required
+    fields and authenticates the user through a cookie before adding the file information.
+    Args:
+        info (dict): A dictionary containing request information with the following keys:
+            - body (str): JSON string containing file details (file_name, server_key, chunk_count, size)
+            - cookies (list): List of cookie tuples containing authentication information
+        response (dict): A dictionary to store the response information
+    Returns:
+        dict: Modified response dictionary containing:
+            - body (str): JSON string with success/failure message
+            - response_code (str): HTTP response code (only on success)
+    Raises:
+        Exception: If database operation fails or authentication is invalid
+    Example:
+        >>> info = {
+        ...     "body": '{"file_name": "test.txt", "server_key": "abc123", "chunk_count": 5, "size": 1024}',
+        ...     "cookies": [("auth_cookie", "user123")]
+        ... }
+        >>> response = {}
+        >>> upload_file_info(info, response)
+        {'body': '{"success": "your file info was uploaded "}', 'response_code': '200 OK'}
+    """
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     file_name = json.loads(info["body"])['file_name']
     parent_name = "root" #json.lodads(info["body"])['parent_dir']

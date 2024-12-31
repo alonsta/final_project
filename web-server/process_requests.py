@@ -10,9 +10,28 @@ from utils.actions.upload_chunk import upload_chunk
 from utils.actions.upload_file import upload_file_info
 from utils.actions.user_data import user_data as fetch_user_data
 from utils.actions.get_app import get_app
+
+
 def process_req(http_request: json) -> bytes:
     """
-    Receives a JSON parsed HTTP request and sends back an HTTP response.
+    Processes an HTTP request and returns an HTTP response.
+    
+    
+    Args:
+        http_request (json): The HTTP request to process.
+        
+        It should contain the following keys:
+            - "endpoint" (str): The endpoint being accessed.
+            - "method" (str): The HTTP method (e.g., "GET", "POST").
+            - "path" (str, optional): The specific path within the endpoint.
+            - "body" (dict, optional): The body of the request, if applicable.
+    Returns:
+        bytes: The HTTP response as a JSON-encoded byte string. 
+        
+        The response contains:
+            - "response_code" (str): The HTTP response code.
+            - "headers" (dict): The HTTP headers.
+            - "body" (str): The HTML body of the response.
     """
     response = {
         "response_code": "400 Bad Request",

@@ -1,6 +1,28 @@
 import os 
 
 def get_resource(http_request: dict, response) -> dict:
+    """
+    Get and prepare a resource (file) for HTTP response.
+    This function reads a file from the specified path in the HTTP request and prepares
+    it for sending in an HTTP response, handling different file types appropriately.
+    Args:
+        http_request (dict): A dictionary containing HTTP request information.
+            Must include 'path' key with the requested resource path.
+        response (dict): The response dictionary to be modified.
+            Must contain 'response_code', 'headers', and 'body' keys.
+    Returns:
+        dict: Modified response dictionary containing:
+            - response_code: HTTP status code ("200 OK" or "404 Not Found")
+            - headers: Dictionary with Content-Type header set based on file type
+            - body: File content as bytes, or error message if file not found
+    Raises:
+        None: Exceptions are not explicitly raised but may occur during file operations.
+    Examples:
+        >>> response = {"headers": {}}
+        >>> request = {"path": "image.png"}
+        >>> get_resource(request, response)
+        {'response_code': '200 OK', 'headers': {'Content-Type': 'image/png'}, 'body': b'...'}
+    """
     file_type = http_request['path'].split(".")[-1]
     file_path = f"{os.getcwd()}\\web-server\\website\\resources\\{http_request['path']}"
     if not os.path.exists(file_path):

@@ -11,6 +11,12 @@ class DB:
         self.check_tables()
 
     def check_tables(self) -> None:
+        """Ensures that the necessary tables for the database exist. If the tables do not exist, they will be created.
+        The tables created are:
+        - users: Stores user information including id, username, password, creation time, data uploaded, and data downloaded.
+        - files: Stores file information including id, server key, size, creation time, file name, chunk count, owner id, parent id, type, and status.
+        - cookies: Stores cookie information including id, key, value, expiration, and owner id.
+        This method executes the SQL statements to create the tables if they do not already exist and commits the changes to the database."""
         users_table_check_sql = """
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY NOT NULL UNIQUE,
@@ -218,6 +224,22 @@ class DB:
         pass
                 
     def get_user_info(self, cookie_value: str) -> str:
+        """
+        Retrieves user information based on the provided cookie value.
+        Args:
+            cookie_value (str): The value of the user's cookie.
+        Returns:
+            dict: A dictionary containing the user's information including:
+                - username (str): The username of the user.
+                - creation_time (str): The account creation time.
+                - uploaded (int): The amount of data uploaded by the user.
+                - downloaded (int): The amount of data downloaded by the user.
+                - success (str): A message indicating successful login.
+                - fileCount (int): The number of files owned by the user.
+        Raises:
+            Exception: If the user is not found or an unexpected error occurs.
+            sqlite3.Error: If a database error occurs.
+        """
 
         try:
             user_id = self.check_cookie(cookie_value)
@@ -251,6 +273,17 @@ class DB:
         
 
     def add_file(self, cookie_value: str, file_name: str, parent_name: str,server_key: str, chunk_count: int, size: int) -> None:
+        """Adds a file entry to the database and creates the corresponding file on the server.
+        Args:
+            cookie_value (str): The cookie value to identify the user.
+            file_name (str): The name of the file to be added.
+            parent_name (str): The name of the parent directory.
+            server_key (str): The server key for the file.
+            chunk_count (int): The number of chunks the file is divided into.
+            size (int): The size of the file in bytes.
+        Raises:
+            sqlite3.Error: If there is an error with the SQLite database operations.
+            ValueError: If there is a value error during the process."""
         try:
             user_id = self.check_cookie(cookie_value)
             username = self.cursor.execute("SELECT username FROM users WHERE id = ?",(user_id,)).fetchone()[0]
@@ -294,6 +327,16 @@ class DB:
             raise ve
         
     def upload_chunk(self,cookie_value: str ,server_key: str, index: int, content: str) -> None:
+        """Uploads a chunk of data to the server and updates the file status if all chunks are uploaded.
+            
+            Args:
+                cookie_value (str): The cookie value used to identify the user.
+                server_key (str): The unique key for the file on the server.
+                index (int): The index of the current chunk being uploaded.
+                content (str): The content of the chunk to be uploaded.
+            Raises:
+                sqlite3.Error: If there is an error with the SQLite database operation.
+                ValueError: If there is a value error during the operation."""
         try:
 
             user_id = self.check_cookie(cookie_value)

@@ -1,6 +1,25 @@
 import os
 
 def get_script(http_request: dict, response) -> dict:
+    """
+    Handles HTTP requests for script files and prepares the response.
+    This function processes HTTP requests for script files, reads the requested file
+    if it exists, and sets appropriate response headers based on the file type.
+    Args:
+        http_request (dict): A dictionary containing HTTP request information.
+            Must include a 'path' key with the requested file path.
+        response (dict): The response dictionary to be modified.
+            Should contain 'response_code', 'headers', and 'body' keys.
+    Returns:
+        dict: The modified response dictionary containing:
+            - response_code: HTTP status code (200 OK or 404 Not Found)
+            - headers: Dictionary with Content-Type header
+            - body: File content or error message
+    Example:
+        http_request = {'path': 'script.js'}
+        response = {'headers': {}, 'response_code': '', 'body': ''}
+        result = get_script(http_request, response)
+    """
     file_type = http_request['path'].split(".")[-1]
     file_path = f"{os.getcwd()}\\web-server\\website\\scripts\\{http_request['path']}"
     

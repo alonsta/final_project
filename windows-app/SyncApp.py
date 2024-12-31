@@ -60,6 +60,23 @@ except Exception as e:
 
 
 class Config:
+    """
+    A class to handle the configuration for the application, including saving and loading
+    configuration data to and from a file and Windows Credential Manager.
+    Attributes:
+        config_path (str): The path to the configuration file.
+        app_name (str): The name of the application.
+    Methods:
+        __init__():
+            Initializes the Config object, creates the configuration directory if it doesn't exist,
+            and saves a default configuration if the configuration file doesn't exist.
+        save(data):
+            Saves the configuration data. Sensitive data is saved to Windows Credential Manager,
+            and non-sensitive data is saved to the configuration file.
+        load():
+            Loads the configuration data. Sensitive data is loaded from Windows Credential Manager,
+            and non-sensitive data is loaded from the configuration file.
+    """
     def __init__(self):
         os.makedirs(CONFIG_DIR, exist_ok=True)
         self.config_path = CONFIG_FILE
@@ -67,7 +84,7 @@ class Config:
         if not os.path.exists(self.config_path):
             self.save({"file_location": "C:\\", "username": "", "password": "", "file_password": ""})
 
-    def save(self, data):
+    def save(self, data: dict) -> None:
         """Save configuration data."""
         try:
             # Save sensitive data to Windows Credential Manager
@@ -91,7 +108,7 @@ class Config:
             logger.error(f"Failed to save configuration: {e}")
             raise RuntimeError(f"Failed to save configuration: {e}") from e
 
-    def load(self):
+    def load(self) -> dict:
         """Load configuration data."""
         if not os.path.exists(self.config_path):
             logger.info(f"No configuration file found at {self.config_path}")
@@ -184,6 +201,15 @@ class FileEventHandler(FileSystemEventHandler):
 
 
 def add_to_startup():
+    """
+    Adds the application to the Windows startup folder, so it runs on system startup.
+    This function checks if the script is running with administrative privileges. If not, it requests admin privileges.
+    Once it has the necessary permissions, it creates a shortcut to the executable in the Windows startup folder.
+    Returns:
+        bool: True if the startup shortcut was created successfully, otherwise logs an error and returns None.
+    Raises:
+        Exception: If there is an error during the creation of the startup shortcut, it logs the error.
+    """
     try:
         if not pyuac.isUserAdmin():
             logger.info("Requesting admin privileges for startup configuration")
@@ -211,6 +237,25 @@ def add_to_startup():
         logger.error(f"Failed to create startup shortcut: {e}")
 
 class Application(tk.Tk):
+    """
+    A Tkinter-based application for configuring file synchronization settings.
+    Attributes:
+        config_manager (Config): An instance of the Config class to manage configuration data.
+        fields (dict): A dictionary to store Tkinter Entry widgets for user input fields.
+    Methods:
+        __init__():
+            Initializes the Application instance, sets up the UI, and loads the configuration.
+        setup_ui():
+            Sets up the user interface, including labels, entry fields, and buttons.
+        browse_folder():
+            Opens a file dialog for selecting a folder and updates the file location entry field.
+        save_config():
+            Saves the configuration data entered by the user and starts the background process.
+        start_background_and_exit():
+            Destroys the GUI, requests admin privileges if necessary, and starts a new background process.
+        load_config():
+            Loads the configuration data and populates the entry fields with the loaded values.
+    """
     def __init__(self):
         super().__init__()
 
@@ -312,6 +357,21 @@ class Application(tk.Tk):
 
 
 def main():
+    """
+    Main function to run the SyncApp in either background or GUI mode.
+    If the "--background" argument is provided, the application runs in background mode:
+    - Requires admin privileges.
+    - Loads configuration and watches a specified directory for file changes.
+    - Logs errors if the directory does not exist or if another instance is already running.
+    - Handles file events using a FileEventHandler and Observer.
+    If the "--background" argument is not provided, the application runs in GUI mode:
+    - Adds the application to startup.
+    - Initializes and runs the GUI application.
+    Logs errors and exits the application if any exceptions occur.
+    Raises:
+        Exception: If background mode fails or another instance is already running.
+        Exception: If GUI mode fails.
+    """
     if "--background" in sys.argv:
         try:
             lock = FileLock(LOCK_FILE, timeout=0)

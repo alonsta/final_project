@@ -6,6 +6,21 @@ def main():
     pass
 
 def user_data(info, response):
+    """
+    Retrieves user data from the database based on authentication cookie.
+    Args:
+        info (dict): Dictionary containing request information including cookies
+        response (dict): Dictionary to store response data
+    Returns:
+        dict: Modified response dictionary containing:
+            - 'body': JSON string with user information or error message
+            - 'response_code': HTTP status code ('200' for success, '500' for error)
+    Raises:
+        Exception: If database access fails or user information cannot be retrieved
+    Note:
+        Expects 'auth_cookie' to be present in the cookies list within info dictionary.
+        Uses DB class to interface with the database located at 'web-server/database/data'.
+    """
     auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     try:

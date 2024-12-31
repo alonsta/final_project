@@ -2,6 +2,26 @@ import os
 import sass
 
 def get_style(http_request: dict, response) -> dict:
+    """Gets the style file content and sets the appropriate response headers.
+    This function retrieves the content of a style file (.css or .scss) and prepares
+    the HTTP response with the appropriate headers and content type.
+    Args:
+        http_request (dict): A dictionary containing the HTTP request information.
+                            Must contain a 'path' key with the file path.
+        response (dict): A dictionary that will be populated with the response data.
+                        Should contain 'response_code', 'headers', and 'body' keys.
+    Returns:
+        dict: The response dictionary containing:
+            - response_code: HTTP status code (200 OK or 404 Not Found)
+            - headers: Dictionary with Content-Type header
+            - body: The file content or error message
+    Raises:
+        None: Handles file not found cases by returning 404 response
+    Example:
+        http_request = {'path': 'styles/main.scss'}
+        response = {'headers': {}}
+        result = get_style(http_request, response)
+    """
     file_type = http_request['path'].split(".")[-1]
     file_path = f"{os.getcwd()}\\web-server\\website\\styles\\{http_request['path'].split('.')[0]}.scss"
 
