@@ -16,4 +16,4 @@
 .idea/modules.xml
 .idea/vcs.xml
 ./windows-app/build/
-./windows-app/SyncApp.spec/
+./windows-app/SyncApp.spec
