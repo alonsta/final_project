@@ -9,5 +9,11 @@
 /test.py/
 .__pycache__/
 *.pyc
-/.gitignore/
-/.idea/
+.gitignore/
+.idea/
+.idea/workspace.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+./windows-app/build/
+./windows-app/SyncApp.spec/
