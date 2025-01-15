@@ -4,6 +4,36 @@ def main():
     pass
 
 def serialize_http(raw_request):
+    """
+    Parse and serialize an HTTP request string into a JSON formatted string.
+    This function takes a raw HTTP request and converts it into a structured JSON format,
+    breaking down the request into its components including method, endpoint, path,
+    query parameters, cookies, headers, and body.
+    Args:
+        raw_request (str): A string containing the raw HTTP request including request line,
+                          headers, and body, separated by CRLF (\r\n).
+    Returns:
+        str: A JSON-formatted string containing the parsed request information with the following structure:
+            {
+                "method": str,          # HTTP method (GET, POST, etc.)
+                "endpoint": str,        # First part of the path
+                "path": str,           # Remaining path after endpoint
+                "query_params": dict,   # Query parameters as key-value pairs
+                "cookies": list,        # List of tuples containing (cookie_name, cookie_value)
+                "headers": dict,        # HTTP headers as key-value pairs
+                "body": str            # Request body
+    Examples:
+        >>> raw_request = "GET /pages/index.html?id=1 HTTP/1.1\\r\\nHost: example.com\\r\\n\\r\\n"
+        >>> serialize_http(raw_request)
+        {
+            "method": "GET",
+            "endpoint": "pages",
+            "path": "index.html",
+            "query_params": {"id": "1"},
+            "cookies": [],
+            "headers": {"Host": "example.com"},
+            "body": ""
+    """
     lines = raw_request.split("\r\n")
 
     request_line = lines[0].split(" ")

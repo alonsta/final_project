@@ -373,6 +373,7 @@ def main():
         Exception: If GUI mode fails.
     """
     if "--background" in sys.argv:
+        # Background mode
         try:
             lock = FileLock(LOCK_FILE, timeout=0)
             with lock:
@@ -414,13 +415,15 @@ def main():
                 
             
 
-    # GUI mode
-    try:
-        add_to_startup()
-        app = Application()
-        app.mainloop()
-    except Exception as e:
-        logger.error(f"GUI failed: {e}")
+    
+    else:
+        # GUI mode
+        try:
+            add_to_startup()
+            app = Application()
+            app.mainloop()
+        except Exception as e:
+            logger.error(f"GUI failed: {e}")
 
 if __name__ == "__main__":
     main()
