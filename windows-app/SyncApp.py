@@ -312,37 +312,28 @@ class Application(tk.Tk):
             self.config_manager.save(config_data)
             messagebox.showinfo("Success", "Configuration saved successfully")
 
-            # Schedule the background process start after GUI closes
-            self.after(100, self.start_background_and_exit)
+            # Start background process without launching new GUI
+            if "--background" not in sys.argv:
+                self.destroy()
+                
+                # Start new background instance
+                import subprocess
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
+                
+                subprocess.Popen(
+                    [sys.executable, sys.argv[0], "--background"],
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                    close_fds=True
+                )
+                
+                sys.exit(0)
+            
         except Exception as e:
             logger.error(f"Failed to save configuration: {e}")
             messagebox.showerror("Error", f"Failed to save configuration: {e}")
-
-    def start_background_and_exit(self):
-        # Destroy the GUI first
-        self.destroy()
-        
-        # Start new instance with admin privileges
-        if not pyuac.isUserAdmin():
-            logger.info("Requesting admin privileges for background mode")
-            pyuac.runAsAdmin()
-        else:
-            logger.info("Starting new background instance")
-            # Start the background process detached from the current process
-            import subprocess
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
-            
-            subprocess.Popen(
-                [sys.executable, sys.argv[0], "--background"],
-                startupinfo=startupinfo,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
-                close_fds=True
-            )
-        
-        # Exit the current process
-        sys.exit(0)
         
     def load_config(self):
         try:
@@ -408,20 +399,27 @@ def main():
                         
                 except Exception as e:
                     logger.error(f"Background mode failed: {e}")
-                    sys.exit(0)
+                    sys.exit(1)
         except Exception as e:
-            logger.error(f"another instance is already running: {e}")
-            sys.exit(0)
-                
-            
-
-    
+            logger.error(f"Another instance is already running: {e}")
+            sys.exit(1)
+                 
     else:
-        # GUI mode
+        # GUI mode - only start if not already running in background
         try:
-            add_to_startup()
-            app = Application()
-            app.mainloop()
+            # Check if background process is already running
+            lock = FileLock(LOCK_FILE, timeout=0)
+            try:
+                with lock:
+                    pass
+                # If we get here, no background process is running
+                add_to_startup()
+                app = Application()
+                app.mainloop()
+            except Exception:
+                # Background process is running, just show GUI
+                app = Application()
+                app.mainloop()
         except Exception as e:
             logger.error(f"GUI failed: {e}")
 
