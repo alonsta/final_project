@@ -12,9 +12,10 @@ from tkinter import ttk, filedialog, messagebox
 import sys
 import pyuac
 import httpx
-import psutil
 import time
 from filelock import FileLock
+import subprocess
+
 
 # Set keyring backend
 keyring.set_keyring(WinVaultKeyring())
@@ -157,19 +158,39 @@ class Config:
 
 
 
-class FileEventHandler(FileSystemEventHandler):
+class FileSyncHandler(FileSystemEventHandler):
+    def __init__(self, base_path, server_url, username, password):
+        self.file_info = {}
+        config = Config()
+        self.config = config
+        
+        config_data = config.load()
+        self.username = config_data["username"]
+        self.password = config_data["password"]
+        self.file_password = config_data["file_password"]
+
+   
+    async def track_server(self):
+        #here i will check if the server has a newer version of a file i have or a new file and ill download it.
+       pass
+   
     def on_modified(self, event):
-        if not event.is_directory:
-            logger.info(f"File modified: {event.src_path}")
+        #check if my version is different than the server's version. if so send an update to that file
+        #also have to check how to not send 1000 updates per second.
+        pass
 
     def on_created(self, event):
-        if not event.is_directory:
-            logger.info(f"File created: {event.src_path}")
+        #when a new file is created upload it to the server(like modified but with a new file)
+        pass
 
     def on_deleted(self, event):
-        if not event.is_directory:
-            logger.info(f"File deleted: {event.src_path}")
+        #when a file is deleted, delete it from the server
+        pass
 
+    def on_moved(self, event):
+        #send new location to the server(if in the sync folder.)
+        pass
+    
 
 
 
@@ -317,7 +338,6 @@ class Application(tk.Tk):
                 self.destroy()
                 
                 # Start new background instance
-                import subprocess
                 startupinfo = subprocess.STARTUPINFO()
                 startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                 startupinfo.wShowWindow = subprocess.SW_HIDE
@@ -383,7 +403,12 @@ def main():
                         logger.error(f"The directory to watch does not exist: {watch_path}")
                         return
 
-                    event_handler = FileEventHandler()
+                    event_handler = FileSyncHandler(
+                    base_path=watch_path,
+                    server_url="https://your-server.com/api",
+                    username=config_data["username"],
+                    password=config_data["password"]
+)
                     observer = Observer()
                     observer.schedule(event_handler, watch_path, recursive=True)
                     observer.start()

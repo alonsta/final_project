@@ -19,7 +19,7 @@ A file management system with a Windows app and web client for quick data storag
 To build the executable, run:
 
 
-pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import winerror --hidden-import win32api --hidden-import win32event --hidden-import socket --hidden-import pyuac --hidden-import tendo --hidden-import psutil --hidden-import time --hidden-import subprocess --name "SyncApp" --icon=app.ico --noconsole SyncApp.py
+pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import winerror --hidden-import win32api --hidden-import win32event --hidden-import socket --hidden-import pyuac --hidden-import tendo --hidden-import subprocess --hidden-import time --name "SyncApp" --icon=app.ico --noconsole SyncApp.py
 
 
 ## Project Idea
