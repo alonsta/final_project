@@ -10,7 +10,7 @@ from utils.actions.upload_chunk import upload_chunk
 from utils.actions.upload_file import upload_file_info
 from utils.actions.user_data import user_data as fetch_user_data
 from utils.actions.get_app import get_app
-
+from utils.actions.user_files import get_files_info
 
 def process_req(http_request: json) -> bytes:
     """
@@ -98,7 +98,7 @@ def process_req(http_request: json) -> bytes:
                         case "download":
                             response = download_file(http_request["body"], response)
                         case "info":
-                            response = get_file_info(http_request["body"], response)
+                            response = get_files_info(http_request, response)
         case "app":
             match http_request["method"]:
                 case "GET":

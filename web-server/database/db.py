@@ -223,7 +223,7 @@ class DB:
     def delete_user(self, user_id: str, username: str) -> None:
         pass
                 
-    def get_user_info(self, cookie_value: str) -> str:
+    def get_user_info(self, cookie_value: str) -> dict:
         """
         Retrieves user information based on the provided cookie value.
         Args:
@@ -377,7 +377,7 @@ class DB:
             print(ve)
             self.db_connection.rollback()
 
-    def get_files_summary(self, cookie_value: str, key: str = None) -> str:
+    def get_files_summary(self, cookie_value: str, key: str = None) -> dict:
         try:
             user_id = self.check_cookie(cookie_value)
             get_files_sql = """
@@ -387,7 +387,7 @@ class DB:
             self.cursor.execute(get_files_sql, (user_id,))
             rows = self.cursor.fetchall()
 
-            files_summary = []
+            files_summary = {}
             for row in rows:
                 file_summary = {
                     'id': row[0],
@@ -398,8 +398,8 @@ class DB:
                     'parent_id': row[5],
                     'type': row[6]
                 }
-                files_summary.append(file_summary)
-            return json.dumps(files_summary, indent=4)
+                files_summary[row[0]] = file_summary
+            return files_summary
         except sqlite3.Error as e:
             raise e
         except Exception as e:

@@ -47,6 +47,10 @@ body {
 }
 
 .content {
+    .content-section{
+        min-height: fit-content;
+        min-width: fit-content;
+    }
     flex: 1;
     padding: 20px;
     background-color: #f1f1f1;
@@ -87,7 +91,7 @@ body {
 }
 
 #statsChart {
-    width: 100%;        // Set width to 100% of its parent container
+    width: 200%;        // Set width to 100% of its parent container
     height: 400px;      // Set a fixed height for the chart (adjust as needed)
     max-width: 90%;     // Optional: Ensure it doesn't get too large
     max-height: 90%;    // Optional: Ensure it doesn't overflow its parent container

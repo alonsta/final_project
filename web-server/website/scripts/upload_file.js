@@ -1,10 +1,7 @@
-const uploadButton = document.getElementById('upload-button');
-const cancelButton = document.getElementById('cancel-button');
 const dropZone = document.getElementById('files');
 const modal = document.getElementById('password-modal');
-const passwordInput = document.getElementById('password');
 const fileInput = document.getElementById('file');
-
+const storedPassword = localStorage.getItem('filePassword');
 const CHUNK_SIZE = 1024 * 1024 * 0.1;  // 100KB
 
 dropZone.addEventListener('dragenter', (e) => e.preventDefault());
@@ -14,27 +11,9 @@ dropZone.addEventListener('drop', handleFileDrop);
 function handleFileDrop(e) {
     e.preventDefault();
     fileInput.files = e.dataTransfer.files;
-    modal.style.display = 'flex';
-    modal.classList.remove('hidden');
+    processFiles(storedPassword, Array.from(fileInput.files)); 
 }
 
-cancelButton.addEventListener('click', () => {
-    passwordInput.setAttribute("value", "")
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
-});
-
-uploadButton.addEventListener('click', () => {
-    const password = passwordInput.value;
-    if (password.length < 8) {
-        alert('Password length must be 8 or more characters');
-        return;
-    }
-    processFiles(password, Array.from(fileInput.files));
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
-    passwordInput.value = "";
-});
 
 async function processFiles(password, files) {
     files.forEach(async (file) => {
