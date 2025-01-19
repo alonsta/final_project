@@ -332,24 +332,20 @@ class Application(tk.Tk):
         try:
             self.config_manager.save(config_data)
             messagebox.showinfo("Success", "Configuration saved successfully")
-
-            # Start background process without launching new GUI
-            if "--background" not in sys.argv:
-                self.destroy()
                 
-                # Start new background instance
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                startupinfo.wShowWindow = subprocess.SW_HIDE
+            # Start new background instance
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = subprocess.SW_HIDE
                 
-                subprocess.Popen(
-                    [sys.executable, sys.argv[0], "--background"],
-                    startupinfo=startupinfo,
-                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
-                    close_fds=True
-                )
+            subprocess.Popen(
+                [sys.executable, sys.argv[0], "--background"],
+                startupinfo=startupinfo,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                close_fds=True
+            )
                 
-                sys.exit(0)
+            sys.exit(0)
             
         except Exception as e:
             logger.error(f"Failed to save configuration: {e}")
@@ -407,8 +403,8 @@ def main():
                     base_path=watch_path,
                     server_url="https://your-server.com/api",
                     username=config_data["username"],
-                    password=config_data["password"]
-)
+                    password=config_data["password"])
+                    
                     observer = Observer()
                     observer.schedule(event_handler, watch_path, recursive=True)
                     observer.start()
@@ -430,10 +426,8 @@ def main():
             sys.exit(1)
                  
     else:
-        # GUI mode - only start if not already running in background
+        # GUI mode
         try:
-            # Check if background process is already running
-            lock = FileLock(LOCK_FILE, timeout=0)
             try:
                 with lock:
                     pass
