@@ -24,7 +24,12 @@ def get_files_info(info, response):
     auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     try:
-        response["body"] = json.dumps(database_access.get_files_summary(auth_cookie_value))
+        parent = info["query_params"]["parent"]
+    except:
+        parent = None
+        
+    try:
+        response["body"] = json.dumps(database_access.get_folders_summary(auth_cookie_value, parent_id=parent))
         response["response_code"] = "200"
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt fetch file summery","message": str(e)})

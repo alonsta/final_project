@@ -115,6 +115,7 @@ async function sendFileMetadata(fileId, encryptedFileName, chunkCount, Size) {
         }); 
         console.log("file metadata uploaded")
         return response.ok;
+        
     } catch (error) {
         console.error('Error sending file metadata:', error);
         return false;

@@ -223,7 +223,7 @@ class DB:
     def delete_user(self, user_id: str, username: str) -> None:
         pass
                 
-    def get_user_info(self, cookie_value: str) -> dict:
+    def get_user_info(self, cookie_value: str) -> str:
         """
         Retrieves user information based on the provided cookie value.
         Args:
@@ -377,14 +377,19 @@ class DB:
             print(ve)
             self.db_connection.rollback()
 
-    def get_files_summary(self, cookie_value: str, key: str = None) -> dict:
+    def get_folders_summary(self, cookie_value: str, parent_id: str = None) -> dict:
         try:
             user_id = self.check_cookie(cookie_value)
             get_files_sql = """
             SELECT id, server_key, file_name, size, created, parent_id, type
             FROM files WHERE owner_id = ?
             """
-            self.cursor.execute(get_files_sql, (user_id,))
+            
+            if parent_id is not None:
+                get_folders_sql += " AND parent_id = ?"
+                self.cursor.execute(get_files_sql, (user_id, parent_id))
+            else:
+                self.cursor.execute(get_files_sql, (user_id,))
             rows = self.cursor.fetchall()
 
             files_summary = {}
