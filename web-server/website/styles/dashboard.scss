@@ -98,9 +98,11 @@ body {
 }
 
 #files {
-    display: flex;
+    overflow: auto; 
     flex-direction: column;
     gap: 10px;
+    width: 100%;          /* Take up 100% width of the parent */
+    height: 100%; 
 
     .file-item {
         display: flex;
