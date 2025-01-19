@@ -16,7 +16,6 @@ import time
 from filelock import FileLock
 import subprocess
 
-
 # Set keyring backend
 keyring.set_keyring(WinVaultKeyring())
 
@@ -158,39 +157,19 @@ class Config:
 
 
 
-class FileSyncHandler(FileSystemEventHandler):
-    def __init__(self, base_path, server_url, username, password):
-        self.file_info = {}
-        config = Config()
-        self.config = config
-        
-        config_data = config.load()
-        self.username = config_data["username"]
-        self.password = config_data["password"]
-        self.file_password = config_data["file_password"]
-
-   
-    async def track_server(self):
-        #here i will check if the server has a newer version of a file i have or a new file and ill download it.
-       pass
-   
+class FileEventHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        #check if my version is different than the server's version. if so send an update to that file
-        #also have to check how to not send 1000 updates per second.
-        pass
+        if not event.is_directory:
+            logger.info(f"File modified: {event.src_path}")
 
     def on_created(self, event):
-        #when a new file is created upload it to the server(like modified but with a new file)
-        pass
+        if not event.is_directory:
+            logger.info(f"File created: {event.src_path}")
 
     def on_deleted(self, event):
-        #when a file is deleted, delete it from the server
-        pass
+        if not event.is_directory:
+            logger.info(f"File deleted: {event.src_path}")
 
-    def on_moved(self, event):
-        #send new location to the server(if in the sync folder.)
-        pass
-    
 
 
 
@@ -332,20 +311,24 @@ class Application(tk.Tk):
         try:
             self.config_manager.save(config_data)
             messagebox.showinfo("Success", "Configuration saved successfully")
+
+            # Start background process without launching new GUI
+            if "--background" not in sys.argv:
+                self.destroy()
                 
-            # Start new background instance
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            startupinfo.wShowWindow = subprocess.SW_HIDE
+                # Start new background instance
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                startupinfo.wShowWindow = subprocess.SW_HIDE
                 
-            subprocess.Popen(
-                [sys.executable, sys.argv[0], "--background"],
-                startupinfo=startupinfo,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
-                close_fds=True
-            )
+                subprocess.Popen(
+                    [sys.executable, sys.argv[0], "--background"],
+                    startupinfo=startupinfo,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS,
+                    close_fds=True
+                )
                 
-            sys.exit(0)
+                sys.exit(0)
             
         except Exception as e:
             logger.error(f"Failed to save configuration: {e}")
@@ -384,10 +367,6 @@ def main():
         try:
             lock = FileLock(LOCK_FILE, timeout=0)
             with lock:
-                if not pyuac.isUserAdmin():
-                    logger.error("Background mode requires admin privileges")
-                    pyuac.runAsAdmin()
-                    return
 
                 logger.info("Running in background mode")
                 try:
@@ -399,12 +378,7 @@ def main():
                         logger.error(f"The directory to watch does not exist: {watch_path}")
                         return
 
-                    event_handler = FileSyncHandler(
-                    base_path=watch_path,
-                    server_url="https://your-server.com/api",
-                    username=config_data["username"],
-                    password=config_data["password"])
-                    
+                    event_handler = FileEventHandler()
                     observer = Observer()
                     observer.schedule(event_handler, watch_path, recursive=True)
                     observer.start()
@@ -426,8 +400,10 @@ def main():
             sys.exit(1)
                  
     else:
-        # GUI mode
+        # GUI mode -
         try:
+            # Check if background process is already running
+            lock = FileLock(LOCK_FILE, timeout=0)
             try:
                 with lock:
                     pass
