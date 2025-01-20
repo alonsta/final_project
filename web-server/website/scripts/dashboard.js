@@ -4,7 +4,7 @@ const confirmButton = document.getElementById('confirm-button');
 const cancelButton = document.getElementById('cancel-button');
 
 document.addEventListener('DOMContentLoaded', () => {
-  const storedPassword = localStorage.getItem('filePassword');
+  const storedPassword = sessionStorage.getItem('filePassword');
   if (!storedPassword) {
     showPasswordModal(true);
   } else {
@@ -46,7 +46,7 @@ confirmButton.addEventListener('click', () => {
   }
   
   try {
-    localStorage.setItem('filePassword', password);
+    sessionStorage.setItem('filePassword', password);
     passwordModal.style.display = 'none';
   } catch (error) {
     console.error('Error storing password:', error);
@@ -134,89 +134,99 @@ function generateEncryptionKey(password, fileId) {
 }
 
 async function loadUserFiles() {
-    const password = localStorage.getItem('filePassword');
-    try {
-        const response = await fetch('/files/info', {
-            credentials: 'include',
-            method: 'GET'
-        });
-        const files = await response.json();
-        for(const key in files) {
-            const file = files[key];
-            let server_key = file.server_key;
-            let encryptionKey = generateEncryptionKey(password, server_key);
-            let decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
-            let size = file.size;
-            const fileSection = document.querySelector('#files.content-section');
-            const fileContainer = document.createElement('div');
-            fileContainer.className = 'file-item';
-            
-            const fileLabel = document.createElement('span');
-            fileLabel.className = 'file-label';
-            fileLabel.textContent = `${decryptedFileName} (${(size / (1024*1024)).toFixed(2)} MB)`;
-            
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'button-container';
-            
-            const downloadButton = document.createElement('button');
-            downloadButton.className = 'download-button';
-            downloadButton.textContent = 'Download';
-            
-            downloadButton.addEventListener('click', async () => {
-              try {
-                const response = await fetch(`/files/download?key=${server_key}`, {
-                  method: 'GET',
-                  credentials: 'include'
-                });
-                const compressedDataStr = await response.text();
+  const password = sessionStorage.getItem('filePassword');
+  try {
+      const response = await fetch('/files/info', {
+          credentials: 'include',
+          method: 'GET'
+      });
+      const files = await response.json();
+      for(const key in files) {
+          const file = files[key];
+          let server_key = file.server_key;
+          let encryptionKey = generateEncryptionKey(password, server_key);
+          let decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
+          let size = file.size;
+          const fileSection = document.querySelector('#files.content-section');
+          const fileContainer = document.createElement('div');
+          fileContainer.className = 'file-item';
+          
+          const fileLabel = document.createElement('span');
+          fileLabel.className = 'file-label';
+          fileLabel.textContent = `${decryptedFileName} (${(size / (1024*1024)).toFixed(2)} MB)`;
+          
+          const buttonContainer = document.createElement('div');
+          buttonContainer.className = 'button-container';
+          
+          const downloadButton = document.createElement('button');
+          downloadButton.className = 'download-button';
+          downloadButton.textContent = 'Download';
+          
+          downloadButton.addEventListener('click', async () => {
+            try {
+              const response = await fetch(`/files/download?key=${server_key}`, {
+                method: 'GET',
+                credentials: 'include'
+              });
+              const hexData = await response.text();
 
-                const decryptedBlob = await decryptFile(compressedDataStr, encryptionKey);
-            
-                async function decryptFile(compressedData, key) {
-                  try {
+              const decryptedBlob = await decryptFile(hexData, encryptionKey);
+          
+              async function decryptFile(hexString, key) {
+                try {
+                    // Convert hex string back to bytes
+                    const bytes = new Uint8Array(hexString.length / 2);
+                    for (let i = 0; i < hexString.length; i += 2) {
+                        bytes[i/2] = parseInt(hexString.substr(i, 2), 16);
+                    }
                     
-                    intarr = new Uint8Array(compressedData.length);
-                    for (let i = 0; i < compressedData.length; i++) {
-                      intarr[i] = compressedData.charCodeAt(i);
+                    // Decompress with matching options from upload
+                    const decompressed = pako.inflate(bytes, {
+                        windowBits: 15,
+                        raw: false
+                    });
+
+                    // Convert Uint8Array to WordArray directly
+                    const wordArray = CryptoJS.lib.WordArray.create(decompressed);
+                    
+                    // Convert to base64
+                    const base64String = CryptoJS.enc.Base64.stringify(wordArray);
+                    
+                    // Decrypt using the same key
+                    const decrypted = CryptoJS.AES.decrypt(base64String, key);
+                    
+                    // Convert to ArrayBuffer
+                    const arrayBuffer = new ArrayBuffer(decrypted.sigBytes);
+                    const view = new DataView(arrayBuffer);
+                    
+                    for (let i = 0; i < decrypted.sigBytes; i++) {
+                        view.setUint8(i, decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8) & 0xFF);
                     }
-                    console.log(intarr);
-                    const decompressedData = pako.inflate(intarr, { to: 'string' });
-            
-                    // Decrypt the data
-                    const decrypted = CryptoJS.AES.decrypt({ ciphertext: decompressedData }, key);
-                    const decryptedData = CryptoJS.enc.Utf8.stringify(decrypted);
-            
-                    // Convert decrypted data to Uint8Array
-                    const decryptedArray = new Uint8Array(decryptedData.length);
-                    for (let i = 0; i < decryptedData.length; i++) {
-                      decryptedArray[i] = decryptedData.charCodeAt(i);
-                    }
-            
-                    return new Blob([decryptedArray]);
-                  } catch (error) {
+                    
+                    return new Blob([arrayBuffer]);
+                } catch (error) {
                     console.error('Decompression or decryption failed:', error);
-                    throw new Error('Invalid compressed or encrypted data');
-                  }
+                    throw error;
                 }
-            
-                const url = URL.createObjectURL(decryptedBlob);
-                const tempLink = document.createElement('a');
-                tempLink.href = url;
-                tempLink.download = decryptedFileName;
-                tempLink.click();
-                URL.revokeObjectURL(url);
-              } catch (error) {
-                console.error('Download failed:', error);
-              }
-            });
-            
-            buttonContainer.appendChild(downloadButton);
-            fileContainer.appendChild(fileLabel);
-            fileContainer.appendChild(buttonContainer);
-            fileSection.appendChild(fileContainer);
-        }
-    } catch (error) {
-        console.error('Error loading user files:', error);
-    }}
-
-
+            }
+          
+              const url = URL.createObjectURL(decryptedBlob);
+              const tempLink = document.createElement('a');
+              tempLink.href = url;
+              tempLink.download = decryptedFileName;
+              tempLink.click();
+              URL.revokeObjectURL(url);
+            } catch (error) {
+              console.error('Download failed:', error);
+            }
+          });
+          
+          buttonContainer.appendChild(downloadButton);
+          fileContainer.appendChild(fileLabel);
+          fileContainer.appendChild(buttonContainer);
+          fileSection.appendChild(fileContainer);
+      }
+  } catch (error) {
+      console.error('Error loading user files:', error);
+  }
+}

@@ -3,6 +3,8 @@ import json
 from datetime import *
 import uuid
 from os import makedirs
+import time
+import os
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -305,7 +307,7 @@ class DB:
                 datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, 1, 0
             ))
             makedirs(f"web-server\\database\\files\\{user_id}",exist_ok=True)
-            open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "wb")
+            open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
             
 
             user_upload_sql = """
@@ -326,36 +328,62 @@ class DB:
             self.db_connection.rollback()
             raise ve
         
-    def upload_chunk(self,cookie_value: str ,server_key: str, index: int, content: str) -> None:
+    def upload_chunk(self, cookie_value: str, server_key: str, index: int, content: str) -> None:
         """Uploads a chunk of data to the server and updates the file status if all chunks are uploaded.
-            
-            Args:
-                cookie_value (str): The cookie value used to identify the user.
-                server_key (str): The unique key for the file on the server.
-                index (int): The index of the current chunk being uploaded.
-                content (str): The content of the chunk to be uploaded.
-            Raises:
-                sqlite3.Error: If there is an error with the SQLite database operation.
-                ValueError: If there is a value error during the operation."""
+        Chunks are processed strictly in order starting from index 0.
+        
+        Args:
+            cookie_value (str): The cookie value used to identify the user.
+            server_key (str): The unique key for the file on the server.
+            index (int): The index of the current chunk (0-based).
+            content (str): The content of the chunk to be uploaded.
+        """
         try:
-
             user_id = self.check_cookie(cookie_value)
-            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "wb") as file:
-                file.write(content.encode())
-            
+            file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
+
+            # Simple but effective ordered chunk processing
+            while True:
+                try:
+                    if index == 0:
+                        # First chunk - should write to empty file
+                        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+                            with open(file_path, "w") as file:
+                                file.write(content)
+                            break
+                    else:
+                        # For subsequent chunks, count newlines to determine chunk position
+                        with open(file_path, "r") as file:
+                            chunk_count = file.read().count('\n') + 1
+                            
+                        if chunk_count == index:
+                            # It's this chunk's turn
+                            with open(file_path, "a") as file:
+                                file.write('\n' + content)
+                            break
+                    
+                    time.sleep(0.1)  # Short sleep to prevent CPU thrashing
+                    
+                except Exception as e:
+                    time.sleep(0.1)
+                    continue
+
+            # Update file status if this was the last chunk
             check_file_complete = """
-            SELECT chunk_count FROM files where server_key = ?
+            SELECT chunk_count FROM files WHERE server_key = ?
             """
-            count = self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0]
+            count = self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0] - 1  # Convert to 0-based
             if index == count:
                 self.cursor.execute("UPDATE files SET status = 1 WHERE server_key = ?", (server_key,))
                 self.db_connection.commit()
+
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
             self.db_connection.rollback()
             raise ve
+
 
 
 
@@ -418,9 +446,9 @@ class DB:
             raise e
         
         try:
-            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "rb") as file:
-                file_content = file.read()
-            return file_content.decode()
+            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "r") as file:
+                file_content = file.read().replace('\n', '')
+            return file_content
         except TypeError:
             raise Exception("File does not exist")
 

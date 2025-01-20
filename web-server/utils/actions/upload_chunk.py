@@ -31,7 +31,6 @@ def upload_chunk(info, response):
         index = json.loads(info["body"])["index"] + 1
         server_key = json.loads(info["body"])["server_key"]
         content = json.loads(info["body"])["content"]
-        print(content)
 
         if not(index and server_key and content):
             response["body"] = json.dumps({"failed": "boohoo "})
