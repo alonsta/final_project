@@ -164,7 +164,7 @@ async function loadUserFiles() {
             
             downloadButton.addEventListener('click', async () => {
                 try {
-                    const response = await fetch(`/files/download/${server_key}`, {
+                    const response = await fetch(`/files/download?key=${server_key}`, {
                         method: 'GET',
                         credentials: 'include'
                     });
@@ -172,17 +172,29 @@ async function loadUserFiles() {
                     const decryptedBlob = await decryptFile(blob, encryptionKey);
 
                     async function decryptFile(encryptedBlob, key) {
-                        const arrayBuffer = await encryptedBlob.arrayBuffer();
-                        const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
-                        const decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key);
-                        const decryptedArray = new Uint8Array(decrypted.sigBytes);
-                        
-                        for (let i = 0; i < decrypted.sigBytes; i++) {
-                            decryptedArray[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-                        }
-                        
-                        return new Blob([decryptedArray]);
-                    }
+                      const arrayBuffer = await encryptedBlob.arrayBuffer();
+                      const compressedData = new Uint8Array(arrayBuffer);
+                  
+                      // Decompress first
+                      try {
+                          const decompressedData = pako.inflate(compressedData);
+                          const wordArray = CryptoJS.lib.WordArray.create(decompressedData);
+                  
+                          // Decrypt
+                          const decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key);
+                  
+                          // Convert decrypted WordArray to Uint8Array
+                          const decryptedArray = new Uint8Array(decrypted.sigBytes);
+                          for (let i = 0; i < decrypted.sigBytes; i++) {
+                              decryptedArray[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+                          }
+                  
+                          return new Blob([decryptedArray]);
+                      } catch (error) {
+                          console.error('Decompression failed:', error);
+                          throw new Error('Invalid compressed data');
+                      }
+                  }
 
                     const url = URL.createObjectURL(decryptedBlob);
                     const tempLink = document.createElement('a');

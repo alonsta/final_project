@@ -11,7 +11,7 @@ from utils.actions.upload_file import upload_file_info
 from utils.actions.user_data import user_data as fetch_user_data
 from utils.actions.get_app import get_app
 from utils.actions.user_files import get_files_info
-
+from utils.actions.get_file import get_file_content as download_file
 def process_req(http_request: json) -> bytes:
     """
     Processes an HTTP request and returns an HTTP response.
@@ -96,7 +96,7 @@ def process_req(http_request: json) -> bytes:
                 case "GET":
                     match http_request["path"]:
                         case "download":
-                            response = download_file(http_request["body"], response)
+                            response = download_file(http_request, response)
                         case "info":
                             response = get_files_info(http_request, response)
         case "app":

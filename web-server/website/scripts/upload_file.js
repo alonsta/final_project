@@ -32,6 +32,29 @@ async function processFiles(password, files) {
         if (!success) {
             console.error(`Failed to send file metadata for ${file.name}`);
             return;
+        } else {
+            const fileSection = document.querySelector('#files.content-section');
+            const fileContainer = document.createElement('div');
+            fileContainer.className = 'file-item';
+            
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'file-label';
+            fileLabel.textContent = `${file.name} (${(file.size / (1024*1024)).toFixed(2)} MB)`;
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+            
+            const downloadButton = document.createElement('button');
+            downloadButton.className = 'download-button';
+            downloadButton.textContent = 'Download';
+            
+            buttonContainer.appendChild(downloadButton);
+            fileContainer.appendChild(fileLabel);
+            fileContainer.appendChild(buttonContainer);
+            fileSection.appendChild(fileContainer);
+
+            console.log(`File metadata sent for ${file.name}`);
+
         }
 
         for (let start = 0; start < processedFile.byteLength; start += CHUNK_SIZE) {

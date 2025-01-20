@@ -411,11 +411,15 @@ class DB:
             raise e
 
 
-    def get_file(self, user_id: str, file_name: str) -> bytes:
-        get_file_sql = "SELECT content FROM files WHERE owner_id = ? AND file_name = ?"
-        self.cursor.execute(get_file_sql, (user_id, file_name))
+    def get_file(self, cookie_value: str, server_key: str) -> bytes:
         try:
-            file_content = self.cursor.fetchone()[0]
+            user_id = self.check_cookie(cookie_value)
+        except sqlite3.Error as e:
+            raise e
+        
+        try:
+            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "rb") as file:
+                file_content = file.read()
             return file_content
         except TypeError:
             raise Exception("File does not exist")
