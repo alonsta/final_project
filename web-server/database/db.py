@@ -420,7 +420,7 @@ class DB:
         try:
             with open(f"web-server\\database\\files\\{user_id}\\{server_key}.bin", "rb") as file:
                 file_content = file.read()
-            return file_content
+            return file_content.decode()
         except TypeError:
             raise Exception("File does not exist")
 

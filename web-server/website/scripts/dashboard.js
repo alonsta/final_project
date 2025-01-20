@@ -163,49 +163,51 @@ async function loadUserFiles() {
             downloadButton.textContent = 'Download';
             
             downloadButton.addEventListener('click', async () => {
-                try {
-                    const response = await fetch(`/files/download?key=${server_key}`, {
-                        method: 'GET',
-                        credentials: 'include'
-                    });
-                    const blob = await response.blob();
-                    const decryptedBlob = await decryptFile(blob, encryptionKey);
+              try {
+                const response = await fetch(`/files/download?key=${server_key}`, {
+                  method: 'GET',
+                  credentials: 'include'
+                });
+                const compressedDataStr = await response.text();
 
-                    async function decryptFile(encryptedBlob, key) {
-                      const arrayBuffer = await encryptedBlob.arrayBuffer();
-                      const compressedData = new Uint8Array(arrayBuffer);
-                  
-                      // Decompress first
-                      try {
-                          const decompressedData = pako.inflate(compressedData);
-                          const wordArray = CryptoJS.lib.WordArray.create(decompressedData);
-                  
-                          // Decrypt
-                          const decrypted = CryptoJS.AES.decrypt({ ciphertext: wordArray }, key);
-                  
-                          // Convert decrypted WordArray to Uint8Array
-                          const decryptedArray = new Uint8Array(decrypted.sigBytes);
-                          for (let i = 0; i < decrypted.sigBytes; i++) {
-                              decryptedArray[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-                          }
-                  
-                          return new Blob([decryptedArray]);
-                      } catch (error) {
-                          console.error('Decompression failed:', error);
-                          throw new Error('Invalid compressed data');
-                      }
+                const decryptedBlob = await decryptFile(compressedDataStr, encryptionKey);
+            
+                async function decryptFile(compressedData, key) {
+                  try {
+                    
+                    intarr = new Uint8Array(compressedData.length);
+                    for (let i = 0; i < compressedData.length; i++) {
+                      intarr[i] = compressedData.charCodeAt(i);
+                    }
+                    console.log(intarr);
+                    const decompressedData = pako.inflate(intarr, { to: 'string' });
+            
+                    // Decrypt the data
+                    const decrypted = CryptoJS.AES.decrypt({ ciphertext: decompressedData }, key);
+                    const decryptedData = CryptoJS.enc.Utf8.stringify(decrypted);
+            
+                    // Convert decrypted data to Uint8Array
+                    const decryptedArray = new Uint8Array(decryptedData.length);
+                    for (let i = 0; i < decryptedData.length; i++) {
+                      decryptedArray[i] = decryptedData.charCodeAt(i);
+                    }
+            
+                    return new Blob([decryptedArray]);
+                  } catch (error) {
+                    console.error('Decompression or decryption failed:', error);
+                    throw new Error('Invalid compressed or encrypted data');
                   }
-
-                    const url = URL.createObjectURL(decryptedBlob);
-                    const tempLink = document.createElement('a');
-                    tempLink.href = url;
-                    tempLink.download = decryptedFileName;
-                    tempLink.click();
-                    URL.revokeObjectURL(url);
-                } catch (error) {
-                    console.error('Download failed:', error);
-                    alert('Failed to download file');
                 }
+            
+                const url = URL.createObjectURL(decryptedBlob);
+                const tempLink = document.createElement('a');
+                tempLink.href = url;
+                tempLink.download = decryptedFileName;
+                tempLink.click();
+                URL.revokeObjectURL(url);
+              } catch (error) {
+                console.error('Download failed:', error);
+              }
             });
             
             buttonContainer.appendChild(downloadButton);

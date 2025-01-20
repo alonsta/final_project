@@ -47,7 +47,9 @@ body {
 }
 
 .content {
+    overflow: auto; 
     .content-section{
+        overflow: auto; 
         min-height: fit-content;
         min-width: fit-content;
     }

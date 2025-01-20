@@ -69,18 +69,18 @@ async function processFiles(password, files) {
 
 async function encryptAndCompressFile(fileData, key) {
     try {
-        const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(fileData));
-
-        const encryptedData = CryptoJS.AES.encrypt(wordArray, key).toString();
-
-        const compressedData = pako.deflate(encryptedData);
-
-        return compressedData;
+      const wordArray = CryptoJS.lib.WordArray.create(new Uint8Array(fileData));
+  
+      const encrypted = CryptoJS.AES.encrypt(wordArray, key).toString();
+  
+      const compressedData = pako.deflate(encrypted.toString(CryptoJS.enc.Base64)).toString(CryptoJS.enc.Base64);
+      console.log(compressedData);
+      return compressedData;
     } catch (error) {
-        console.error("Error encrypting or compressing file:", error);
-        throw new Error('Failed to encrypt or compress file');
+      console.error("Error encrypting or compressing file:", error);
+      throw new Error('Failed to encrypt or compress file');
     }
-}
+  }
 
 function readFile(file) {
     return new Promise((resolve, reject) => {
@@ -93,7 +93,7 @@ function readFile(file) {
 
 async function uploadChunkToServer(fileId, chunkIndex, chunkData) {
     try {
-        const base64Chunk = btoa(String.fromCharCode.apply(null, chunkData));
+        const base64Chunk = chunkData
 
         const response = await fetch('/files/upload/chunk', {
             method: 'POST',
