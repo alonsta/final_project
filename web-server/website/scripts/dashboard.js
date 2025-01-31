@@ -141,86 +141,52 @@ async function loadUserFiles() {
           method: 'GET'
       });
       const files = await response.json();
-      for(const key in files) {
+      for (const key in files) {
           const file = files[key];
-          let server_key = file.server_key;
-          let encryptionKey = generateEncryptionKey(password, server_key);
-          let decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
-          let size = file.size;
+          const server_key = file.server_key;
+          const encryptionKey = generateEncryptionKey(password, server_key);
+          const decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
+          const size = file.size;
+
+          // Create UI elements
           const fileSection = document.querySelector('#files.content-section');
           const fileContainer = document.createElement('div');
           fileContainer.className = 'file-item';
-          
+
           const fileLabel = document.createElement('span');
           fileLabel.className = 'file-label';
-          fileLabel.textContent = `${decryptedFileName} (${(size / (1024*1024)).toFixed(2)} MB)`;
-          
+          fileLabel.textContent = `${decryptedFileName} (${(size / (1024 * 1024)).toFixed(2)} MB)`;
+
           const buttonContainer = document.createElement('div');
           buttonContainer.className = 'button-container';
-          
+
           const downloadButton = document.createElement('button');
           downloadButton.className = 'download-button';
           downloadButton.textContent = 'Download';
-          
+
           downloadButton.addEventListener('click', async () => {
-            try {
-              const response = await fetch(`/files/download?key=${server_key}`, {
-                method: 'GET',
-                credentials: 'include'
-              });
-              const hexData = await response.text();
+              try {
+                  const response = await fetch(`/files/download?key=${server_key}`, {
+                      method: 'GET',
+                      credentials: 'include'
+                  });
+                  const base64Data = await response.text();
 
-              const decryptedBlob = await decryptFile(hexData, encryptionKey);
-          
-              async function decryptFile(hexString, key) {
-                try {
-                    // Convert hex string back to bytes
-                    const bytes = new Uint8Array(hexString.length / 2);
-                    for (let i = 0; i < hexString.length; i += 2) {
-                        bytes[i/2] = parseInt(hexString.substr(i, 2), 16);
-                    }
-                    
-                    // Decompress with matching options from upload
-                    const decompressed = pako.inflate(bytes, {
-                        windowBits: 15,
-                        raw: false
-                    });
+                  // Decrypt and decompress the file
+                  const decryptedBlob = await decryptFile(base64Data, encryptionKey);
 
-                    // Convert Uint8Array to WordArray directly
-                    const wordArray = CryptoJS.lib.WordArray.create(decompressed);
-                    
-                    // Convert to base64
-                    const base64String = CryptoJS.enc.Base64.stringify(wordArray);
-                    
-                    // Decrypt using the same key
-                    const decrypted = CryptoJS.AES.decrypt(base64String, key);
-                    
-                    // Convert to ArrayBuffer
-                    const arrayBuffer = new ArrayBuffer(decrypted.sigBytes);
-                    const view = new DataView(arrayBuffer);
-                    
-                    for (let i = 0; i < decrypted.sigBytes; i++) {
-                        view.setUint8(i, decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8) & 0xFF);
-                    }
-                    
-                    return new Blob([arrayBuffer]);
-                } catch (error) {
-                    console.error('Decompression or decryption failed:', error);
-                    throw error;
-                }
-            }
-          
-              const url = URL.createObjectURL(decryptedBlob);
-              const tempLink = document.createElement('a');
-              tempLink.href = url;
-              tempLink.download = decryptedFileName;
-              tempLink.click();
-              URL.revokeObjectURL(url);
-            } catch (error) {
-              console.error('Download failed:', error);
-            }
+                  // Create an object URL for the decrypted blob and trigger download
+                  const url = URL.createObjectURL(decryptedBlob);
+                  const tempLink = document.createElement('a');
+                  tempLink.href = url;
+                  tempLink.download = decryptedFileName;
+                  tempLink.click();
+                  URL.revokeObjectURL(url);
+              } catch (error) {
+                  console.error('Download failed:', error);
+              }
           });
-          
+
           buttonContainer.appendChild(downloadButton);
           fileContainer.appendChild(fileLabel);
           fileContainer.appendChild(buttonContainer);
@@ -228,5 +194,37 @@ async function loadUserFiles() {
       }
   } catch (error) {
       console.error('Error loading user files:', error);
+  }
+}
+
+
+async function decryptFile(base64String, key) {
+  try {
+      // 1. Decode Base64 to binary
+      const rawData = atob(base64String);
+      const bytes = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; i++) {
+          bytes[i] = rawData.charCodeAt(i);
+      }
+
+      // 2. Decrypt binary data
+      const decrypted = CryptoJS.AES.decrypt(
+          { ciphertext: CryptoJS.lib.WordArray.create(bytes) },
+          key
+      );
+
+      // 3. Convert to Uint8Array
+      const decryptedBytes = new Uint8Array(decrypted.sigBytes);
+      for (let i = 0; i < decrypted.sigBytes; i++) {
+          decryptedBytes[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+      }
+
+      // 4. Decompress
+      const decompressed = pako.inflate(decryptedBytes);
+      
+      return new Blob([decompressed]);
+  } catch (error) {
+      console.error('Decryption failed:', error);
+      throw error;
   }
 }

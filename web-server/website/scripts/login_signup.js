@@ -57,7 +57,7 @@ document.getElementById("auth-form").addEventListener("submit", async function (
   const Repassword = document.getElementById("Re_enter_password")?.value;
 
   if (formTitle.textContent === "Sign Up" && Repassword) {
-    if (Repassword === password) {
+    if (Repassword === password && password.length >= 8) {
       password = await hashString(password);
       fetch("/users/signup", {
         method: 'POST',
@@ -73,8 +73,10 @@ document.getElementById("auth-form").addEventListener("submit", async function (
             alert(data.message);
           }
         });
-    } else {
+    } else if (password.length >= 8) {
       alert("Passwords do not match");
+    } else {
+      alert("Password must be at least 8 characters long");
     }
   } else if (username && password) {
     password = await hashString(password);

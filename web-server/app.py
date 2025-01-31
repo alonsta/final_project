@@ -6,7 +6,6 @@ import json
 import socket
 import threading
 from datetime import datetime
-from base64 import *
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +34,7 @@ def serve_client(client_socket, client_address):
         This function prepares a JSON-encoded string (`data2`) for transmission:
 
         Args:
-            data2 (dict): A dictionary containing data to be sent.
+            http_response (dict): A dictionary containing data to be sent.
 
         Returns:
             None
