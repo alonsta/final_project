@@ -2,7 +2,7 @@ const dropZone = document.getElementById('files');
 const modal = document.getElementById('password-modal');
 const fileInput = document.getElementById('file');
 const storedPassword = sessionStorage.getItem('filePassword');
-const CHUNK_SIZE = 1024 * 100; // 100KB
+const CHUNK_SIZE = 1024 * 100 * 2;
 
 dropZone.addEventListener('dragenter', (e) => e.preventDefault());
 dropZone.addEventListener('dragover', (e) => e.preventDefault());

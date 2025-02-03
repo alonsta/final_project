@@ -446,10 +446,21 @@ class DB:
             raise e
         
         try:
-            with open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "r") as file:
+            file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
+            with open(file_path, "r") as file:
                 file_content = file.read().replace('\n', '')
+            
+            file_size_sql = "SELECT size FROM files WHERE server_key = ?"
+            file_size = self.cursor.execute(file_size_sql, (server_key,)).fetchone()[0]
+            update_downloaded_sql = "UPDATE users SET data_downloaded = data_downloaded + ? WHERE id = ?"
+            self.cursor.execute(update_downloaded_sql, (file_size, user_id))
+            self.db_connection.commit()
+            
             return file_content
         except TypeError:
             raise Exception("File does not exist")
+        except sqlite3.Error as e:
+            self.db_connection.rollback()
+            raise e
 
 
