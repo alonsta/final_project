@@ -2,7 +2,7 @@ const dropZone = document.getElementById('files');
 const modal = document.getElementById('password-modal');
 const fileInput = document.getElementById('file');
 const storedPassword = sessionStorage.getItem('filePassword');
-const CHUNK_SIZE = 1024 * 100 * 2;
+const CHUNK_SIZE = 1024 * 1024 * 2 ; // 2MB chunks
 
 dropZone.addEventListener('dragenter', (e) => e.preventDefault());
 dropZone.addEventListener('dragover', (e) => e.preventDefault());
@@ -15,25 +15,30 @@ function handleFileDrop(e) {
 }
 
 async function processFiles(password, files) {
-    files.forEach(async (file) => {
+    for (const file of files) {  // Changed forEach to for...of for better async handling
         const fileId = generateRandomId();
         const key = generateEncryptionKey(password, fileId);
-        
         const encryptedFileName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(file.name), key).toString();
-        const fileData = await readFile(file);
-        const processedFile = await compressAndEncryptFile(fileData, key);
 
-        // Calculate chunk count with integer math
-        const chunkCount = Math.ceil(processedFile.length / CHUNK_SIZE);
-
+        // Calculate chunk count
+        const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+        
+        // Send file metadata first
         await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
 
-        // Upload chunks with proper integer boundaries
-        for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-            const start = chunkIndex * CHUNK_SIZE;
-            const end = Math.min(start + CHUNK_SIZE, processedFile.length);
-            const chunk = processedFile.slice(start, end);
-            await uploadChunkToServer(fileId, chunkIndex, chunk);
+        // Process file in chunks
+        for (let i = 0; i < chunkCount; i++) {
+            const start = i * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, file.size);
+            const chunk = file.slice(start, end);
+            
+            // Read chunk
+            const chunkData = await readChunk(chunk);
+            // Compress and encrypt chunk
+            const processedChunk = await compressAndEncryptChunk(chunkData, key);
+            
+            // Send chunk
+            await uploadChunk(fileId, i, processedChunk);
         }
 
         const fileSection = document.querySelector('#files.content-section');
@@ -53,18 +58,31 @@ async function processFiles(password, files) {
 
         downloadButton.addEventListener('click', async () => {
             try {
-                const response = await fetch(`/files/download?key=${fileId}`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-                const base64Data = await response.text();
+                const chunks = [];
+                let chunkIndex = 0;
+                let chunk_count = file.chunk_count;
 
-                const decryptedBlob = await decryptFile(base64Data, key);
+                while (chunkIndex < chunk_count) {
+                    const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
 
-                const url = URL.createObjectURL(decryptedBlob);
+                    if (response.ok) {
+                        const encryptedChunk = await response.text();
+                        const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
+                        chunks.push(decryptedChunk);
+                        chunkIndex++;
+                    } else {
+                        console.error("chunk counting corruption or other problems")
+                    }
+                }
+
+                const blob = new Blob(chunks);
+                const url = URL.createObjectURL(blob);
                 const tempLink = document.createElement('a');
                 tempLink.href = url;
-                tempLink.download = file.name;
+                tempLink.download = decryptedFileName;
                 tempLink.click();
                 URL.revokeObjectURL(url);
             } catch (error) {
@@ -78,7 +96,34 @@ async function processFiles(password, files) {
             fileSection.appendChild(fileContainer);
 
             console.log(`File metadata sent for ${file.name}`);
+    }
+}
+
+async function readChunk(chunk) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsArrayBuffer(chunk);
     });
+}
+
+async function compressAndEncryptChunk(chunkData, key) {
+    // Compress chunk
+    const compressed = pako.deflate(new Uint8Array(chunkData));
+    
+    // Convert to base64 in smaller chunks to avoid stack overflow
+    const chunkSize = 32768; // 32KB chunks for string conversion
+    let binary = '';
+    for (let i = 0; i < compressed.length; i += chunkSize) {
+        const slice = compressed.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, slice);
+    }
+    
+    // Convert to base64
+    const base64 = btoa(binary);
+    
+    // Encrypt
+    return CryptoJS.AES.encrypt(base64, key).toString();
 }
 
 async function compressAndEncryptFile(fileData, key) {
@@ -111,6 +156,25 @@ function readFile(file) {
         reader.onerror = reject;
         reader.readAsArrayBuffer(file);
     });
+}
+
+async function uploadChunk(fileId, index, chunk) {
+    const response = await fetch('/files/upload/chunk', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            key: fileId,
+            index: index,
+            data: chunk
+        }),
+        credentials: 'include'
+    });
+    
+    if (!response.ok) {
+        throw new Error(`Failed to upload chunk ${index}`);
+    }
 }
 
 async function uploadChunkToServer(fileId, chunkIndex, chunkData) {

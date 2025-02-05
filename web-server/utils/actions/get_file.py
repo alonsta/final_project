@@ -18,6 +18,7 @@ def get_file_content(info, response):
     
     try:
         server_key = info["query_params"]["key"]
+        index = info["query_params"]["index"]
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldn't fetch file content", "message": str(e)})
         response["response_code"] = "500"
@@ -25,8 +26,8 @@ def get_file_content(info, response):
 
     try:
         # Get the file content - it's already in hex format from upload
-        file_content = database_access.get_file(auth_cookie_value, server_key)
-        
+        file_content = database_access.get_file(auth_cookie_value, server_key, int(index))
+        print("got file")
         # Set response headers for plain text
         response["headers"]["Content-Type"] = "text/plain"
         # Send the content as is - it's already in hex format from the upload

@@ -127,12 +127,6 @@ async function loadUserStats() {
     overviewDiv.innerHTML = 'Failed to load user statistics';
   }}
 
-function generateEncryptionKey(password, fileId) {
-    const masterHash = CryptoJS.SHA256(password).toString();
-    const combined = fileId + masterHash;
-    return CryptoJS.MD5(combined).toString();
-}
-
 async function loadUserFiles() {
   const password = sessionStorage.getItem('filePassword');
   try {
@@ -166,17 +160,28 @@ async function loadUserFiles() {
 
           downloadButton.addEventListener('click', async () => {
               try {
-                  const response = await fetch(`/files/download?key=${server_key}`, {
-                      method: 'GET',
-                      credentials: 'include'
-                  });
-                  const base64Data = await response.text();
+                  const chunks = [];
+                  let chunkIndex = 0;
+                  let chunk_count = file.chunk_count;
 
-                  // Decrypt and decompress the file
-                  const decryptedBlob = await decryptFile(base64Data, encryptionKey);
+                  while (chunkIndex < chunk_count) {
+                      const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
+                          method: 'GET',
+                          credentials: 'include'
+                      });
 
-                  // Create an object URL for the decrypted blob and trigger download
-                  const url = URL.createObjectURL(decryptedBlob);
+                      if (response.ok) {
+                          const encryptedChunk = await response.text();
+                          const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
+                          chunks.push(decryptedChunk);
+                          chunkIndex++;
+                      } else {
+                          console.error("chunk counting corruption or other problems")
+                      }
+                  }
+
+                  const blob = new Blob(chunks);
+                  const url = URL.createObjectURL(blob);
                   const tempLink = document.createElement('a');
                   tempLink.href = url;
                   tempLink.download = decryptedFileName;
@@ -197,6 +202,39 @@ async function loadUserFiles() {
   }
 }
 
+async function decryptAndDecompressChunk(encryptedChunk, key) {
+    // Decrypt
+    const decrypted = CryptoJS.AES.decrypt(encryptedChunk, key);
+    const base64 = decrypted.toString(CryptoJS.enc.Utf8);
+    
+    // Convert base64 to binary
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    
+    // Decompress
+    return pako.inflate(bytes);
+}
+
+function decryptChunk(encryptedChunk, key) {
+    const decrypted = CryptoJS.AES.decrypt(encryptedChunk, key);
+    const decryptedData = decrypted.toString(CryptoJS.enc.Utf8);
+
+    const byteCharacters = atob(decryptedData);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    return new Uint8Array(byteNumbers);
+}
+
+function generateEncryptionKey(password, fileId) {
+    const masterHash = CryptoJS.SHA256(password).toString();
+    const combined = fileId + masterHash;
+    return CryptoJS.MD5(combined).toString();
+}
 
 async function decryptFile(base64String, key) {
   try {

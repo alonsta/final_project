@@ -409,7 +409,7 @@ class DB:
         try:
             user_id = self.check_cookie(cookie_value)
             get_files_sql = """
-            SELECT id, server_key, file_name, size, created, parent_id, type
+            SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
             FROM files WHERE owner_id = ?
             """
             
@@ -429,7 +429,8 @@ class DB:
                     'size': row[3],
                     'created': row[4],
                     'parent_id': row[5],
-                    'type': row[6]
+                    'type': row[6],
+                    'chunk_count': row[7]
                 }
                 files_summary[row[0]] = file_summary
             return files_summary
@@ -439,7 +440,7 @@ class DB:
             raise e
 
 
-    def get_file(self, cookie_value: str, server_key: str) -> bytes:
+    def get_file(self, cookie_value: str, server_key: str, index: int) -> str:
         try:
             user_id = self.check_cookie(cookie_value)
         except sqlite3.Error as e:
@@ -448,15 +449,17 @@ class DB:
         try:
             file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
             with open(file_path, "r") as file:
-                file_content = file.read().replace('\n', '')
+                file_content = file.read().split('\n')
             
             file_size_sql = "SELECT size FROM files WHERE server_key = ?"
-            file_size = self.cursor.execute(file_size_sql, (server_key,)).fetchone()[0]
+            file_size_result = self.cursor.execute(file_size_sql, (server_key,)).fetchone()
+            if file_size_result is None:
+                raise Exception("File does not exist")
+            file_size = file_size_result[0]
             update_downloaded_sql = "UPDATE users SET data_downloaded = data_downloaded + ? WHERE id = ?"
             self.cursor.execute(update_downloaded_sql, (file_size, user_id))
             self.db_connection.commit()
-            
-            return file_content
+            return file_content[index + 1]
         except TypeError:
             raise Exception("File does not exist")
         except sqlite3.Error as e:

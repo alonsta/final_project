@@ -29,8 +29,8 @@ def upload_chunk(info, response):
     try:
         database_access = DB(os.getcwd() + "\\web-server\\database\\data")
         index = json.loads(info["body"])["index"] + 1
-        server_key = json.loads(info["body"])["server_key"]
-        content = json.loads(info["body"])["content"]
+        server_key = json.loads(info["body"])["key"]
+        content = json.loads(info["body"])["data"]
 
         if not(index and server_key and content):
             response["body"] = json.dumps({"failed": "boohoo "})
