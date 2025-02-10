@@ -17,5 +17,5 @@ pyuac
 tkinter
 watchdog
 keyring
-win32com
 pytz
+pywin32
