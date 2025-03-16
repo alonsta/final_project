@@ -6,6 +6,7 @@ const cancelButton = document.getElementById('cancel-button');
 document.addEventListener('DOMContentLoaded', () => {
   const storedPassword = sessionStorage.getItem('filePassword');
   if (!storedPassword) {
+    loadUserStats();
     showPasswordModal(true);
   } else {
     loadUserStats();
@@ -48,6 +49,8 @@ confirmButton.addEventListener('click', () => {
   try {
     sessionStorage.setItem('filePassword', password);
     passwordModal.style.display = 'none';
+    loadUserFiles();
+    loadUserStats();
   } catch (error) {
     console.error('Error storing password:', error);
     alert('Failed to store password. Please try again.');

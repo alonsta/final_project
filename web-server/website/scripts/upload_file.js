@@ -15,80 +15,78 @@ function handleFileDrop(e) {
 }
 
 async function processFiles(password, files) {
-    for (const file of files) {  // Changed forEach to for...of for better async handling
-        const fileId = generateRandomId();
-        const key = generateEncryptionKey(password, fileId);
-        const encryptedFileName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(file.name), key).toString();
+    for (const file of files) {
+        try {
+            const fileId = generateRandomId();
+            const key = generateEncryptionKey(password, fileId);
+            const encryptedFileName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(file.name), key).toString();
 
-        // Calculate chunk count
-        const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
-        
-        // Send file metadata first
-        await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
+            // Calculate chunk count
+            const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
 
-        // Process file in chunks
-        for (let i = 0; i < chunkCount; i++) {
-            const start = i * CHUNK_SIZE;
-            const end = Math.min(start + CHUNK_SIZE, file.size);
-            const chunk = file.slice(start, end);
-            
-            // Read chunk
-            const chunkData = await readChunk(chunk);
-            // Compress and encrypt chunk
-            const processedChunk = await compressAndEncryptChunk(chunkData, key);
-            
-            // Send chunk
-            await uploadChunk(fileId, i, processedChunk);
-        }
+            // Send file metadata first
+            await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
 
-        const fileSection = document.querySelector('#files.content-section');
-        const fileContainer = document.createElement('div');
-        fileContainer.className = 'file-item';
+            // Process file in chunks
+            for (let i = 0; i < chunkCount; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
 
-        const fileLabel = document.createElement('span');
-        fileLabel.className = 'file-label';
-        fileLabel.textContent = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+                // Read chunk
+                const chunkData = await readChunk(chunk);
+                // Compress and encrypt chunk
+                const processedChunk = await compressAndEncryptChunk(chunkData, key);
 
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'button-container';
-
-        const downloadButton = document.createElement('button');
-        downloadButton.className = 'download-button';
-        downloadButton.textContent = 'Download';
-
-        downloadButton.addEventListener('click', async () => {
-            try {
-                const chunks = [];
-                let chunkIndex = 0;
-                let chunk_count = file.chunk_count;
-
-                while (chunkIndex < chunk_count) {
-                    const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
-                        method: 'GET',
-                        credentials: 'include'
-                    });
-
-                    if (response.ok) {
-                        const encryptedChunk = await response.text();
-                        const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
-                        chunks.push(decryptedChunk);
-                        chunkIndex++;
-                    } else {
-                        console.error("chunk counting corruption or other problems")
-                    }
-                }
-
-                const blob = new Blob(chunks);
-                const url = URL.createObjectURL(blob);
-                const tempLink = document.createElement('a');
-                tempLink.href = url;
-                tempLink.download = decryptedFileName;
-                tempLink.click();
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error('Download failed:', error);
+                // Send chunk
+                await uploadChunk(fileId, i, processedChunk);
             }
-        });
+
+            // Update UI for the file
+            const fileSection = document.querySelector('#files.content-section');
+            const fileContainer = document.createElement('div');
+            fileContainer.className = 'file-item';
+
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'file-label';
+            fileLabel.textContent = `${file.name} (${formatFileSize(file.size)})`; // Use the helper function here
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            const downloadButton = document.createElement('button');
+            downloadButton.className = 'download-button';
+            downloadButton.textContent = 'Download';
+
+            downloadButton.addEventListener('click', async () => {
+                try {
+                    const chunks = [];
+                    for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
+                        const response = await fetch(`/files/download?key=${fileId}&index=${chunkIndex}`, {
+                            method: 'GET',
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            const encryptedChunk = await response.text();
+                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, key);
+                            chunks.push(decryptedChunk);
+                        } else {
+                            console.error("Chunk download failed");
+                        }
+                    }
+
+                    const blob = new Blob(chunks);
+                    const url = URL.createObjectURL(blob);
+                    const tempLink = document.createElement('a');
+                    tempLink.href = url;
+                    tempLink.download = file.name;
+                    tempLink.click();
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    console.error('Download failed:', error);
+                }
+            });
 
             buttonContainer.appendChild(downloadButton);
             fileContainer.appendChild(fileLabel);
@@ -96,6 +94,9 @@ async function processFiles(password, files) {
             fileSection.appendChild(fileContainer);
 
             console.log(`File metadata sent for ${file.name}`);
+        } catch (error) {
+            console.error(`Error processing file ${file.name}:`, error);
+        }
     }
 }
 
@@ -256,3 +257,13 @@ async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size) {
         return false;
     }
 }
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+  
+    const units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const unitIndex = Math.floor(Math.log(bytes) / Math.log(1024));
+    const size = (bytes / Math.pow(1024, unitIndex)).toFixed(2);
+  
+    return `${size} ${units[unitIndex]}`;
+  }
