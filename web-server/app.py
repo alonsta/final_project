@@ -9,7 +9,7 @@ from datetime import datetime
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", 12345))
+    server_socket.bind(("0.0.0.0", 8080))
 
     print("Server running " + str(datetime.now()), end="\n\n")
 
