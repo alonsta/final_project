@@ -85,23 +85,23 @@ async function processFiles(password, files) {
                     let chunkIndex = 0;
 
                     // --- Show Progress Indicator for Download ---
-                     updateProgress('show', `Starting download: ${decryptedFileName}`, 0, false, true); // isDownload = true
+                     updateProgress('show', `Starting download: ${file.name}`, 0, false, true); // isDownload = true
 
-                    while (chunkIndex < chunk_count) {
-                        const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
+                    while (chunkIndex < totalChunks) { // Use totalChunks
+                        const response = await fetch(`/files/download?key=${fileId}&index=${chunkIndex}`, {
                             method: 'GET',
                             credentials: 'include'
                         });
 
                         if (response.ok) {
                             const encryptedChunk = await response.text();
-                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
+                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, key);
                             chunks.push(decryptedChunk);
                             chunkIndex++;
 
                              // --- Update Download Progress ---
-                            const percentComplete = Math.round((chunkIndex / chunk_count) * 100);
-                            updateProgress('update', `Downloading ${decryptedFileName} ${percentComplete}%`, percentComplete, false, true);
+                            const percentComplete = Math.round((chunkIndex / totalChunks) * 100);
+                            updateProgress('update', `Downloading ${file.name} ${percentComplete}%`, percentComplete, false, true);
 
                         } else {
                              throw new Error(`Chunk download failed (Index: ${chunkIndex}, Status: ${response.status})`);
@@ -109,13 +109,13 @@ async function processFiles(password, files) {
                     }
 
                     // --- All chunks downloaded, prepare Blob ---
-                    updateProgress('update', `Download complete: ${decryptedFileName}. Preparing file...`, 100, false, true);
+                    updateProgress('update', `Download complete: ${file.name}. Preparing file...`, 100, false, true);
 
                     const blob = new Blob(chunks);
                     const url = URL.createObjectURL(blob);
                     const tempLink = document.createElement('a');
                     tempLink.href = url;
-                    tempLink.download = decryptedFileName;
+                    tempLink.download = file.name;
                     document.body.appendChild(tempLink); // Required for Firefox
                     tempLink.click();
                     document.body.removeChild(tempLink); // Clean up
@@ -127,7 +127,7 @@ async function processFiles(password, files) {
                 } catch (error) {
                     console.error('Download failed:', error);
                      // --- Show error and hide ---
-                     updateProgress('show', `Download failed: ${decryptedFileName}`, null, true); // isError = true
+                     updateProgress('show', `Download failed: ${file.name}`, null, true); // isError = true
                      setTimeout(() => updateProgress('hide'), 3000);
                 }
             });

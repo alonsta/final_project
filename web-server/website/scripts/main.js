@@ -15,7 +15,7 @@ document.getElementById('app-button').addEventListener('click', function() {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = 'my_application.exe'; // The file name for the download
+        a.download = 'RAFT_pc.exe'; // The file name for the download
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url); // Clean up the URL object

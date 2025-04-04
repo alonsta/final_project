@@ -36,6 +36,7 @@ function updateProgress(state, message, percentage = null, isError = false, isDo
 
 // --- Add this to your existing event listeners ---
 document.addEventListener('DOMContentLoaded', () => {
+  switchTab('overview'); // Default tab on load
   const storedPassword = sessionStorage.getItem('filePassword');
   if (!storedPassword) {
     loadUserStats();
