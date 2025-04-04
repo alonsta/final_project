@@ -16,19 +16,27 @@ function handleFileDrop(e) {
 
 async function processFiles(password, files) {
     for (const file of files) {
+        let fileId;
+        let totalChunks = 0;
         try {
-            const fileId = generateRandomId();
+            fileId = generateRandomId();
             const key = generateEncryptionKey(password, fileId);
             const encryptedFileName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(file.name), key).toString();
 
             // Calculate chunk count
-            const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+            totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+            // --- Show progress for the current file ---
+            updateProgress('show', `Starting upload: ${file.name}`, 0);
 
             // Send file metadata first
-            await sendFileMetadata(fileId, encryptedFileName, chunkCount, file.size);
+            const metadataOk = await sendFileMetadata(fileId, encryptedFileName, totalChunks, file.size); // Use totalChunks
+            if (!metadataOk) {
+                 throw new Error('Failed to send file metadata.');
+            }
 
             // Process file in chunks
-            for (let i = 0; i < chunkCount; i++) {
+            for (let i = 0; i < totalChunks; i++) { // Use totalChunks
                 const start = i * CHUNK_SIZE;
                 const end = Math.min(start + CHUNK_SIZE, file.size);
                 const chunk = file.slice(start, end);
@@ -40,16 +48,24 @@ async function processFiles(password, files) {
 
                 // Send chunk
                 await uploadChunk(fileId, i, processedChunk);
+
+                // --- Update progress after each chunk ---
+                const percentComplete = Math.round(((i + 1) / totalChunks) * 100);
+                updateProgress('update', `Uploading ${file.name} ${percentComplete}%`, percentComplete);
             }
 
-            // Update UI for the file
+             // --- Show success and hide after delay ---
+             updateProgress('update', `Upload complete: ${file.name}`, 100);
+             setTimeout(() => updateProgress('hide'), 2000); // Hide after 2 seconds
+
+            // Update UI for the file (Your existing UI update code)
             const fileSection = document.querySelector('#files.content-section');
             const fileContainer = document.createElement('div');
             fileContainer.className = 'file-item';
 
             const fileLabel = document.createElement('span');
             fileLabel.className = 'file-label';
-            fileLabel.textContent = `${file.name} (${formatFileSize(file.size)})`; // Use the helper function here
+            fileLabel.textContent = `${file.name} (${formatFileSize(file.size)})`;
 
             const buttonContainer = document.createElement('div');
             buttonContainer.className = 'button-container';
@@ -59,32 +75,60 @@ async function processFiles(password, files) {
             downloadButton.textContent = 'Download';
 
             downloadButton.addEventListener('click', async () => {
+                 if (progressIndicator.style.display === 'block') {
+                    alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
+                    return;
+                }
+
                 try {
                     const chunks = [];
-                    for (let chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++) {
-                        const response = await fetch(`/files/download?key=${fileId}&index=${chunkIndex}`, {
+                    let chunkIndex = 0;
+
+                    // --- Show Progress Indicator for Download ---
+                     updateProgress('show', `Starting download: ${decryptedFileName}`, 0, false, true); // isDownload = true
+
+                    while (chunkIndex < chunk_count) {
+                        const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
                             method: 'GET',
                             credentials: 'include'
                         });
 
                         if (response.ok) {
                             const encryptedChunk = await response.text();
-                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, key);
+                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
                             chunks.push(decryptedChunk);
+                            chunkIndex++;
+
+                             // --- Update Download Progress ---
+                            const percentComplete = Math.round((chunkIndex / chunk_count) * 100);
+                            updateProgress('update', `Downloading ${decryptedFileName} ${percentComplete}%`, percentComplete, false, true);
+
                         } else {
-                            console.error("Chunk download failed");
+                             throw new Error(`Chunk download failed (Index: ${chunkIndex}, Status: ${response.status})`);
                         }
                     }
+
+                    // --- All chunks downloaded, prepare Blob ---
+                    updateProgress('update', `Download complete: ${decryptedFileName}. Preparing file...`, 100, false, true);
 
                     const blob = new Blob(chunks);
                     const url = URL.createObjectURL(blob);
                     const tempLink = document.createElement('a');
                     tempLink.href = url;
-                    tempLink.download = file.name;
+                    tempLink.download = decryptedFileName;
+                    document.body.appendChild(tempLink); // Required for Firefox
                     tempLink.click();
+                    document.body.removeChild(tempLink); // Clean up
                     URL.revokeObjectURL(url);
+
+                    // --- Hide indicator after success ---
+                     setTimeout(() => updateProgress('hide'), 1000); // Hide shortly after click initiated
+
                 } catch (error) {
                     console.error('Download failed:', error);
+                     // --- Show error and hide ---
+                     updateProgress('show', `Download failed: ${decryptedFileName}`, null, true); // isError = true
+                     setTimeout(() => updateProgress('hide'), 3000);
                 }
             });
 
@@ -94,11 +138,16 @@ async function processFiles(password, files) {
             fileSection.appendChild(fileContainer);
 
             console.log(`File metadata sent for ${file.name}`);
+
         } catch (error) {
             console.error(`Error processing file ${file.name}:`, error);
+             // --- Show error and hide after delay ---
+             updateProgress('show', `Upload failed: ${file.name}`, null, true); // isError = true
+             setTimeout(() => updateProgress('hide'), 3000); // Hide after 3 seconds
         }
     }
 }
+
 
 async function readChunk(chunk) {
     return new Promise((resolve) => {

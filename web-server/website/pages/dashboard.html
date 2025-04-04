@@ -8,6 +8,11 @@
     <title>Dashboard</title>
 </head>
 <body>
+    <div id="progress-indicator" class="progress-container" style="display: none;">
+        <div class="progress-bar"></div>
+        <span class="progress-text">Processing...</span>
+    </div>
+
     <div class="dashboard">
         <div class="sidebar">
             <div class="tab" id="overview-tab" onclick="switchTab('overview');">
@@ -28,7 +33,9 @@
             <div id="files" class="content-section hidden">
                 <input type="file" id="file" style="display: none;" multiple>
                 <h1>Your Files</h1>
-                <div id="password-modal">
+                <div class="file-grid-container">
+                    </div>
+                 <div id="password-modal" style="display: none;">
                     <div style="background-color: white; padding: 20px; border-radius: 8px; text-align: center;">
                         <h2>Enter encryption key</h2>
                         <input type="password" id="password" placeholder="password" style="margin: 10px; padding: 8px;">

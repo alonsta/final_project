@@ -3,6 +3,38 @@ const passwordInput = document.getElementById('password');
 const confirmButton = document.getElementById('confirm-button');
 const cancelButton = document.getElementById('cancel-button');
 
+
+const progressIndicator = document.getElementById('progress-indicator');
+const progressBar = progressIndicator.querySelector('.progress-bar');
+const progressText = progressIndicator.querySelector('.progress-text');
+
+// --- Helper function to show/update/hide indicator ---
+function updateProgress(state, message, percentage = null, isError = false, isDownload = false) {
+    if (state === 'show') {
+        progressIndicator.classList.remove('error', 'download'); // Reset classes
+        if(isError) progressIndicator.classList.add('error');
+        if(isDownload) progressIndicator.classList.add('download');
+
+        progressText.textContent = message;
+        progressBar.style.width = (percentage !== null) ? `${percentage}%` : '0%';
+        progressIndicator.style.display = 'block';
+        progressIndicator.style.opacity = '1';
+    } else if (state === 'update') {
+         progressText.textContent = message;
+         if (percentage !== null) {
+             progressBar.style.width = `${percentage}%`;
+         }
+    } else if (state === 'hide') {
+        progressIndicator.style.opacity = '0';
+        // Wait for fade out before hiding completely
+        setTimeout(() => {
+            progressIndicator.style.display = 'none';
+            progressIndicator.classList.remove('error', 'download'); // Clean up classes
+        }, 500); // Matches CSS transition duration
+    }
+}
+
+// --- Add this to your existing event listeners ---
 document.addEventListener('DOMContentLoaded', () => {
   const storedPassword = sessionStorage.getItem('filePassword');
   if (!storedPassword) {
@@ -12,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserStats();
     loadUserFiles();
   }
+
 });
 
 /**
@@ -130,79 +163,125 @@ async function loadUserStats() {
     overviewDiv.innerHTML = 'Failed to load user statistics';
   }}
 
-async function loadUserFiles() {
-  const password = sessionStorage.getItem('filePassword');
-  try {
-      const response = await fetch('/files/info', {
-          credentials: 'include',
-          method: 'GET'
-      });
-      const files = await response.json();
-      for (const key in files) {
-          const file = files[key];
-          const server_key = file.server_key;
-          const encryptionKey = generateEncryptionKey(password, server_key);
-          const decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
-          const size = file.size;
+  async function loadUserFiles() {
+    const password = sessionStorage.getItem('filePassword');
+    const fileSection = document.querySelector('#files.content-section'); // Get reference outside loop
 
-          // Create UI elements
-          const fileSection = document.querySelector('#files.content-section');
-          const fileContainer = document.createElement('div');
-          fileContainer.className = 'file-item';
+    fileSection.querySelectorAll('.file-item').forEach(item => item.remove());
 
-          const fileLabel = document.createElement('span');
-          fileLabel.className = 'file-label';
-          fileLabel.textContent = `${decryptedFileName} (${(size / (1024 * 1024)).toFixed(2)} MB)`;
 
-          const buttonContainer = document.createElement('div');
-          buttonContainer.className = 'button-container';
+    try {
+        const response = await fetch('/files/info', {
+            credentials: 'include',
+            method: 'GET'
+        });
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); // Check response ok
 
-          const downloadButton = document.createElement('button');
-          downloadButton.className = 'download-button';
-          downloadButton.textContent = 'Download';
+        const files = await response.json();
 
-          downloadButton.addEventListener('click', async () => {
-              try {
-                  const chunks = [];
-                  let chunkIndex = 0;
-                  let chunk_count = file.chunk_count;
+        for (const key in files) {
+            const file = files[key];
+            const server_key = file.server_key;
+            const encryptionKey = generateEncryptionKey(password, server_key);
+            let decryptedFileName = "Filename Error"; // Default filename in case of decryption error
+             try {
+                decryptedFileName = CryptoJS.AES.decrypt(file.file_name, encryptionKey).toString(CryptoJS.enc.Utf8);
+                 if (!decryptedFileName) { // Handle cases where decryption results in empty string
+                     decryptedFileName = "corrupt/unnamed File";
+                 }
+            } catch (e) {
+                 console.error(`Failed to decrypt filename for key ${server_key}:`, e);
+            }
 
-                  while (chunkIndex < chunk_count) {
-                      const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
-                          method: 'GET',
-                          credentials: 'include'
-                      });
+            const size = file.size;
+            const chunk_count = file.chunk_count; // Get chunk_count for progress calculation
 
-                      if (response.ok) {
-                          const encryptedChunk = await response.text();
-                          const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
-                          chunks.push(decryptedChunk);
-                          chunkIndex++;
-                      } else {
-                          console.error("chunk counting corruption or other problems")
-                      }
-                  }
+            // Create UI elements (Your existing code)
+            const fileContainer = document.createElement('div');
+            fileContainer.className = 'file-item';
 
-                  const blob = new Blob(chunks);
-                  const url = URL.createObjectURL(blob);
-                  const tempLink = document.createElement('a');
-                  tempLink.href = url;
-                  tempLink.download = decryptedFileName;
-                  tempLink.click();
-                  URL.revokeObjectURL(url);
-              } catch (error) {
-                  console.error('Download failed:', error);
-              }
-          });
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'file-label';
+            // Use the formatFileSize helper function you already have
+            fileLabel.textContent = `${decryptedFileName} (${formatFileSize(size)})`;
 
-          buttonContainer.appendChild(downloadButton);
-          fileContainer.appendChild(fileLabel);
-          fileContainer.appendChild(buttonContainer);
-          fileSection.appendChild(fileContainer);
-      }
-  } catch (error) {
-      console.error('Error loading user files:', error);
-  }
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            const downloadButton = document.createElement('button');
+            downloadButton.className = 'download-button';
+            downloadButton.textContent = 'Download';
+
+            // --- MODIFIED Download Button Event Listener ---
+            downloadButton.addEventListener('click', async () => {
+                 if (progressIndicator.style.display === 'block') {
+                    alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
+                    return;
+                }
+
+                try {
+                    const chunks = [];
+                    let chunkIndex = 0;
+
+                    // --- Show Progress Indicator for Download ---
+                     updateProgress('show', `Starting download: ${decryptedFileName}`, 0, false, true); // isDownload = true
+
+                    while (chunkIndex < chunk_count) {
+                        const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
+                            method: 'GET',
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            const encryptedChunk = await response.text();
+                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
+                            chunks.push(decryptedChunk);
+                            chunkIndex++;
+
+                             // --- Update Download Progress ---
+                            const percentComplete = Math.round((chunkIndex / chunk_count) * 100);
+                            updateProgress('update', `Downloading ${decryptedFileName} ${percentComplete}%`, percentComplete, false, true);
+
+                        } else {
+                             throw new Error(`Chunk download failed (Index: ${chunkIndex}, Status: ${response.status})`);
+                        }
+                    }
+
+                    // --- All chunks downloaded, prepare Blob ---
+                    updateProgress('update', `Download complete: ${decryptedFileName}. Preparing file...`, 100, false, true);
+
+                    const blob = new Blob(chunks);
+                    const url = URL.createObjectURL(blob);
+                    const tempLink = document.createElement('a');
+                    tempLink.href = url;
+                    tempLink.download = decryptedFileName;
+                    document.body.appendChild(tempLink); // Required for Firefox
+                    tempLink.click();
+                    document.body.removeChild(tempLink); // Clean up
+                    URL.revokeObjectURL(url);
+
+                    // --- Hide indicator after success ---
+                     setTimeout(() => updateProgress('hide'), 1000); // Hide shortly after click initiated
+
+                } catch (error) {
+                    console.error('Download failed:', error);
+                     // --- Show error and hide ---
+                     updateProgress('show', `Download failed: ${decryptedFileName}`, null, true); // isError = true
+                     setTimeout(() => updateProgress('hide'), 3000);
+                }
+            });
+            // --- END OF MODIFIED Listener ---
+
+            buttonContainer.appendChild(downloadButton);
+            fileContainer.appendChild(fileLabel);
+            fileContainer.appendChild(buttonContainer);
+            fileSection.appendChild(fileContainer);
+        }
+    } catch (error) {
+        console.error('Error loading user files:', error);
+        // Optionally display an error message in the UI
+        fileSection.innerHTML = '<p style="color: red;">Error loading files. Please check console or try again later.</p>';
+    }
 }
 
 async function decryptAndDecompressChunk(encryptedChunk, key) {
