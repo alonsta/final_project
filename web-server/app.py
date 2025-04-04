@@ -6,17 +6,22 @@ import json
 import socket
 import threading
 from datetime import datetime
+import ssl
 
 def main():
+    #context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    #context.load_cert_chain('/path/to/certchain.pem', '/path/to/private.key')
+    
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", 8080))
+    server_socket.bind(("0.0.0.0", 443))
 
     print("Server running " + str(datetime.now()), end="\n\n")
-
+    #ssocket = context.wrap_socket(server_socket, server_side=True)
+    ssocket = server_socket
     while True:
         try:
-            server_socket.listen()
-            client_socket, client_address = server_socket.accept()
+            ssocket.listen()
+            client_socket, client_address = ssocket.accept()
             print(str(datetime.now()) +  " - " + client_address[0] + " made a request")
             thread = threading.Thread(target=serve_client, args=(client_socket, client_address))
             thread.daemon = True
@@ -58,8 +63,7 @@ def serve_client(client_socket, client_address):
         response = process_req(data)
         send(response)
     except Exception as e:
-        print(e)
-        print(f"Connection aborted {client_address}")
+        print(f"Connection aborted {client_address} right now it means he sent a request i cant handle")
     finally:
         client_socket.close()
     

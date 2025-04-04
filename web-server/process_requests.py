@@ -96,7 +96,6 @@ def process_req(http_request: json) -> bytes:
                 case "GET":
                     match http_request["path"]:
                         case "download":
-                            print("download")
                             response = download_chunk(http_request, response)
                         case "info":
                             response = get_files_info(http_request, response)

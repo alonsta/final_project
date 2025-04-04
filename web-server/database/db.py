@@ -402,7 +402,7 @@ class DB:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
-            print(ve)
+            print("remove file ERORR: " + ve)
             self.db_connection.rollback()
 
     def get_folders_summary(self, cookie_value: str, parent_id: str = None) -> dict:

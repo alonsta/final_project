@@ -28,7 +28,7 @@ def user_data(info, response):
         response["response_code"] = "200"
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt fetch data","message": str(e)})
-        print(e)
+        print("user data " + str(e))
         response["response_code"] = "500"
     
 

@@ -48,5 +48,5 @@ def upload_file_info(info, response):
 
     except Exception as e:
         response["body"] = json.dumps({"failed": "boohoo "})
-        print(e)
+        print("upload file " + str(e))
         return response

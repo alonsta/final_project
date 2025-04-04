@@ -164,7 +164,7 @@ async function loadUserStats() {
     overviewDiv.innerHTML = 'Failed to load user statistics';
   }}
 
-  async function loadUserFiles() {
+async function loadUserFiles() {
     const password = sessionStorage.getItem('filePassword');
     const fileSection = document.querySelector('#files.content-section'); // Get reference outside loop
 
@@ -280,7 +280,6 @@ async function loadUserStats() {
         }
     } catch (error) {
         console.error('Error loading user files:', error);
-        // Optionally display an error message in the UI
         fileSection.innerHTML = '<p style="color: red;">Error loading files. Please check console or try again later.</p>';
     }
 }

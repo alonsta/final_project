@@ -33,7 +33,7 @@ def get_files_info(info, response):
         response["response_code"] = "200"
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt fetch file summery","message": str(e)})
-        print(e)
+        print("user files " + str(e))
         response["response_code"] = "500"
     
 

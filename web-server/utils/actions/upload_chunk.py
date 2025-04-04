@@ -45,6 +45,6 @@ def upload_chunk(info, response):
         return response
 
     except Exception as e:
-        print(e)
+        print("upload chunk " + str(e))
         response["body"] = json.dumps({"failed": "boohoo "})
         return response
