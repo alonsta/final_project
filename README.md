@@ -64,7 +64,4 @@ I think this project, if executed to the fullest, will take over 400 hours.
 בזמן העלאה ראשונה המשתמש יזין מאסטר פסוורד בגאווה אני אעשה האש לסיסמאת מאסטר והאש לאיי די מגונרט של הקובץ. אני אחבר אותם ואמעך בעזרת האש כדי להשיג סיסמה מיוחדת לאיי אי אס להצפנת הקובץ. שם הקובץ שישלח לשרת והתוכן יוצפנו עם הסיסמא המיוחדת.
 בזמן שיתוף המשתמש יקבל מייל עם יו אר אל עם ה איי די הספציפי של הקובץ המשותף וסיסמא לתוכן שלו לאחר פתיחת הקישור יתבקש להזין את הסיסמא ויקבל קובץ להורדה.
 
-### Current Focus
 
-right now ill be focusing on the app since i dont really feel like working to the html gui and i can learn about the reconstruction 
-and decryption easier with this type of applicatio

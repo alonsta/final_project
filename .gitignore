@@ -1,3 +1,9 @@
-
 .codegpt
 web-server/database/data
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore certificate files
+*.crt
