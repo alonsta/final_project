@@ -13,7 +13,7 @@ def main():
     #context.load_cert_chain('/path/to/certchain.pem', '/path/to/private.key')
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", 443))
+    server_socket.bind(("0.0.0.0", 8080))
 
     print("Server running " + str(datetime.now()), end="\n\n")
     #ssocket = context.wrap_socket(server_socket, server_side=True)
