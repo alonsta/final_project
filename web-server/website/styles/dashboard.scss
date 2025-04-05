@@ -147,50 +147,164 @@ body {
     gap: 10px;
     width: 100%;
     height: 100%; 
+    #files-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    #files-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+        width: 100%;
+    }
 
     .file-item {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        padding: 10px;
+        padding: 12px;
         border: 1px solid #ddd;
         border-radius: 8px;
-        background-color: #f9f9f9;
+        background-color: #ffffff;
+        text-align: center;
+        height: 180px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         transition: box-shadow 0.3s ease;
+    }
+    
+    .file-item:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .file-icon {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        margin-bottom: 10px;
+    }
+    
+    .file-label {
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+    
+    .file-size {
+        font-size: 12px;
+        color: #666;
+    }
+}
 
-        &:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+#files_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    
+    .file-item {
+        position: relative;
+        width: 100%; /* Fit inside the grid cell */
+        max-width: 220px; /* Optional: for better layout */
+        height: auto; 
+        box-sizing: border-box;
+
+        .dropdown-toggle {
+            cursor: pointer;
+            padding: 2px 8px;
+            font-size: 1rem;
+            background-color: transparent;
+            border: none;
+            user-select: none;
+    
+            &:hover {
+                color: #007bff;
+            }
         }
-
-        .file-label {
-            font-size: 16px;
-            color: #333;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            flex: 1;
-            margin-right: 10px;
-        }
-
-        .button-container {
-            display: flex;
-            align-items: center;
-
-            .download-button {
-                padding: 8px 12px;
-                font-size: 14px;
-                color: #fff;
-                background-color: #007bff;
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 6px;
+            z-index: 10;
+    
+            .dropdown-btn {
+                display: block;
+                width: 100%;
+                padding: 6px 12px;
+                background: none;
                 border: none;
-                border-radius: 4px;
-                text-decoration: none;
+                text-align: left;
                 cursor: pointer;
-                transition: background-color 0.3s ease;
-
+                font-size: 0.9rem;
+    
                 &:hover {
-                    background-color: #0056b3;
+                    background-color: #f0f0f0;
                 }
             }
         }
     }
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 1rem;
+    background-color: transparent;
+    border: none;
+    user-select: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    &:hover {
+        color: #007bff;
+    }
+}
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 6px;
+    z-index: 10;
+
+    .dropdown-btn {
+        display: block;
+        width: 100%;
+        padding: 6px 12px;
+        background: none;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+        font-size: 0.9rem;
+
+        &:hover {
+            background-color: #f0f0f0;
+        }
+    }
+}
+
+.dropdown-menu.global {
+    display: block; /* or inline-block */
+    position: fixed;
+    width: auto;    /* prevent full-width stretch */
+    max-width: 100px; /* optional: keep it sane */
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 9999;
+    padding: 6px 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 5px;
 }

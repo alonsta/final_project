@@ -13,12 +13,76 @@ class DB:
         self.check_tables()
 
     def check_tables(self) -> None:
-        """Ensures that the necessary tables for the database exist. If the tables do not exist, they will be created.
-        The tables created are:
-        - users: Stores user information including id, username, password, creation time, data uploaded, and data downloaded.
-        - files: Stores file information including id, server key, size, creation time, file name, chunk count, owner id, parent id, type, and status.
-        - cookies: Stores cookie information including id, key, value, expiration, and owner id.
-        This method executes the SQL statements to create the tables if they do not already exist and commits the changes to the database."""
+        """Ensures the necessary database tables exist by creating them if they do not already exist.
+        This method defines and executes SQL statements to create the following tables:
+        1. `users`:
+            - Stores user information.
+            - Columns:
+                - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
+                - `username` (TEXT, NOT NULL): Username of the user.
+                - `password` (TEXT, NOT NULL): Hashed password of the user.
+                - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
+                - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
+                - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
+        2. `files`:
+            - Stores information about files uploaded to the server.
+            - Columns:
+                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
+                - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
+                - `size` (INTEGER): Size of the file in bytes.
+                - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
+                - `file_name` (TEXT, NOT NULL): Name of the file.
+                - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
+                - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
+                - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
+                - `type` (INTEGER): Type of the file (e.g., folder, regular file).
+                - `status` (INTEGER): Status of the file (e.g., active, deleted).
+        3. `cookies`:
+            - Stores session cookies for users.
+            - Columns:
+                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
+                - `key` (TEXT, NOT NULL): Key of the cookie.
+                - `value` (TEXT, NOT NULL): Value of the cookie.
+                - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
+                - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
+        After defining the SQL statements, this method executes them to ensure the tables exist.
+        Commits the changes to the database after execution."""
+        
+        """Ensures the necessary database tables exist by creating them if they do not already exist.
+        This method defines and executes SQL statements to create the following tables:
+        1. `users`:
+            - Stores user information.
+            - Columns:
+                - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
+                - `username` (TEXT, NOT NULL): Username of the user.
+                - `password` (TEXT, NOT NULL): Hashed password of the user.
+                - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
+                - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
+                - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
+        2. `files`:
+            - Stores information about files uploaded to the server.
+            - Columns:
+                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
+                - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
+                - `size` (INTEGER): Size of the file in bytes.
+                - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
+                - `file_name` (TEXT, NOT NULL): Name of the file.
+                - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
+                - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
+                - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
+                - `type` (INTEGER): Type of the file (e.g., folder, regular file).
+                - `status` (INTEGER): Status of the file (e.g., active, deleted).
+        3. `cookies`:
+            - Stores session cookies for users.
+            - Columns:
+                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
+                - `key` (TEXT, NOT NULL): Key of the cookie.
+                - `value` (TEXT, NOT NULL): Value of the cookie.
+                - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
+                - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
+        After defining the SQL statements, this method executes them to ensure the tables exist.
+        Commits the changes to the database after execution."""
+        
         users_table_check_sql = """
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY NOT NULL UNIQUE,
@@ -288,7 +352,6 @@ class DB:
             ValueError: If there is a value error during the process."""
         try:
             user_id = self.check_cookie(cookie_value)
-            username = self.cursor.execute("SELECT username FROM users WHERE id = ?",(user_id,)).fetchone()[0]
             seek_parent_id_sql = """
             SELECT id FROM files WHERE file_name = ?
             """
@@ -387,17 +450,42 @@ class DB:
 
 
 
-    def remove_file(self, user_id: str, file_name: str) -> None:
-        file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND file_name = ?"
+    def remove_file(self, cookie_value: str, server_key: str) -> None:
+        """
+        Deletes a file record from the database and removes the corresponding file from the filesystem.
+        This method checks the validity of the provided cookie, retrieves the user ID, and ensures
+        that the file associated with the given server key exists in the database. If the file exists,
+        it deletes the record from the database and removes the physical file from the filesystem.
+        Args:
+            cookie_value (str): The cookie value used to authenticate the user.
+            server_key (str): The unique identifier for the file to be removed.
+        Raises:
+            sqlite3.Error: If a database error occurs during the operation.
+            ValueError: If an invalid value is encountered during the process.
+        Notes:
+            - The method rolls back the database transaction in case of any errors.
+            - The file path is constructed based on the user ID and server key.
+            - If the file does not exist in the filesystem, no action is taken for the file removal.
+        """
+
+        
+        user_id = self.check_cookie(cookie_value)
+        file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND server_key = ?"
 
         try:
-            self.cursor.execute(file_count_sql, (user_id, file_name))
+            self.cursor.execute(file_count_sql, (user_id, server_key))
             count = self.cursor.fetchone()[0]
 
             if count > 0:
-                file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND file_name = ?"
-                self.cursor.execute(file_deletion_sql, (user_id, file_name))
+                file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND server_key = ?"
+                self.cursor.execute(file_deletion_sql, (user_id, server_key))
                 self.db_connection.commit()
+                file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
+                if os.path.exists(file_path):
+                    os.remove(file_path)
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
@@ -441,6 +529,32 @@ class DB:
 
 
     def get_file(self, cookie_value: str, server_key: str, index: int) -> str:
+        """
+        Retrieves a specific chunk from a file associated with a user and updates the user's data usage.
+        Args:
+            cookie_value (str): The cookie value used to authenticate the user.
+            server_key (str): The unique key identifying the file on the server.
+            index (int): The zero-based index of the line to retrieve from the file.
+        Returns:
+            str: The content of the specified chunk in the file.
+        Raises:
+            sqlite3.Error: If there is an error with the database operations.
+            Exception: If the file does not exist or the index is invalid.
+        """
+        
+        """
+        Retrieves a specific chunk from a file associated with a user and updates the user's data usage.
+        Args:
+            cookie_value (str): The cookie value used to authenticate the user.
+            server_key (str): The unique key identifying the file on the server.
+            index (int): The zero-based index of the line to retrieve from the file.
+        Returns:
+            str: The content of the specified chunk in the file.
+        Raises:
+            sqlite3.Error: If there is an error with the database operations.
+            Exception: If the file does not exist or the index is invalid.
+        """
+        
         try:
             user_id = self.check_cookie(cookie_value)
         except sqlite3.Error as e:

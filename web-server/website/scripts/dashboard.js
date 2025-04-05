@@ -166,13 +166,13 @@ async function loadUserStats() {
 
 async function loadUserFiles() {
     const password = sessionStorage.getItem('filePassword');
-    const fileSection = document.querySelector('#files.content-section'); // Get reference outside loop
+    const fileSection = document.getElementById('files_grid');
 
     fileSection.querySelectorAll('.file-item').forEach(item => item.remove());
 
 
     try {
-        const response = await fetch('/files/info', {
+        const response = await fetch('/files/folder', {
             credentials: 'include',
             method: 'GET'
         });
@@ -181,7 +181,9 @@ async function loadUserFiles() {
         const files = await response.json();
 
         for (const key in files) {
+          
             const file = files[key];
+            if(file.type == 0) continue;
             const server_key = file.server_key;
             const encryptionKey = generateEncryptionKey(password, server_key);
             let decryptedFileName = "Filename Error"; // Default filename in case of decryption error
@@ -200,21 +202,8 @@ async function loadUserFiles() {
             // Create UI elements (Your existing code)
             const fileContainer = document.createElement('div');
             fileContainer.className = 'file-item';
-
-            const fileLabel = document.createElement('span');
-            fileLabel.className = 'file-label';
-            // Use the formatFileSize helper function you already have
-            fileLabel.textContent = `${decryptedFileName} (${formatFileSize(size)})`;
-
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'button-container';
-
-            const downloadButton = document.createElement('button');
-            downloadButton.className = 'download-button';
-            downloadButton.textContent = 'Download';
-
-            // --- MODIFIED Download Button Event Listener ---
-            downloadButton.addEventListener('click', async () => {
+            
+            fileContainer.addEventListener('click', async () => {
                  if (progressIndicator.style.display === 'block') {
                     alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
                     return;
@@ -273,10 +262,133 @@ async function loadUserFiles() {
             });
             // --- END OF MODIFIED Listener ---
 
-            buttonContainer.appendChild(downloadButton);
-            fileContainer.appendChild(fileLabel);
-            fileContainer.appendChild(buttonContainer);
-            fileSection.appendChild(fileContainer);
+            function getFileIcon(extension) {
+              extension = extension.toLowerCase();
+          
+              const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
+              const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+              const audioExts = ['mp3', 'wav', 'ogg', 'flac', 'm4a'];
+              const docExts   = ['doc', 'docx'];
+              const pptExts   = ['ppt', 'pptx'];
+              const xlsExts   = ['xls', 'xlsx'];
+              const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php'];
+          
+              if (imageExts.includes(extension)) return '🖼️';
+              if (videoExts.includes(extension)) return '🎬';
+              if (audioExts.includes(extension)) return '🎧';
+              if (extension === 'pdf') return '📄';
+              if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) return '🗜️';
+              if (['txt', 'md', 'log'].includes(extension)) return '📃';
+              if (['csv'].includes(extension)) return '📊';
+              if (xlsExts.includes(extension)) return '📊';
+              if (pptExts.includes(extension)) return '📽️';
+              if (docExts.includes(extension)) return '📝';
+              if (['json', 'xml'].includes(extension)) return '🧾';
+              if (['db', 'sqlite'].includes(extension)) return '🗄️';
+              if (['apk'].includes(extension)) return '📱';
+              if (['exe', 'msi'].includes(extension)) return '💻';
+              if (codeExts.includes(extension)) return '💻';
+          
+              return '🥸'; // Default/fallback
+          }
+          // Create file type icon
+          function handleDelete(fileId) {
+            fetch(`/files/delete?key=${fileId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`File ${file.name} deleted successfully.`);
+                    fileContainer.remove();
+                } else {
+                    console.error(`Failed to delete file ${file.name}. Status: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                console.error(`Error deleting file ${file.name}:`, error);
+            });
+        }
+        const iconSpan = document.createElement('span');
+        iconSpan.textContent = getFileIcon(decryptedFileName.split('.').pop());
+        fileContainer.appendChild(iconSpan);
+
+        // File name
+        const fileLabel = document.createElement('span');
+        fileLabel.className = 'file-label';
+        fileLabel.textContent = decryptedFileName;
+
+        // File size
+        const fileSize = document.createElement('span');
+        fileSize.className = 'file-size';
+        fileSize.textContent = formatFileSize(file.size);
+
+        // Dropdown toggle arrow
+        const toggleArrow = document.createElement('span');
+        toggleArrow.className = 'dropdown-toggle';
+        toggleArrow.textContent = '▼';
+
+        // Dropdown menu
+        const dropdownMenu = document.createElement('div');
+        dropdownMenu.className = 'dropdown-menu';
+        dropdownMenu.style.display = 'none'; // Initially hidden
+
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'dropdown-btn';
+        shareBtn.textContent = 'Share';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'dropdown-btn';
+        deleteBtn.textContent = 'Delete';
+
+        shareBtn.onclick = (event) => {
+          event.stopPropagation();
+          handleShare(server_key);
+        };
+      
+      deleteBtn.onclick = (event) => {
+          event.stopPropagation();
+          handleDelete(server_key);
+        };
+
+        dropdownMenu.appendChild(shareBtn);
+        dropdownMenu.appendChild(deleteBtn);
+
+        toggleArrow.onclick = (event) => {
+          event.stopPropagation();
+      
+          // Remove any existing dropdown to avoid duplicates
+          const existingMenu = document.querySelector('.dropdown-menu.global');
+          if (existingMenu) existingMenu.remove();
+      
+          const rect = toggleArrow.getBoundingClientRect();
+      
+          // Clone dropdown to body
+          const globalMenu = dropdownMenu.cloneNode(true);
+          globalMenu.classList.add('global');
+          globalMenu.style.display = 'block';
+          globalMenu.style.position = 'fixed';
+          globalMenu.style.top = `${rect.bottom}px`;
+          globalMenu.style.left = `${rect.left}px`;
+      
+          // Add functionality back to buttons
+          globalMenu.querySelector('.dropdown-btn:nth-child(1)').onclick = () => handleShare(server_key);
+          globalMenu.querySelector('.dropdown-btn:nth-child(2)').onclick = () => handleDelete(server_key);
+      
+          document.body.appendChild(globalMenu);
+      };
+
+      document.addEventListener('click', () => {
+        const existingMenu = document.querySelector('.dropdown-menu.global');
+        if (existingMenu) existingMenu.remove();
+      });
+
+        fileContainer.appendChild(dropdownMenu);
+        fileContainer.appendChild(fileLabel);
+        fileContainer.appendChild(fileSize);
+        fileContainer.appendChild(toggleArrow);
+
+        fileSection.appendChild(fileContainer);
         }
     } catch (error) {
         console.error('Error loading user files:', error);
