@@ -27,7 +27,7 @@ def user_data(info, response):
         response["body"] = json.dumps(database_access.get_user_info(auth_cookie_value))
         response["response_code"] = "200"
     except Exception as e:
-        response["body"] = json.dumps({"failed": "couldnt fetch data","message": str(e)})
+        response["body"] = json.dumps({"failed": "couldnt fetch data","message": "problem fetching data"})
         print("user data " + str(e))
         response["response_code"] = "500"
     

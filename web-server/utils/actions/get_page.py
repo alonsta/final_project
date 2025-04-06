@@ -1,4 +1,5 @@
 import os
+import json
 
 def get_page(http_request: dict, response) -> dict:
     """
@@ -21,17 +22,23 @@ def get_page(http_request: dict, response) -> dict:
     Note:
         The function assumes the website pages are stored in '<current_directory>/web-server/website/pages/'
     """
-    file_path = f"{os.getcwd()}\\web-server\\website\\pages\\{http_request['path']}"
-    if not os.path.exists(file_path):
-        response["headers"]["Content-Type"] = "text/html"
-        response["response_code"] = "404 Not Found"
-        response["body"] = "<h1>404 Not Found</h1>"
-    else:
-        with open(file_path, "r") as file:
-            response["body"] = file.read()
-            response["response_code"] = "200 OK"
+    try:
+        file_path = f"{os.getcwd()}\\web-server\\website\\pages\\{http_request['path']}"
+        if not os.path.exists(file_path):
             response["headers"]["Content-Type"] = "text/html"
-    return response
+            response["response_code"] = "404 Not Found"
+            response["body"] = "<h1>404 Not Found</h1>"
+        else:
+            with open(file_path, "r") as file:
+                response["body"] = file.read()
+                response["response_code"] = "200 OK"
+                response["headers"]["Content-Type"] = "text/html"
+        return response
+    except Exception as e:
+        response["response_code"] = "500 Internal Server Error"
+        response["headers"]["Content-Type"] = "text/html"
+        response["body"] = json.dumps({"failed": "couldn't fetch page", "message": "couldn't fetch page"})
+        return response
 
 def main():
     pass

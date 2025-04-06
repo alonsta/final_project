@@ -1,13 +1,7 @@
 async function hashString(input) {
   
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hash = CryptoJS.SHA256(input);
+  const hashHex = hash.toString(CryptoJS.enc.Hex);
 
   return hashHex;
 }

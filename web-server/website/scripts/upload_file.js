@@ -23,14 +23,14 @@ function getFileIcon(extension) {
     const docExts   = ['doc', 'docx'];
     const pptExts   = ['ppt', 'pptx'];
     const xlsExts   = ['xls', 'xlsx'];
-    const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php'];
+    const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php',"cs","go","swift","sql","json"];
 
     if (imageExts.includes(extension)) return '🖼️';
     if (videoExts.includes(extension)) return '🎬';
     if (audioExts.includes(extension)) return '🎧';
     if (extension === 'pdf') return '📄';
     if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) return '🗜️';
-    if (['txt', 'md', 'log'].includes(extension)) return '📃';
+    if (['txt', 'md', 'log','pdf'].includes(extension)) return '📃';
     if (['csv'].includes(extension)) return '📊';
     if (xlsExts.includes(extension)) return '📊';
     if (pptExts.includes(extension)) return '📽️';
@@ -95,7 +95,7 @@ async function processFiles(password, files) {
 
 
             
-            fileContainer.addEventListener('click', async () => {
+            fileContainer.addEventListener('dblclick', async () => {
                  if (progressIndicator.style.display === 'block') {
                     alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
                     return;
@@ -183,14 +183,13 @@ async function processFiles(password, files) {
                 const docExts   = ['doc', 'docx'];
                 const pptExts   = ['ppt', 'pptx'];
                 const xlsExts   = ['xls', 'xlsx'];
-                const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php'];
-            
+                const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php', 'cs', 'go', 'swift', 'sql', 'bash', 'sh', 'pl', 'r', 'dart', 'kotlin', 'lua', 'yaml', 'json'];
                 if (imageExts.includes(extension)) return '🖼️';
                 if (videoExts.includes(extension)) return '🎬';
                 if (audioExts.includes(extension)) return '🎧';
                 if (extension === 'pdf') return '📄';
                 if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) return '🗜️';
-                if (['txt', 'md', 'log'].includes(extension)) return '📃';
+                if (['txt', 'md', 'log',"json"].includes(extension)) return '📃';
                 if (['csv'].includes(extension)) return '📊';
                 if (xlsExts.includes(extension)) return '📊';
                 if (pptExts.includes(extension)) return '📽️';

@@ -32,7 +32,7 @@ def get_files_info(info, response):
         response["body"] = json.dumps(database_access.get_folders_summary(auth_cookie_value, parent_id=parent))
         response["response_code"] = "200"
     except Exception as e:
-        response["body"] = json.dumps({"failed": "couldnt fetch file summery","message": str(e)})
+        response["body"] = json.dumps({"failed": "couldnt fetch file summery","message": "problem fetching file summery"})
         print("user files " + str(e))
         response["response_code"] = "500"
     

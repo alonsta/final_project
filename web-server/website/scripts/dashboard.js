@@ -75,8 +75,10 @@ function showPasswordModal(isInitial = false) {
 confirmButton.addEventListener('click', () => {
   const password = passwordInput.value;
   
-  if (password.length < 8) {
-    alert('Password length must be 8 or more characters');
+  if (password.length < 8 || password.length > 32) {
+    alert('Password must be between 8 and 32 characters long.');
+    passwordInput.value = ''; // Clear input
+    passwordInput.focus(); // Focus back on input
     return;
   }
   
@@ -203,7 +205,7 @@ async function loadUserFiles() {
             const fileContainer = document.createElement('div');
             fileContainer.className = 'file-item';
             
-            fileContainer.addEventListener('click', async () => {
+            fileContainer.addEventListener('dblclick', async () => {
                  if (progressIndicator.style.display === 'block') {
                     alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
                     return;
@@ -271,7 +273,7 @@ async function loadUserFiles() {
               const docExts   = ['doc', 'docx'];
               const pptExts   = ['ppt', 'pptx'];
               const xlsExts   = ['xls', 'xlsx'];
-              const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php'];
+              const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php', 'cs', 'go', 'swift', 'sql', 'bash', 'sh', 'pl', 'r', 'dart', 'kotlin', 'lua', 'yaml', 'json'];
           
               if (imageExts.includes(extension)) return '🖼️';
               if (videoExts.includes(extension)) return '🎬';

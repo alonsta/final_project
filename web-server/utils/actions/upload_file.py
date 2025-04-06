@@ -47,6 +47,7 @@ def upload_file_info(info, response):
         return response
 
     except Exception as e:
-        response["body"] = json.dumps({"failed": "boohoo "})
+        response["body"] = json.dumps({"failed": "couldn't upload file", "message": "problem uploading file info"})
+        response["response_code"] = "500"
         print("upload file " + str(e))
         return response

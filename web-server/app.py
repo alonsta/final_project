@@ -6,17 +6,13 @@ import json
 import socket
 import threading
 from datetime import datetime
-import ssl
 
 def main():
-    #context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    #context.load_cert_chain('/path/to/certchain.pem', '/path/to/private.key')
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(("0.0.0.0", 8080))
 
-    print("Server running " + str(datetime.now()), end="\n\n")
-    #ssocket = context.wrap_socket(server_socket, server_side=True)
+    print("Server running with HTTP " + str(datetime.now()), end="\n\n")
     ssocket = server_socket
     while True:
         try:
