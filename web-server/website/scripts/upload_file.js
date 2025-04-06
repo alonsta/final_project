@@ -14,35 +14,6 @@ function handleFileDrop(e) {
     processFiles(storedPassword, Array.from(fileInput.files));
 }
 
-function getFileIcon(extension) {
-    extension = extension.toLowerCase();
-
-    const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg'];
-    const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
-    const audioExts = ['mp3', 'wav', 'ogg', 'flac', 'm4a'];
-    const docExts   = ['doc', 'docx'];
-    const pptExts   = ['ppt', 'pptx'];
-    const xlsExts   = ['xls', 'xlsx'];
-    const codeExts  = ['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'py', 'java', 'c', 'cpp', 'rb', 'php',"cs","go","swift","sql","json"];
-
-    if (imageExts.includes(extension)) return '🖼️';
-    if (videoExts.includes(extension)) return '🎬';
-    if (audioExts.includes(extension)) return '🎧';
-    if (extension === 'pdf') return '📄';
-    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(extension)) return '🗜️';
-    if (['txt', 'md', 'log','pdf'].includes(extension)) return '📃';
-    if (['csv'].includes(extension)) return '📊';
-    if (xlsExts.includes(extension)) return '📊';
-    if (pptExts.includes(extension)) return '📽️';
-    if (docExts.includes(extension)) return '📝';
-    if (['json', 'xml'].includes(extension)) return '🧾';
-    if (['db', 'sqlite'].includes(extension)) return '🗄️';
-    if (['apk'].includes(extension)) return '📱';
-    if (['exe', 'msi'].includes(extension)) return '💻';
-    if (codeExts.includes(extension)) return '💻';
-
-    return '🥸'; // Default/fallback
-}
 
 async function processFiles(password, files) {
     for (const file of files) {
