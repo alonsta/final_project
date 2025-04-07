@@ -34,13 +34,26 @@ def serialize_http(raw_request):
             "headers": {"Host": "example.com"},
             "body": ""
     """
+    request_info = {
+        "method": "",
+        "endpoint": "",
+        "path": "",
+        "query_params": {},
+        "cookies": [],
+        "headers": {},
+        "body": ""
+    }
+
     try:
         lines = raw_request.split("\r\n")
+        if not lines or not lines[0]:
+            return json.dumps(request_info, indent=4)
 
         request_line = lines[0].split(" ")
         method = request_line[0]
         full_path = request_line[1]
-        
+
+        # Endpoint & path
         if full_path == "/":
             endpoint = "pages"
             path = "index.html"
@@ -49,40 +62,49 @@ def serialize_http(raw_request):
             endpoint = path_parts[0]
             path = "/".join(path_parts[1:])
 
+        # Headers
         headers = {}
         for line in lines[1:]:
             if line == "":
                 break
-            header, value = line.split(":", 1)
-            headers[header.strip()] = value.strip()
-        
+            try:
+                header, value = line.split(":", 1)
+                headers[header.strip()] = value.strip()
+            except ValueError:
+                continue  # Skip malformed headers
+
+        # Cookies
         cookies = []
-        if "Cookie" in headers.keys():
+        if "Cookie" in headers:
             cookie_string = headers["Cookie"]
             individual_cookies = cookie_string.split("; ")
-
             for cookie in individual_cookies:
                 parts = cookie.split("=")
                 if len(parts) == 2:
-                    key, value = parts[0], parts[1]
+                    key, value = parts
                     cookies.append((key, value))
-                
-        
-        body_index = lines.index("") + 1
-        if body_index < len(lines):
-            body = "\r\n".join(lines[body_index:])
-        else:
+
+        # Body
+        try:
+            body_index = lines.index("") + 1
+            body = "\r\n".join(lines[body_index:]) if body_index < len(lines) else ""
+        except ValueError:
             body = ""
 
+        # Query string
         query_string = ""
         if "?" in full_path:
-            path, query_string = path.split("?",1)
+            path, query_string = path.split("?", 1)
 
         query_params = {}
         if query_string:
-            query_params = dict(param.split("=") for param in query_string.split("&"))
+            for param in query_string.split("&"):
+                if "=" in param:
+                    k, v = param.split("=", 1)
+                    query_params[k] = v
 
-        request_info = {
+        # Final assign
+        request_info.update({
             "method": method,
             "endpoint": endpoint,
             "path": path,
@@ -90,12 +112,12 @@ def serialize_http(raw_request):
             "cookies": cookies,
             "headers": headers,
             "body": body
-        }
+        })
 
-        return json.dumps(request_info, indent=4)
     except Exception as e:
-        print(f"Error serializing HTTP request: {e}")
-        return
+        print(f"Warning: Error serializing HTTP request: {e}")
+    
+    return json.dumps(request_info, indent=4)
 
 
 if __name__ == "__main__":
