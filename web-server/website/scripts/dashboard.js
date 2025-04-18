@@ -174,7 +174,8 @@ async function loadUserFiles() {
 
 
     try {
-        const response = await fetch('/files/folder', {
+      let parent_id = document.getElementById('folder_path').getAttribute('current-id');
+        const response = await fetch(`/files/folder?parent=${parent_id}`, {
             credentials: 'include',
             method: 'GET'
         });

@@ -103,7 +103,7 @@ class DB:
                 file_name TEXT NOT NULL,
                 chunk_count INTEGER NOT NULL,
                 owner_id INTEGER NOT NULL,
-                parent_id INTEGER,
+                parent_id TEXT,
                 type INTEGER,
                 status INTEGER,
                 FOREIGN KEY (owner_id) REFERENCES users(id)
@@ -338,7 +338,7 @@ class DB:
             raise Exception(f"An unexpected error occurred: {e}")
         
 
-    def add_file(self, cookie_value: str, file_name: str, parent_name: str,server_key: str, chunk_count: int, size: int) -> None:
+    def add_file(self, cookie_value: str, file_name: str, parent_id: str,server_key: str, chunk_count: int, size: int) -> None:
         """Adds a file entry to the database and creates the corresponding file on the server.
         Args:
             cookie_value (str): The cookie value to identify the user.
@@ -351,15 +351,7 @@ class DB:
             sqlite3.Error: If there is an error with the SQLite database operations.
             ValueError: If there is a value error during the process."""
         try:
-            user_id = self.check_cookie(cookie_value)
-            seek_parent_id_sql = """
-            SELECT id FROM files WHERE file_name = ?
-            """
-            parent_id = self.cursor.execute(seek_parent_id_sql,(parent_name,)).fetchone()
-            if parent_id == None:
-                parent_id = None
-            else:
-                parent_name = parent_name[0]
+            user_id = self.check_cookie(cookie_value)          
 
             file_insertion_sql = """
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
@@ -493,19 +485,15 @@ class DB:
             print("remove file ERORR: " + ve)
             self.db_connection.rollback()
 
-    def get_folders_summary(self, cookie_value: str, parent_id: str = None) -> dict:
+    def get_folders_summary(self, cookie_value: str, parent_id: str = "-1") -> dict:
         try:
             user_id = self.check_cookie(cookie_value)
             get_files_sql = """
             SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
-            FROM files WHERE owner_id = ?
+            FROM files WHERE owner_id = ? AND parent_id = ?
             """
             
-            if parent_id is not None:
-                get_folders_sql += " AND parent_id = ?"
-                self.cursor.execute(get_files_sql, (user_id, parent_id))
-            else:
-                self.cursor.execute(get_files_sql, (user_id,))
+            self.cursor.execute(get_files_sql, (user_id, parent_id))
             rows = self.cursor.fetchall()
 
             files_summary = {}

@@ -27,20 +27,22 @@ def upload_file_info(info, response):
         >>> upload_file_info(info, response)
         {'body': '{"success": "your file info was uploaded "}', 'response_code': '200 OK'}
     """
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
-    file_name = json.loads(info["body"])['file_name']
-    parent_name = "root" #json.lodads(info["body"])['parent_dir']
-    server_key = json.loads(info["body"])['server_key']
-    chunk_count = json.loads(info["body"])['chunk_count']
-    size = json.loads(info["body"])['size']
-
-    if not (file_name and server_key and chunk_count):
-        response["body"] = json.dumps({"failed": "boohoo "})
-        return response
-
     try:
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+        file_name = json.loads(info["body"])['file_name']
+        parent_id = json.loads(info["body"])['parent_id']
+        server_key = json.loads(info["body"])['server_key']
+        chunk_count = json.loads(info["body"])['chunk_count']
+        size = json.loads(info["body"])['size']
+
+        if not (file_name and server_key and chunk_count and parent_id and size):
+            response["body"] = json.dumps({"failed": "missing file info"})
+            response["response_code"] = "400"
+            return response
+
+    
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access.add_file(auth_cookie_value, file_name, parent_name, server_key, chunk_count, size)
+        database_access.add_file(auth_cookie_value, file_name, parent_id, server_key, chunk_count, size)
         
         response["body"] = json.dumps({"success": "your file info was uploaded "})
         response["response_code"] = "200 OK"

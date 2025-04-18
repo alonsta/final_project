@@ -16,6 +16,7 @@ function handleFileDrop(e) {
 
 
 async function processFiles(password, files) {
+    let parent_id = document.getElementById('folder_path').getAttribute("current-id")
     for (const file of files) {
         let fileId;
         let totalChunks = 0;
@@ -31,7 +32,7 @@ async function processFiles(password, files) {
             updateProgress('show', `Starting upload: ${file.name}`, 0);
 
             // Send file metadata first
-            const metadataOk = await sendFileMetadata(fileId, encryptedFileName, totalChunks, file.size); // Use totalChunks
+            const metadataOk = await sendFileMetadata(fileId, encryptedFileName, totalChunks, file.size, parent_id); // Use totalChunks
             if (!metadataOk) {
                  throw new Error('Failed to send file metadata.');
             }
@@ -403,7 +404,7 @@ function generateEncryptionKey(password, fileId) {
     return CryptoJS.MD5(combined).toString();
 }
 
-async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size) {
+async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size, parentId) {
     try {
         const response = await fetch('/files/upload/file', {
             method: 'POST',
@@ -412,7 +413,8 @@ async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size) {
                 server_key: fileId,
                 file_name: encryptedFileName,
                 chunk_count: chunkCount,
-                size: size
+                size: size,
+                parent_id: parentId
             })
         });
         console.log("File metadata uploaded");
