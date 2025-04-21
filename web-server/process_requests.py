@@ -13,6 +13,8 @@ from utils.actions.get_app import get_app
 from utils.actions.user_files import get_files_info
 from utils.actions.get_file import get_file_content as download_chunk
 from utils.actions.delete_file import delete_file as delete_file
+from utils.actions.create_folder import create_folder
+
 def process_req(http_request: json) -> bytes:
     """
     Processes an HTTP request and returns an HTTP response.
@@ -94,6 +96,9 @@ def process_req(http_request: json) -> bytes:
 
                         case "upload/chunk":
                             response = upload_chunk(http_request, response)
+                        
+                        case "create/folder":
+                            response = create_folder(http_request, response)
                 case "GET":
                     match http_request["path"]:
                         case "download":
@@ -102,8 +107,10 @@ def process_req(http_request: json) -> bytes:
                             response = get_files_info(http_request, response)
                 case "DELETE":
                     match http_request["path"]:
-                        case "delete":
+                        case "delete/file":
                             response = delete_file(http_request, response)
+                        case "delete/folder":
+                            response = delete_folder(http_request, response)
         case "app":
             match http_request["method"]:
                 case "GET":

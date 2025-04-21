@@ -338,7 +338,7 @@ class DB:
             raise Exception(f"An unexpected error occurred: {e}")
         
 
-    def add_file(self, cookie_value: str, file_name: str, parent_id: str,server_key: str, chunk_count: int, size: int) -> None:
+    def add_file(self, cookie_value: str, file_name: str, parent_id: str,server_key: str, chunk_count: int, size: int, type = 1) -> None:
         """Adds a file entry to the database and creates the corresponding file on the server.
         Args:
             cookie_value (str): The cookie value to identify the user.
@@ -347,6 +347,7 @@ class DB:
             server_key (str): The server key for the file.
             chunk_count (int): The number of chunks the file is divided into.
             size (int): The size of the file in bytes.
+            type (int): The type of the file (1 for folder, 0 for regular file).
         Raises:
             sqlite3.Error: If there is an error with the SQLite database operations.
             ValueError: If there is a value error during the process."""
@@ -359,7 +360,7 @@ class DB:
             """
             self.cursor.execute(file_insertion_sql, (
                 user_id, file_name, server_key, chunk_count, size,
-                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, 1, 0
+                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, type, 0
             ))
             makedirs(f"web-server\\database\\files\\{user_id}",exist_ok=True)
             open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
@@ -369,6 +370,7 @@ class DB:
             SELECT data_uploaded FROM users WHERE id = ?
             """
             data_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
+            
             update_user_upload = """
             UPDATE users SET data_uploaded = ? WHERE id = ?
             """
@@ -469,15 +471,40 @@ class DB:
             count = self.cursor.fetchone()[0]
 
             if count > 0:
+                
+                user_upload_sql = """
+                SELECT data_uploaded FROM users WHERE id = ?
+                """
+                #remove from uploaded data size
+                file_size_sql = "SELECT size FROM files WHERE owner_id = ? AND server_key = ?"
+                file_size_result = self.cursor.execute(file_size_sql, (user_id, server_key)).fetchone()
+                if file_size_result is None:
+                    raise ValueError("File size not found in database")
+                file_size = file_size_result[0]
+
+                data_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] - file_size
+
+                update_user_upload = """
+                UPDATE users SET data_uploaded = ? WHERE id = ?
+                """
+                self.cursor.execute(update_user_upload, (data_uploaded, user_id))
+            
+                self.db_connection.commit()
+                
+                #remove from database
                 file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND server_key = ?"
                 self.cursor.execute(file_deletion_sql, (user_id, server_key))
                 self.db_connection.commit()
+                
+                ##remove from filesystem
                 file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
                 if os.path.exists(file_path):
                     os.remove(file_path)
-                file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
-                if os.path.exists(file_path):
-                    os.remove(file_path)
+                    
+                else:
+                    raise ValueError("File does not exist on the server")
+                
+                    
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e

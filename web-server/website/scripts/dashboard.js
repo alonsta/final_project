@@ -8,6 +8,48 @@ const progressIndicator = document.getElementById('progress-indicator');
 const progressBar = progressIndicator.querySelector('.progress-bar');
 const progressText = progressIndicator.querySelector('.progress-text');
 
+const createBtn = document.getElementById('create_folder_btn');
+const popup = document.getElementById('folder_popup');
+const input = document.getElementById('folder_name_input');
+
+createBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  
+  // Get button position
+  const rect = createBtn.getBoundingClientRect();
+  const offsetX = 10;
+  const offsetY = 5;
+
+  // Position popup next to the button
+  popup.style.left = `${rect.right + offsetX}px`;
+  popup.style.top = `${rect.top + offsetY}px`;
+  popup.style.display = 'block';
+
+  input.value = '';
+  input.focus();
+});
+
+document.addEventListener('click', (e) => {
+  if (!popup.contains(e.target) && e.target !== createBtn) {
+    popup.style.display = 'none';
+  }
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const folderName = input.value.trim();
+    if (folderName) {
+      //here look for the parent id of the folder from the parent div. also create an id for the folder and encrypt it with the secret sauce
+      createFolder(folderName);
+      popup.style.display = 'none';
+    }
+  }
+});
+
+function createFolder(name, parentId) {
+  //do stuff
+}
+
 // --- Helper function to show/update/hide indicator ---
 function updateProgress(state, message, percentage = null, isError = false, isDownload = false) {
     if (state === 'show') {
@@ -296,7 +338,7 @@ async function loadUserFiles() {
           }
           // Create file type icon
           function handleDelete(fileId) {
-            fetch(`/files/delete?key=${fileId}`, {
+            fetch(`/files/delete/file?key=${fileId}`, {
                 method: 'DELETE',
                 credentials: 'include'
             })

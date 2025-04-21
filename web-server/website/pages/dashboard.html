@@ -33,9 +33,23 @@
             <div id="files" class="content-section hidden">
                 <input type="file" id="file" style="display: none;" multiple>
                 <div id="path_container" style="font-size: 20px; font-weight: bold;">
-                     <h1 id="folder_path" current-id="-1">Root folder</h1>
-                        
+                    <h1 id="folder_path" current-id="-1" last-id ="-1">Myfiles: /Root <button id="create_folder_btn" style="font-size: 24px; cursor: pointer; background: none; border: none; font-weight: bold; color:rgb(154, 226, 226)">_</button>  </h1>
+
+                    <div id="folder_popup" style="
+                        display: none;
+                        position: fixed;
+                        background: white;
+                        border: 1px solid #ccc;
+                        padding: 8px;
+                        border-radius: 6px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                        z-index: 999;">
+                        <input type="text" id="folder_name_input" placeholder="Enter folder name" style="padding: 4px 8px; font-size: 16px;">
+                    </div>
                 </div>
+
+                
+
                 <div id = "files_grid" class="file-grid-container" style="    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
                     </div>
                  <div id="password-modal" style="display: none;">
@@ -44,7 +58,9 @@
                         <input type="password" id="password" placeholder="password" style="margin: 10px; padding: 8px;">
                         <button id="confirm-button" style="padding: 10px 20px;">Confirm</button>
                         <button id="cancel-button" style="padding: 10px 20px; margin-left: 10px;">Cancel</button>
-                        <div id="note">this is your safe key. keep it safe.(and remember it)</div>
+                        <div id="tip:">drag and drop files into this window to upload.</div>
+                        <div>double click to download, and to create a new folder look for the _</div>
+                    </div>
                     </div>
                 </div>
             </div>

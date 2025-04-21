@@ -57,8 +57,14 @@ async function processFiles(password, files) {
             }
 
              // --- Show success and hide after delay ---
-             updateProgress('update', `Upload complete: ${file.name}`, 100);
-             setTimeout(() => updateProgress('hide'), 2000); // Hide after 2 seconds
+             setTimeout(() => {
+                updateProgress('update', `Upload complete: ${file.name}`);
+                
+                // Now schedule hiding AFTER 2 seconds
+                setTimeout(() => {
+                  updateProgress('hide');
+                }, 2000);
+              }, 0); // Start immediately (or after a small delay if needed)
 
             // Update UI for the file (Your existing UI update code)
             const fileSection = document.getElementById('files_grid');
@@ -130,7 +136,7 @@ async function processFiles(password, files) {
             }
             
             function handleDelete(fileId) {
-                fetch(`/files/delete?key=${fileId}`, {
+                fetch(`/files/delete/file?key=${fileId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 })
