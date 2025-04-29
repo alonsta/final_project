@@ -12,6 +12,16 @@ const createBtn = document.getElementById('create_folder_btn');
 const popup = document.getElementById('folder_popup');
 const input = document.getElementById('folder_name_input');
 
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+
+  const units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const unitIndex = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = (bytes / Math.pow(1024, unitIndex)).toFixed(2);
+
+  return `${size} ${units[unitIndex]}`;
+}
+
 createBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   
@@ -152,61 +162,119 @@ function switchTab(tabName) {
 /**
  * Loads and displays user statistics
  */
+let userChart = null; // Store the Chart instance globally
+
 async function loadUserStats() {
   const overviewDiv = document.getElementById('overview');
-  const ctx = document.getElementById('statsChart')?.getContext('2d');
+  const canvas = document.getElementById('statsChart');
+  const ctx = canvas?.getContext('2d');
   const fileCountDiv = document.getElementById('file_count');
   
   if (!ctx || !overviewDiv || !fileCountDiv) {
     console.error('Required DOM elements not found');
     return;
   }
-  
+
+  // Reset previous chart if exists
+  if (userChart) {
+    userChart.destroy();
+    userChart = null;
+  }
+
+  // Clear previous content safely
+  overviewDiv.innerHTML = '';
+  fileCountDiv.innerHTML = '';
+
   try {
     const response = await fetch('/users/info', {
       credentials: 'include',
       method: 'GET'
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const stats = await response.json();
-    const { username, uploaded, downloaded, fileCount } = stats;
-    
-    fileCountDiv.innerHTML = `<strong>Total Files: </strong>${fileCount}`;
-    
-    // Create chart with sanitized data
-    new Chart(ctx, {
-      type: 'pie',
+    let { username, uploaded, downloaded, fileCount } = stats;
+
+    let uploadeds = formatFileSize(uploaded);
+    let downloadeds = formatFileSize(downloaded);
+
+    overviewDiv.innerHTML = `
+      <h2 style="text-align:center;">Welcome back, <strong>${username}</strong>! 🎉</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 20px;">
+      
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h3>📂 Files</h3>
+          <p style="font-size: 1.5em; margin: 10px 0;">${fileCount}</p>
+          <small>Total Uploaded Files</small>
+        </div>
+
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h3>☁️ Uploaded</h3>
+          <p style="font-size: 1.5em; margin: 10px 0;">${uploadeds}</p>
+          <small>Data stored</small>
+        </div>
+
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h3>🔻 Downloaded</h3>
+          <p style="font-size: 1.5em; margin: 10px 0;">${downloadeds}</p>
+          <small>Data received</small>
+        </div>
+
+        <div style="background: #fff3e0; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <h3>💾 Server Space</h3>
+          <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; height: 20px; width: 100%; margin: 10px 0;">
+            <div style="background: #4caf50; width: ${Math.min((uploaded / 10 *(1024**3)) * 100, 100)}%; height: 100%; transition: width 0.5s;"></div>
+          </div>
+          <small>Space used</small>
+        </div>
+
+      </div>
+    `;
+
+    // Create a new chart and store the reference
+    userChart = new Chart(ctx, {
+      type: 'bar',
       data: {
-        labels: ['Uploaded Data (MB)', 'Downloaded Data (MB)'],
+        labels: ['Uploaded', 'Downloaded'],
         datasets: [{
-          data: [
-            Number(uploaded) / (1024 * 1024) || 0,
-            Number(downloaded) / (1024 * 1024) || 0
-          ],
+          label: 'Data Transfer (in MB)',
+          data: [uploaded, downloaded],
           backgroundColor: ['#4caf50', '#2196f3'],
-          hoverBackgroundColor: ['#45a049', '#1e88e5']
+          borderRadius: 10,
         }]
       },
       options: {
+        responsive: true,
         plugins: {
-          legend: {
+          legend: { display: false },
+          title: {
             display: true,
-            position: 'bottom'
-          },
-        title: {
-          display: true,
-          text: `Stats for ${username}`
+            text: `📊 Your Data Journey`
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 50
+            }
+          }
         }
       }
-    }});
+    });
+
+    // Update file count separately at the bottom
+    fileCountDiv.innerHTML = `<strong>📂 Total Files:</strong> ${fileCount}`;
+
   } catch (error) {
     console.error('Error loading user stats:', error);
-    overviewDiv.innerHTML = 'Failed to load user statistics';
-  }}
+    overviewDiv.innerHTML = 'Failed to load user statistics. 😢';
+  }
+}
+
 
 async function loadUserFiles() {
     const password = sessionStorage.getItem('filePassword');
