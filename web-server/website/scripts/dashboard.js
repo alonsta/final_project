@@ -2,7 +2,7 @@ const passwordModal = document.getElementById('password-modal');
 const passwordInput = document.getElementById('password');
 const confirmButton = document.getElementById('confirm-button');
 const cancelButton = document.getElementById('cancel-button');
-
+const storedPassword = sessionStorage.getItem('filePassword');
 
 const progressIndicator = document.getElementById('progress-indicator');
 const progressBar = progressIndicator.querySelector('.progress-bar');
@@ -48,17 +48,36 @@ document.addEventListener('click', (e) => {
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     const folderName = input.value.trim();
+    let parentId = document.getElementById('folder_path').getAttribute('current-id');
     if (folderName) {
       //here look for the parent id of the folder from the parent div. also create an id for the folder and encrypt it with the secret sauce
-      createFolder(folderName);
+      createFolder(folderName, parentId);
       popup.style.display = 'none';
     }
   }
 });
 
-function createFolder(name, parentId) {
-  //do stuff
-}
+async function createFolder(name, parentId) {
+  let server_key = generateRandomId();
+  let password = sessionStorage.getItem('filePassword');
+  let key = generateEncryptionKey(password, server_key);
+  let encryptedFolderName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(name), key).toString();
+  let response = await fetch('/files/create/folder', {
+    method: 'POST',
+    body: JSON.stringify({
+        server_key: server_key,
+        folder_name: encryptedFolderName,
+        parent_id: parentId
+  })
+});
+if(response.ok) {
+    console.log('Folder created successfully!');
+    document.getElementById('folder_path').getAttribute('current-id');
+    document.getElementById('folder_path').setAttribute('last-id', parentId);
+    document.getElementById('folder_path').setAttribute('current-id', server_key);
+    document.getElementById('path_display').textContent += "/" +name;
+    loadUserFiles(); // Reload files to show the new folder
+}}
 
 // --- Helper function to show/update/hide indicator ---
 function updateProgress(state, message, percentage = null, isError = false, isDownload = false) {
@@ -97,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserStats();
     loadUserFiles();
   }
-
 });
 
 /**
@@ -208,7 +226,7 @@ async function loadUserStats() {
         <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <h3>📂 Files</h3>
           <p style="font-size: 1.5em; margin: 10px 0;">${fileCount}</p>
-          <small>Total Uploaded Files</small>
+          <small>Total files on system</small>
         </div>
 
         <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -226,9 +244,9 @@ async function loadUserStats() {
         <div style="background: #fff3e0; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
           <h3>💾 Server Space</h3>
           <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; height: 20px; width: 100%; margin: 10px 0;">
-            <div style="background: #4caf50; width: ${Math.min((uploaded / 10 *(1024**3)) * 100, 100)}%; height: 100%; transition: width 0.5s;"></div>
+            <div style="background: #4caf50; width: ${Math.min((uploaded / (20 * 1024 ** 3)) * 100, 100).toFixed(2)}%; height: 100%; transition: width 0.5s;"></div>
           </div>
-          <small>Space used</small>
+          <small>Space used out of 20GB</small>
         </div>
 
       </div>
@@ -296,7 +314,6 @@ async function loadUserFiles() {
         for (const key in files) {
           
             const file = files[key];
-            if(file.type == 0) continue;
             const server_key = file.server_key;
             const encryptionKey = generateEncryptionKey(password, server_key);
             let decryptedFileName = "Filename Error"; // Default filename in case of decryption error
@@ -311,69 +328,87 @@ async function loadUserFiles() {
 
             const size = file.size;
             const chunk_count = file.chunk_count; // Get chunk_count for progress calculation
+            let type = file.type; // Get type for file type check
 
             // Create UI elements (Your existing code)
             const fileContainer = document.createElement('div');
             fileContainer.className = 'file-item';
             
-            fileContainer.addEventListener('dblclick', async () => {
-                 if (progressIndicator.style.display === 'block') {
-                    alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
-                    return;
+            if(type === 0){
+              fileContainer.addEventListener('dblclick', async () => {
+                if (progressIndicator.style.display === 'block') {
+                  alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
+                  return;
                 }
-
                 try {
-                    const chunks = [];
-                    let chunkIndex = 0;
+                  document.getElementById('folder_path').setAttribute('last-id',document.getElementById('folder_path').getAttribute('current-id'));
+                  document.getElementById('folder_path').setAttribute('current-id', server_key);
+                  document.getElementById('path_display').textContent += "/" + decryptedFileName;
+                  loadUserFiles(); // Reload files to show the new folder
+                } catch (error) {alert('Failed to open folder. Please try again later.');}
 
-                    // --- Show Progress Indicator for Download ---
-                     updateProgress('show', `Starting download: ${decryptedFileName}`, 0, false, true); // isDownload = true
+              });
 
-                    while (chunkIndex < chunk_count) {
-                        const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
-                            method: 'GET',
-                            credentials: 'include'
-                        });
+            }
+            else{
+              fileContainer.addEventListener('dblclick', async () => {
+                  if (progressIndicator.style.display === 'block') {
+                      alert("Another operation is already in progress."); // Prevent concurrent operations on the same indicator
+                      return;
+                  }
 
-                        if (response.ok) {
-                            const encryptedChunk = await response.text();
-                            const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
-                            chunks.push(decryptedChunk);
-                            chunkIndex++;
+                  try {
+                      const chunks = [];
+                      let chunkIndex = 0;
 
-                             // --- Update Download Progress ---
-                            const percentComplete = Math.round((chunkIndex / chunk_count) * 100);
-                            updateProgress('update', `Downloading ${decryptedFileName} ${percentComplete}%`, percentComplete, false, true);
+                      // --- Show Progress Indicator for Download ---
+                      updateProgress('show', `Starting download: ${decryptedFileName}`, 0, false, true); // isDownload = true
 
-                        } else {
-                             throw new Error(`Chunk download failed (Index: ${chunkIndex}, Status: ${response.status})`);
-                        }
-                    }
+                      while (chunkIndex < chunk_count) {
+                          const response = await fetch(`/files/download?key=${server_key}&index=${chunkIndex}`, {
+                              method: 'GET',
+                              credentials: 'include'
+                          });
 
-                    // --- All chunks downloaded, prepare Blob ---
-                    updateProgress('update', `Download complete: ${decryptedFileName}. Preparing file...`, 100, false, true);
+                          if (response.ok) {
+                              const encryptedChunk = await response.text();
+                              const decryptedChunk = await decryptAndDecompressChunk(encryptedChunk, encryptionKey);
+                              chunks.push(decryptedChunk);
+                              chunkIndex++;
 
-                    const blob = new Blob(chunks);
-                    const url = URL.createObjectURL(blob);
-                    const tempLink = document.createElement('a');
-                    tempLink.href = url;
-                    tempLink.download = decryptedFileName;
-                    document.body.appendChild(tempLink); // Required for Firefox
-                    tempLink.click();
-                    document.body.removeChild(tempLink); // Clean up
-                    URL.revokeObjectURL(url);
+                              // --- Update Download Progress ---
+                              const percentComplete = Math.round((chunkIndex / chunk_count) * 100);
+                              updateProgress('update', `Downloading ${decryptedFileName} ${percentComplete}%`, percentComplete, false, true);
 
-                    // --- Hide indicator after success ---
-                     setTimeout(() => updateProgress('hide'), 1000); // Hide shortly after click initiated
+                          } else {
+                              throw new Error(`Chunk download failed (Index: ${chunkIndex}, Status: ${response.status})`);
+                          }
+                      }
 
-                } catch (error) {
-                    console.error('Download failed:', error);
-                     // --- Show error and hide ---
-                     updateProgress('show', `Download failed: ${decryptedFileName}`, null, true); // isError = true
-                     setTimeout(() => updateProgress('hide'), 3000);
-                }
-            });
-            // --- END OF MODIFIED Listener ---
+                      // --- All chunks downloaded, prepare Blob ---
+                      updateProgress('update', `Download complete: ${decryptedFileName}. Preparing file...`, 100, false, true);
+
+                      const blob = new Blob(chunks);
+                      const url = URL.createObjectURL(blob);
+                      const tempLink = document.createElement('a');
+                      tempLink.href = url;
+                      tempLink.download = decryptedFileName;
+                      document.body.appendChild(tempLink); // Required for Firefox
+                      tempLink.click();
+                      document.body.removeChild(tempLink); // Clean up
+                      URL.revokeObjectURL(url);
+
+                      // --- Hide indicator after success ---
+                      setTimeout(() => updateProgress('hide'), 1000); // Hide shortly after click initiated
+
+                  } catch (error) {
+                      console.error('Download failed:', error);
+                      // --- Show error and hide ---
+                      updateProgress('show', `Download failed: ${decryptedFileName}`, null, true); // isError = true
+                      setTimeout(() => updateProgress('hide'), 3000);
+                  }
+              });}
+              // --- END OF MODIFIED Listener ---
 
             function getFileIcon(extension) {
               extension = extension.toLowerCase();
@@ -401,7 +436,7 @@ async function loadUserFiles() {
               if (['apk'].includes(extension)) return '📱';
               if (['exe', 'msi'].includes(extension)) return '💻';
               if (codeExts.includes(extension)) return '💻';
-          
+              if (extension === '') return '📁';
               return '🥸'; // Default/fallback
           }
           // Create file type icon
@@ -412,18 +447,19 @@ async function loadUserFiles() {
             })
             .then(response => {
                 if (response.ok) {
-                    console.log(`File ${file.name} deleted successfully.`);
+                    console.log(`File ${decryptedFileName} deleted successfully.`);
                     fileContainer.remove();
                 } else {
-                    console.error(`Failed to delete file ${file.name}. Status: ${response.status}`);
+                    console.error(`Failed to delete file ${decryptedFileName}. Status: ${response.status}`);
                 }
             })
             .catch(error => {
-                console.error(`Error deleting file ${file.name}:`, error);
+                console.error(`Error deleting file ${decryptedFileName}:`, error);
             });
         }
         const iconSpan = document.createElement('span');
-        iconSpan.textContent = getFileIcon(decryptedFileName.split('.').pop());
+        const extension = decryptedFileName.includes('.') ? decryptedFileName.split('.').pop() : '';
+        iconSpan.textContent = getFileIcon(extension);
         fileContainer.appendChild(iconSpan);
 
         // File name
@@ -435,7 +471,7 @@ async function loadUserFiles() {
         const fileSize = document.createElement('span');
         fileSize.className = 'file-size';
         fileSize.textContent = formatFileSize(file.size);
-
+        if(type === 0) {fileSize.style.display = 'none';} // Hide size for folders
         // Dropdown toggle arrow
         const toggleArrow = document.createElement('span');
         toggleArrow.className = 'dropdown-toggle';
@@ -449,6 +485,7 @@ async function loadUserFiles() {
         const shareBtn = document.createElement('button');
         shareBtn.className = 'dropdown-btn';
         shareBtn.textContent = 'Share';
+        if(type === 0) {shareBtn.style.display = 'none';} // Hide share button for folders
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'dropdown-btn';
@@ -572,4 +609,8 @@ async function decryptFile(base64String, key) {
       console.error('Decryption failed:', error);
       throw error;
   }
+}
+
+function generateRandomId() {
+  return Math.random().toString(36).substring(2, 15);
 }

@@ -109,8 +109,6 @@ def process_req(http_request: json) -> bytes:
                     match http_request["path"]:
                         case "delete/file":
                             response = delete_file(http_request, response)
-                        case "delete/folder":
-                            response = delete_folder(http_request, response)
         case "app":
             match http_request["method"]:
                 case "GET":

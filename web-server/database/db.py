@@ -446,71 +446,72 @@ class DB:
 
     def remove_file(self, cookie_value: str, server_key: str) -> None:
         """
-        Deletes a file record from the database and removes the corresponding file from the filesystem.
-        This method checks the validity of the provided cookie, retrieves the user ID, and ensures
-        that the file associated with the given server key exists in the database. If the file exists,
-        it deletes the record from the database and removes the physical file from the filesystem.
-        Args:
-            cookie_value (str): The cookie value used to authenticate the user.
-            server_key (str): The unique identifier for the file to be removed.
-        Raises:
-            sqlite3.Error: If a database error occurs during the operation.
-            ValueError: If an invalid value is encountered during the process.
-        Notes:
-            - The method rolls back the database transaction in case of any errors.
-            - The file path is constructed based on the user ID and server key.
-            - If the file does not exist in the filesystem, no action is taken for the file removal.
+        Recursively deletes a file or folder from the database and filesystem.
         """
-
-        
-        user_id = self.check_cookie(cookie_value)
-        file_count_sql = "SELECT COUNT(*) FROM files WHERE owner_id = ? AND server_key = ?"
-
         try:
-            self.cursor.execute(file_count_sql, (user_id, server_key))
-            count = self.cursor.fetchone()[0]
+            user_id = self.check_cookie(cookie_value)
 
-            if count > 0:
-                
-                user_upload_sql = """
-                SELECT data_uploaded FROM users WHERE id = ?
-                """
-                #remove from uploaded data size
-                file_size_sql = "SELECT size FROM files WHERE owner_id = ? AND server_key = ?"
-                file_size_result = self.cursor.execute(file_size_sql, (user_id, server_key)).fetchone()
-                if file_size_result is None:
-                    raise ValueError("File size not found in database")
-                file_size = file_size_result[0]
+            # Check if the item exists
+            self.cursor.execute(
+                "SELECT id, type FROM files WHERE owner_id = ? AND server_key = ?", 
+                (user_id, server_key)
+            )
+            result = self.cursor.fetchone()
+            if not result:
+                raise ValueError("File or folder not found in database")
 
-                data_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] - file_size
+            file_id, file_type = result
 
-                update_user_upload = """
-                UPDATE users SET data_uploaded = ? WHERE id = ?
-                """
-                self.cursor.execute(update_user_upload, (data_uploaded, user_id))
-            
-                self.db_connection.commit()
-                
-                #remove from database
-                file_deletion_sql = "DELETE FROM files WHERE owner_id = ? AND server_key = ?"
-                self.cursor.execute(file_deletion_sql, (user_id, server_key))
-                self.db_connection.commit()
-                
-                ##remove from filesystem
-                file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                    
-                else:
-                    raise ValueError("File does not exist on the server")
-                
-                    
+            # If folder, recursively delete children
+            if file_type == 0:
+                self.cursor.execute(
+                    "SELECT server_key FROM files WHERE owner_id = ? AND parent_id = ?", 
+                    (user_id, server_key)
+                )
+                children = self.cursor.fetchall()
+                for (child_key,) in children:
+                    self.remove_file(cookie_value, child_key)
+
+            # Get file size to update uploaded data
+            file_size_result = self.cursor.execute(
+                "SELECT size FROM files WHERE owner_id = ? AND server_key = ?", 
+                (user_id, server_key)
+            ).fetchone()
+
+            if file_size_result is None:
+                raise ValueError("File size not found in database")
+
+            file_size = file_size_result[0]
+            current_data_uploaded = self.cursor.execute(
+                "SELECT data_uploaded FROM users WHERE id = ?", 
+                (user_id,)
+            ).fetchone()[0]
+
+            self.cursor.execute(
+                "UPDATE users SET data_uploaded = ? WHERE id = ?", 
+                (current_data_uploaded - file_size, user_id)
+            )
+
+            # Delete from files table
+            self.cursor.execute(
+                "DELETE FROM files WHERE owner_id = ? AND server_key = ?", 
+                (user_id, server_key)
+            )
+
+            self.db_connection.commit()
+
+            # Remove file from filesystem if it exists
+            file_path = f"web-server/database/files/{user_id}/{server_key}.txt"
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
-            print("remove file ERORR: " + ve)
+            print("remove_file ERROR: " + str(ve))
             self.db_connection.rollback()
+
 
     def get_folders_summary(self, cookie_value: str, parent_id: str = "-1") -> dict:
         try:

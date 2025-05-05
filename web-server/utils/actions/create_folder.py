@@ -18,7 +18,7 @@ def create_folder(info, response):
 
     
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access.add_file(auth_cookie_value, folder_name, parent_id, server_key, 0, 0)
+        database_access.add_file(auth_cookie_value, folder_name, parent_id, server_key, 0, 0, 0)
         
         response["body"] = json.dumps({"success": "your file info was uploaded "})
         response["response_code"] = "200 OK"
