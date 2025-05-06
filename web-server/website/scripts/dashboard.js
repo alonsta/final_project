@@ -3,7 +3,9 @@ const passwordInput = document.getElementById('password');
 const confirmButton = document.getElementById('confirm-button');
 const cancelButton = document.getElementById('cancel-button');
 const storedPassword = sessionStorage.getItem('filePassword');
-
+let folderIdStack = [];
+let currentLoadToken = null; // Token to track the current load operation
+let backButtonCooldown = false;
 const progressIndicator = document.getElementById('progress-indicator');
 const progressBar = progressIndicator.querySelector('.progress-bar');
 const progressText = progressIndicator.querySelector('.progress-text');
@@ -21,6 +23,32 @@ function formatFileSize(bytes) {
 
   return `${size} ${units[unitIndex]}`;
 }
+
+document.getElementById('go_back_btn').addEventListener('click', () => {
+  if (backButtonCooldown) return;
+
+  backButtonCooldown = true;
+  setTimeout(() => {
+    backButtonCooldown = false;
+  }, 300); // 0.3 second cooldown
+
+  // Cancel all pending file loads
+  currentLoadToken = null;
+
+  if (folderIdStack.length > 0) {
+    const previousId = folderIdStack.pop();
+
+    document.getElementById('folder_path').setAttribute('current-id', previousId);
+    document.getElementById('folder_path').setAttribute('last-id', folderIdStack[folderIdStack.length - 1] || "-1");
+
+    let currentPath = document.getElementById('path_display').textContent;
+    let pathParts = currentPath.split('/');
+    pathParts.pop(); // remove last
+    document.getElementById('path_display').textContent = pathParts.join('/');
+
+    loadUserFiles(); // safe because prior load is now cancelled
+  }
+});
 
 createBtn.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -62,23 +90,28 @@ async function createFolder(name, parentId) {
   let password = sessionStorage.getItem('filePassword');
   let key = generateEncryptionKey(password, server_key);
   let encryptedFolderName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(name), key).toString();
+
   let response = await fetch('/files/create/folder', {
     method: 'POST',
     body: JSON.stringify({
-        server_key: server_key,
-        folder_name: encryptedFolderName,
-        parent_id: parentId
-  })
-});
-if(response.ok) {
+      server_key: server_key,
+      folder_name: encryptedFolderName,
+      parent_id: parentId
+    })
+  });
+
+  if (response.ok) {
     console.log('Folder created successfully!');
-    document.getElementById('folder_path').getAttribute('current-id');
+    
+    // Stack push
+    folderIdStack.push(parentId);
+
     document.getElementById('folder_path').setAttribute('last-id', parentId);
     document.getElementById('folder_path').setAttribute('current-id', server_key);
-    document.getElementById('path_display').textContent += "/" +name;
-    loadUserFiles(); // Reload files to show the new folder
-}}
-
+    document.getElementById('path_display').textContent += "/" + name;
+    loadUserFiles();
+  }
+}
 // --- Helper function to show/update/hide indicator ---
 function updateProgress(state, message, percentage = null, isError = false, isDownload = false) {
     if (state === 'show') {
@@ -115,6 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     loadUserStats();
     loadUserFiles();
+
+    setInterval(() => {
+      loadUserFiles();
+    }, 25000); // Refresh every 15 seconds
   }
 });
 
@@ -295,6 +332,8 @@ async function loadUserStats() {
 
 
 async function loadUserFiles() {
+    const thisToken = Symbol();
+    currentLoadToken = thisToken; // Set the current load token
     const password = sessionStorage.getItem('filePassword');
     const fileSection = document.getElementById('files_grid');
 
@@ -312,7 +351,7 @@ async function loadUserFiles() {
         const files = await response.json();
 
         for (const key in files) {
-          
+            if (currentLoadToken !== thisToken) return;
             const file = files[key];
             const server_key = file.server_key;
             const encryptionKey = generateEncryptionKey(password, server_key);
@@ -341,9 +380,16 @@ async function loadUserFiles() {
                   return;
                 }
                 try {
-                  document.getElementById('folder_path').setAttribute('last-id',document.getElementById('folder_path').getAttribute('current-id'));
+                  let currentId = document.getElementById('folder_path').getAttribute('current-id');
+                  // Stack push
+                  folderIdStack.push(currentId);
+
+                  document.getElementById('folder_path').setAttribute('last-id', currentId);
                   document.getElementById('folder_path').setAttribute('current-id', server_key);
-                  document.getElementById('path_display').textContent += "/" + decryptedFileName;
+                  
+                  const pathDisplay = document.getElementById('path_display');
+                  pathDisplay.textContent += "/" + decryptedFileName;
+
                   loadUserFiles(); // Reload files to show the new folder
                 } catch (error) {alert('Failed to open folder. Please try again later.');}
 
@@ -544,6 +590,7 @@ async function loadUserFiles() {
         console.error('Error loading user files:', error);
         fileSection.innerHTML = '<p style="color: red;">Error loading files. Please check console or try again later.</p>';
     }
+
 }
 
 async function decryptAndDecompressChunk(encryptedChunk, key) {
