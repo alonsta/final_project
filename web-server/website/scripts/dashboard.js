@@ -86,6 +86,9 @@ input.addEventListener('keydown', (e) => {
 });
 
 async function createFolder(name, parentId) {
+  if(name.length > 32)
+    {alert("Folder name too long!"); return;}
+
   let server_key = generateRandomId();
   let password = sessionStorage.getItem('filePassword');
   let key = generateEncryptionKey(password, server_key);
@@ -150,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserFiles();
 
     setInterval(() => {
-      loadUserFiles();
+      //loadUserFiles();
     }, 25000); // Refresh every 15 seconds
   }
 });

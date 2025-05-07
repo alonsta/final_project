@@ -34,8 +34,24 @@
                 <input type="file" id="file" style="display: none;" multiple>
                 <div id="path_container" style="font-size: 20px; font-weight: bold;">
                     
-                    <h1 id="folder_path" current-id="-1" last-id ="-1"> <button id="go_back_btn" style="font-size: 20px; cursor: pointer; background: none; border: none; margin-right: 10px;"><</button> <span id="path_display" style="font-family: monospace, sans-serif;   padding: 0.2em 0.4em; 
-  border-radius: 5px;">Myfiles</span> <button id="create_folder_btn" style="font-size: 24px; cursor: pointer; background: none; border: none; font-weight: bold; color:rgb(154, 226, 226)">_</button>  </h1>
+                    <h1 id="folder_path" current-id="-1" last-id ="-1" style="max-width: calc(100% - 100px);"> 
+                        <button id="go_back_btn" style="font-size: 20px; cursor: pointer; background: none; border: none; margin-right: 10px;"><</button> 
+                        <span id="path_display" style="
+                            font-family: monospace, sans-serif;
+                            padding: 0.2em 0.4em;
+                            border-radius: 5px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            display: inline-block;
+                            max-width: calc(100% - 200px);
+                            vertical-align: middle;">
+                            Myfiles
+                        </span>
+
+
+                        <button id="create_folder_btn" style="font-size: 24px; cursor: pointer; background: none; border: none; font-weight: bold; color:rgb(154, 226, 226)">_</button>
+                    </h1>
 
                     <div id="folder_popup" style="
                         display: none;

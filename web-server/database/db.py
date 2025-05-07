@@ -215,10 +215,10 @@ class DB:
             Exception: If the user already exists or if there is any issue during the database operation.
         sqlite3.Error: If there is an SQLite-related error.
         """
-        user_check_sql = "SELECT 1 FROM users WHERE username = ? AND password = ?"
+        user_check_sql = "SELECT 1 FROM users WHERE username = ?"
         user_adding_sql = "INSERT INTO users (id, username, password, creation_time, data_uploaded, data_downloaded) VALUES (?, ?, ?, ?, ?, ?)"
         try:
-            self.cursor.execute(user_check_sql, (username, password))
+            self.cursor.execute(user_check_sql, (username,))
             if self.cursor.fetchone():
                 raise "user already exists"
             
