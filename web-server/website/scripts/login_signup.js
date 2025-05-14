@@ -1,10 +1,9 @@
-async function hashString(input) {
-  
-  const hash = CryptoJS.SHA256(input);
-  const hashHex = hash.toString(CryptoJS.enc.Hex);
-
-  return hashHex;
+async function hashString(password, salt) {
+  let saltedInput = salt + password;
+  let hash = CryptoJS.SHA256(saltedInput);
+  return hash.toString(CryptoJS.enc.Hex);
 }
+
 
 document.getElementById("toggle-link").addEventListener("click", function (e) {
   e.preventDefault();
@@ -52,7 +51,6 @@ document.getElementById("auth-form").addEventListener("submit", async function (
 
   if (formTitle.textContent === "Sign Up" && Repassword) {
     if (Repassword === password && password.length >= 8) {
-      password = await hashString(password);
       fetch("/users/signup", {
         method: 'POST',
         headers: {
@@ -73,7 +71,6 @@ document.getElementById("auth-form").addEventListener("submit", async function (
       alert("Password must be at least 8 characters long");
     }
   } else if (username && password) {
-    password = await hashString(password);
     fetch("/users/login", {
       method: 'POST',
       headers: {

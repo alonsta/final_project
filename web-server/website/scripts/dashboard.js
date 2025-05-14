@@ -175,7 +175,7 @@ function showPasswordModal(isInitial = false) {
     noteText.textContent = 'This password will be used to encrypt all your files. Keep it safe!';
     cancelButton.style.display = 'none';
     confirmButton.textContent = 'Set Password';
-  } else {
+  } else {//redundant
     modalTitle.textContent = 'Confirm File Upload';
     noteText.textContent = 'Your stored password will be used to encrypt this file.';
     cancelButton.style.display = 'block';
@@ -629,6 +629,12 @@ function generateEncryptionKey(password, fileId) {
     const masterHash = CryptoJS.SHA256(password).toString();
     const combined = fileId + masterHash;
     return CryptoJS.MD5(combined).toString();
+}
+
+async function hashString(password, salt) {
+  let saltedInput = salt + password;
+  let hash = CryptoJS.SHA256(saltedInput);
+  return hash.toString(CryptoJS.enc.Hex);
 }
 
 async function decryptFile(base64String, key) {

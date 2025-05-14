@@ -4,6 +4,7 @@ import time
 import uuid
 from datetime import datetime, timedelta
 from os import makedirs
+from hashlib import sha256
 
 
 class DB:
@@ -91,7 +92,7 @@ class DB:
             password TEXT NOT NULL,
             creation_time TEXT NOT NULL,
             data_uploaded INTEGER NOT NULL,
-            data_downloaded INTEGER NOT NULL
+            data_downloaded INTEGER NOT NULL,
         )
         """
 
@@ -228,13 +229,14 @@ class DB:
                 raise Exception("user already exists") from None
 
             user_id = str(uuid.uuid4())
-
+            hash_str = username + password
+            pass_hash = sha256(hash_str.encode('utf-8')).hexdigest()
             self.cursor.execute(
                 user_adding_sql,
                 (
                     user_id,
                     username,
-                    password,
+                    pass_hash,
                     datetime.now().strftime("%d/%m/%Y %H:%M"),
                     0,
                     0,
