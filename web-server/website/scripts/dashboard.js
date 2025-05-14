@@ -141,18 +141,14 @@ function updateProgress(state, message, percentage = null, isError = false, isDo
 document.addEventListener('DOMContentLoaded', () => {
   switchTab('overview'); // Default tab on load
   const storedPassword = getCookie("pass");
-  if (!storedPassword) {
-    loadUserStats();
-  } else {
-    loadUserStats();
-    loadUserFiles();
+  loadUserStats();
+  loadUserFiles();
 
-    setInterval(() => {
+  setInterval(() => {
       loadUserFiles();
       loadUserStats();
     }, 30000); // Refresh every 15 seconds
-  }
-});
+  });
 
 
 /**
