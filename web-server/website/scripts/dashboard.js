@@ -228,7 +228,7 @@ async function loadUserStats() {
   const ctx = canvas?.getContext('2d');
   const fileCountDiv = document.getElementById('file_count');
   
-  if (!ctx || !overviewDiv || !fileCountDiv) {
+  if (!overviewDiv || !fileCountDiv) {
     console.error('Required DOM elements not found');
     return;
   }
