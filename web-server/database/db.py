@@ -106,7 +106,8 @@ class DB:
                 parent_id TEXT,
                 type INTEGER,
                 status INTEGER,
-                FOREIGN KEY (owner_id) REFERENCES users(id)
+                FOREIGN KEY (owner_id) REFERENCES users(id),
+                magic TEXT NOT NULL
             )
             """
 
@@ -358,9 +359,12 @@ class DB:
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
+            if type == 0:
+                status = 1
+
             self.cursor.execute(file_insertion_sql, (
                 user_id, file_name, server_key, chunk_count, size,
-                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, type, 0
+                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, type, status
             ))
             makedirs(f"web-server\\database\\files\\{user_id}",exist_ok=True)
             open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
@@ -518,7 +522,7 @@ class DB:
             user_id = self.check_cookie(cookie_value)
             get_files_sql = """
             SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
-            FROM files WHERE owner_id = ? AND parent_id = ?
+            FROM files WHERE owner_id = ? AND parent_id = ? AND status = 1
             """
             
             self.cursor.execute(get_files_sql, (user_id, parent_id))
@@ -534,7 +538,8 @@ class DB:
                     'created': row[4],
                     'parent_id': row[5],
                     'type': row[6],
-                    'chunk_count': row[7]
+                    'chunk_count': row[7],
+                    'magic': row[9]
                 }
                 files_summary[row[0]] = file_summary
             return files_summary

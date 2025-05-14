@@ -153,8 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUserFiles();
 
     setInterval(() => {
-      //loadUserFiles();
-    }, 25000); // Refresh every 15 seconds
+      loadUserFiles();
+      loadUserStats();
+    }, 30000); // Refresh every 15 seconds
   }
 });
 
