@@ -1,10 +1,10 @@
-import sqlite3
-import json
-from datetime import *
-import uuid
-from os import makedirs
-import time
 import os
+import sqlite3
+import time
+import uuid
+from datetime import datetime, timedelta
+from os import makedirs
+
 
 class DB:
     def __init__(self, db_path: str) -> None:
@@ -47,7 +47,7 @@ class DB:
                 - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
         After defining the SQL statements, this method executes them to ensure the tables exist.
         Commits the changes to the database after execution."""
-        
+
         """Ensures the necessary database tables exist by creating them if they do not already exist.
         This method defines and executes SQL statements to create the following tables:
         1. `users`:
@@ -72,6 +72,7 @@ class DB:
                 - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
                 - `type` (INTEGER): Type of the file (e.g., folder, regular file).
                 - `status` (INTEGER): Status of the file (e.g., active, deleted).
+                - 'magic' (TEXT, NOT NULL): the word 'magic' encrypted. to validate the file.
         3. `cookies`:
             - Stores session cookies for users.
             - Columns:
@@ -82,7 +83,7 @@ class DB:
                 - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
         After defining the SQL statements, this method executes them to ensure the tables exist.
         Commits the changes to the database after execution."""
-        
+
         users_table_check_sql = """
         CREATE TABLE IF NOT EXISTS users (
             id TEXT PRIMARY KEY NOT NULL UNIQUE,
@@ -121,48 +122,51 @@ class DB:
                 FOREIGN KEY (owner_id) REFERENCES users (id)
             )
             """
-        
 
         self.cursor.execute(users_table_check_sql)
         self.cursor.execute(files_table_check_sql)
         self.cursor.execute(cookie_table_check_sql)
         self.db_connection.commit()
-    
+
     def create_cookie(self, user_id: str) -> None:
         """
-            Creates a new authentication cookie for a given user and stores it in the database.
+        Creates a new authentication cookie for a given user and stores it in the database.
 
-            The method generates a unique cookie value, sets an expiration date of 7 days from the 
-            current time, and inserts the cookie information into the `cookies` table. If an error 
-            occurs during the insertion, the transaction is rolled back.
+        The method generates a unique cookie value, sets an expiration date of 7 days from the
+        current time, and inserts the cookie information into the `cookies` table. If an error
+        occurs during the insertion, the transaction is rolled back.
 
-            Args:
-                user_id (str): The unique ID of the user for whom the cookie is being created.
+        Args:
+            user_id (str): The unique ID of the user for whom the cookie is being created.
 
-            Returns:
-                tuple: A tuple containing the key, cookie value, and expiration date of the created cookie.
+        Returns:
+            tuple: A tuple containing the key, cookie value, and expiration date of the created cookie.
 
-            Raises:
-                Exception: If there is any issue during the database operation.
+        Raises:
+            Exception: If there is any issue during the database operation.
         """
-        
+
         create_cookie_sql = """
         INSERT INTO cookies (key, value, expiration, owner_id)
         VALUES (?, ?, ?, ?)
         """
         try:
             cookie_value = str(uuid.uuid4())
-            expiration_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-            key = 'auth_cookie'
+            expiration_date = (datetime.now() + timedelta(days=7)).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            key = "auth_cookie"
 
-            self.cursor.execute(create_cookie_sql, (key, cookie_value, expiration_date, user_id))
+            self.cursor.execute(
+                create_cookie_sql, (key, cookie_value, expiration_date, user_id)
+            )
             self.db_connection.commit()
-            return (key,cookie_value,expiration_date)
-        
+            return (key, cookie_value, expiration_date)
+
         except Exception as e:
             self.db_connection.rollback()
             raise e
-        
+
     def check_cookie(self, cookie_value: str) -> str:
         """
         Checks if the provided cookie value exists in the database and is not expired.
@@ -180,7 +184,7 @@ class DB:
         Raises:
             Exception: If the cookie is invalid or has expired.
         """
-        
+
         check_cookie_sql = """SELECT owner_id, expiration FROM cookies WHERE value = ?
         """
         self.cursor.execute(check_cookie_sql, (cookie_value,))
@@ -196,13 +200,13 @@ class DB:
                 raise Exception("Cookie has expired")
         else:
             raise Exception("Invalid cookie")
-    
+
     def add_user(self, username: str, password: str) -> None:
         """
         Adds a new user to the database and creates an authentication cookie for them.
 
-        This method checks if a user with the specified username and password already exists in the 
-        `users` table. If the user does exist, a `Exception` is raised. If not, a new user is created 
+        This method checks if a user with the specified username and password already exists in the
+        `users` table. If the user does exist, a `Exception` is raised. If not, a new user is created
         with a unique ID, and an authentication cookie is generated and stored in the database.
 
         Args:
@@ -221,33 +225,40 @@ class DB:
         try:
             self.cursor.execute(user_check_sql, (username,))
             if self.cursor.fetchone():
-                raise "user already exists"
-            
+                raise Exception("user already exists") from None
+
             user_id = str(uuid.uuid4())
-            
-            self.cursor.execute(user_adding_sql, (
-                user_id, username, password, 
-                datetime.now().strftime("%d/%m/%Y %H:%M"), 0, 0
-            ))
-            
+
+            self.cursor.execute(
+                user_adding_sql,
+                (
+                    user_id,
+                    username,
+                    password,
+                    datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    0,
+                    0,
+                ),
+            )
+
             cookie = self.create_cookie(user_id)
-            
+
             self.db_connection.commit()
             return cookie
-        
+
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
         except Exception as e:
             self.db_connection.rollback()
             raise e
-        
+
     def login(self, username: str, password: str) -> str:
         """
         Authenticates a user and generates an authentication cookie upon successful login.
 
-        This method checks if the provided username and password match an existing user in the 
-        `users` table. If the credentials are correct, it creates a new authentication cookie 
+        This method checks if the provided username and password match an existing user in the
+        `users` table. If the credentials are correct, it creates a new authentication cookie
         and returns it. If the credentials are incorrect, an exception is raised.
 
         Args:
@@ -258,10 +269,10 @@ class DB:
             str: A tuple containing the key, cookie value, and expiration date of the created cookie.
 
         Raises:
-            Exception: If the login information is incorrect or if there is any issue during the 
+            Exception: If the login information is incorrect or if there is any issue during the
                         database operation.
             sqlite3.Error: If there is an SQLite-related error.
-    """
+        """
         id_retrieving_sql = "SELECT id FROM users WHERE username = ? AND password = ?"
         try:
             self.cursor.execute(id_retrieving_sql, (username, password))
@@ -269,7 +280,7 @@ class DB:
 
             if query_result is not None:
                 user_id = query_result[0]
-                
+
                 cookie = self.create_cookie(user_id)
 
                 return cookie
@@ -282,14 +293,12 @@ class DB:
             self.db_connection.rollback()
             raise e
 
-            
     def update_password(self, user_id: str, password: str) -> str:
         pass
 
-
     def delete_user(self, user_id: str, username: str) -> None:
         pass
-                
+
     def get_user_info(self, cookie_value: str) -> str:
         """
         Retrieves user information based on the provided cookie value.
@@ -312,34 +321,42 @@ class DB:
             user_id = self.check_cookie(cookie_value)
         except Exception as e:
             raise e
-        
+
         user_info_sql = """SELECT username, creation_time, data_uploaded, data_downloaded FROM users WHERE id = ?"""
         file_count_sql = """SELECT id FROM files WHERE owner_id = ?"""
         try:
-            fileCount = len(self.cursor.execute(file_count_sql,(user_id,)).fetchall())
+            fileCount = len(self.cursor.execute(file_count_sql, (user_id,)).fetchall())
             self.cursor.execute(user_info_sql, (user_id,))
             query_result = self.cursor.fetchone()
-            
+
             if query_result:
                 user_info = {
-                    'username': query_result[0],
-                    'creation_time': query_result[1],
-                    'uploaded': query_result[2],
-                    'downloaded': query_result[3],
-                    'success': "logged in",
-                    'fileCount': fileCount
+                    "username": query_result[0],
+                    "creation_time": query_result[1],
+                    "uploaded": query_result[2],
+                    "downloaded": query_result[3],
+                    "success": "logged in",
+                    "fileCount": fileCount,
                 }
                 return user_info
             else:
                 raise Exception("User not found")
-                
+
         except sqlite3.Error as e:
             raise e
         except Exception as e:
-            raise Exception(f"An unexpected error occurred: {e}")
-        
+            raise Exception(f"An unexpected error occurred: {e}") from None
 
-    def add_file(self, cookie_value: str, file_name: str, parent_id: str,server_key: str, chunk_count: int, size: int, type = 1) -> None:
+    def add_file(
+        self,
+        cookie_value: str,
+        file_name: str,
+        parent_id: str,
+        server_key: str,
+        chunk_count: int,
+        size: int,
+        type=1,
+        ) -> None:
         """Adds a file entry to the database and creates the corresponding file on the server.
         Args:
             cookie_value (str): The cookie value to identify the user.
@@ -353,7 +370,7 @@ class DB:
             sqlite3.Error: If there is an error with the SQLite database operations.
             ValueError: If there is a value error during the process."""
         try:
-            user_id = self.check_cookie(cookie_value)          
+            user_id = self.check_cookie(cookie_value)
 
             file_insertion_sql = """
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
@@ -362,24 +379,35 @@ class DB:
             if type == 0:
                 status = 1
 
-            self.cursor.execute(file_insertion_sql, (
-                user_id, file_name, server_key, chunk_count, size,
-                datetime.now().strftime("%d/%m/%Y %H:%M"), parent_id, type, status
-            ))
-            makedirs(f"web-server\\database\\files\\{user_id}",exist_ok=True)
+            self.cursor.execute(
+                file_insertion_sql,
+                (
+                    user_id,
+                    file_name,
+                    server_key,
+                    chunk_count,
+                    size,
+                    datetime.now().strftime("%d/%m/%Y %H:%M"),
+                    parent_id,
+                    type,
+                    status,
+                ),
+            )
+            makedirs(f"web-server\\database\\files\\{user_id}", exist_ok=True)
             open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
-            
 
             user_upload_sql = """
             SELECT data_uploaded FROM users WHERE id = ?
             """
-            data_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
-            
+            data_uploaded = (
+                self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
+            )
+
             update_user_upload = """
             UPDATE users SET data_uploaded = ? WHERE id = ?
             """
             self.cursor.execute(update_user_upload, (data_uploaded, user_id))
-            
+
             self.db_connection.commit()
 
         except sqlite3.Error as e:
@@ -388,11 +416,13 @@ class DB:
         except ValueError as ve:
             self.db_connection.rollback()
             raise ve
-        
-    def upload_chunk(self, cookie_value: str, server_key: str, index: int, content: str) -> None:
+
+    def upload_chunk(
+        self, cookie_value: str, server_key: str, index: int, content: str
+    ) -> None:
         """Uploads a chunk of data to the server and updates the file status if all chunks are uploaded.
         Chunks are processed strictly in order starting from index 0.
-        
+
         Args:
             cookie_value (str): The cookie value used to identify the user.
             server_key (str): The unique key for the file on the server.
@@ -408,24 +438,28 @@ class DB:
                 try:
                     if index == 0:
                         # First chunk - should write to empty file
-                        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+                        if (
+                            not os.path.exists(file_path)
+                            or os.path.getsize(file_path) == 0
+                        ):
                             with open(file_path, "w") as file:
                                 file.write(content)
                             break
                     else:
                         # For subsequent chunks, count newlines to determine chunk position
                         with open(file_path, "r") as file:
-                            chunk_count = file.read().count('\n') + 1
-                            
+                            chunk_count = file.read().count("\n") + 1
+
                         if chunk_count == index:
                             # It's this chunk's turn
                             with open(file_path, "a") as file:
-                                file.write('\n' + content)
+                                file.write("\n" + content)
                             break
-                    
+
                     time.sleep(0.1)  # Short sleep to prevent CPU thrashing
-                    
+
                 except Exception as e:
+                    print(f"Error writing chunk {index}: {e}")
                     time.sleep(0.1)
                     continue
 
@@ -433,9 +467,14 @@ class DB:
             check_file_complete = """
             SELECT chunk_count FROM files WHERE server_key = ?
             """
-            count = self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0] - 1  # Convert to 0-based
+            count = (
+                self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0]
+                - 1
+            )  # Convert to 0-based
             if index + 1 == count:
-                self.cursor.execute("UPDATE files SET status = 1 WHERE server_key = ?", (server_key,))
+                self.cursor.execute(
+                    "UPDATE files SET status = 1 WHERE server_key = ?", (server_key,)
+                )
                 self.db_connection.commit()
 
         except sqlite3.Error as e:
@@ -444,9 +483,6 @@ class DB:
         except ValueError as ve:
             self.db_connection.rollback()
             raise ve
-
-
-
 
     def remove_file(self, cookie_value: str, server_key: str) -> None:
         """
@@ -457,8 +493,8 @@ class DB:
 
             # Check if the item exists
             self.cursor.execute(
-                "SELECT id, type FROM files WHERE owner_id = ? AND server_key = ?", 
-                (user_id, server_key)
+                "SELECT id, type FROM files WHERE owner_id = ? AND server_key = ?",
+                (user_id, server_key),
             )
             result = self.cursor.fetchone()
             if not result:
@@ -469,8 +505,8 @@ class DB:
             # If folder, recursively delete children
             if file_type == 0:
                 self.cursor.execute(
-                    "SELECT server_key FROM files WHERE owner_id = ? AND parent_id = ?", 
-                    (user_id, server_key)
+                    "SELECT server_key FROM files WHERE owner_id = ? AND parent_id = ?",
+                    (user_id, server_key),
                 )
                 children = self.cursor.fetchall()
                 for (child_key,) in children:
@@ -478,8 +514,8 @@ class DB:
 
             # Get file size to update uploaded data
             file_size_result = self.cursor.execute(
-                "SELECT size FROM files WHERE owner_id = ? AND server_key = ?", 
-                (user_id, server_key)
+                "SELECT size FROM files WHERE owner_id = ? AND server_key = ?",
+                (user_id, server_key),
             ).fetchone()
 
             if file_size_result is None:
@@ -487,19 +523,18 @@ class DB:
 
             file_size = file_size_result[0]
             current_data_uploaded = self.cursor.execute(
-                "SELECT data_uploaded FROM users WHERE id = ?", 
-                (user_id,)
+                "SELECT data_uploaded FROM users WHERE id = ?", (user_id,)
             ).fetchone()[0]
 
             self.cursor.execute(
-                "UPDATE users SET data_uploaded = ? WHERE id = ?", 
-                (current_data_uploaded - file_size, user_id)
+                "UPDATE users SET data_uploaded = ? WHERE id = ?",
+                (current_data_uploaded - file_size, user_id),
             )
 
             # Delete from files table
             self.cursor.execute(
-                "DELETE FROM files WHERE owner_id = ? AND server_key = ?", 
-                (user_id, server_key)
+                "DELETE FROM files WHERE owner_id = ? AND server_key = ?",
+                (user_id, server_key),
             )
 
             self.db_connection.commit()
@@ -516,7 +551,6 @@ class DB:
             print("remove_file ERROR: " + str(ve))
             self.db_connection.rollback()
 
-
     def get_folders_summary(self, cookie_value: str, parent_id: str = "-1") -> dict:
         try:
             user_id = self.check_cookie(cookie_value)
@@ -524,22 +558,22 @@ class DB:
             SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
             FROM files WHERE owner_id = ? AND parent_id = ? AND status = 1
             """
-            
+
             self.cursor.execute(get_files_sql, (user_id, parent_id))
             rows = self.cursor.fetchall()
 
             files_summary = {}
             for row in rows:
                 file_summary = {
-                    'id': row[0],
-                    'server_key': row[1],
-                    'file_name': row[2],
-                    'size': row[3],
-                    'created': row[4],
-                    'parent_id': row[5],
-                    'type': row[6],
-                    'chunk_count': row[7],
-                    'magic': row[9]
+                    "id": row[0],
+                    "server_key": row[1],
+                    "file_name": row[2],
+                    "size": row[3],
+                    "created": row[4],
+                    "parent_id": row[5],
+                    "type": row[6],
+                    "chunk_count": row[7],
+                    "magic": row[9],
                 }
                 files_summary[row[0]] = file_summary
             return files_summary
@@ -547,7 +581,6 @@ class DB:
             raise e
         except Exception as e:
             raise e
-
 
     def get_file(self, cookie_value: str, server_key: str, index: int) -> str:
         """
@@ -562,7 +595,7 @@ class DB:
             sqlite3.Error: If there is an error with the database operations.
             Exception: If the file does not exist or the index is invalid.
         """
-        
+
         """
         Retrieves a specific chunk from a file associated with a user and updates the user's data usage.
         Args:
@@ -575,30 +608,32 @@ class DB:
             sqlite3.Error: If there is an error with the database operations.
             Exception: If the file does not exist or the index is invalid.
         """
-        
+
         try:
             user_id = self.check_cookie(cookie_value)
         except sqlite3.Error as e:
             raise e
-        
+
         try:
             file_path = f"web-server\\database\\files\\{user_id}\\{server_key}.txt"
             with open(file_path, "r") as file:
-                file_content = file.read().split('\n')
-            
+                file_content = file.read().split("\n")
+
             file_size_sql = "SELECT size FROM files WHERE server_key = ?"
-            file_size_result = self.cursor.execute(file_size_sql, (server_key,)).fetchone()
+            file_size_result = self.cursor.execute(
+                file_size_sql, (server_key,)
+            ).fetchone()
             if file_size_result is None:
-                raise Exception("File does not exist")
+                raise Exception("File does not exist") from None
             file_size = file_size_result[0]
-            update_downloaded_sql = "UPDATE users SET data_downloaded = data_downloaded + ? WHERE id = ?"
+            update_downloaded_sql = (
+                "UPDATE users SET data_downloaded = data_downloaded + ? WHERE id = ?"
+            )
             self.cursor.execute(update_downloaded_sql, (file_size, user_id))
             self.db_connection.commit()
             return file_content[index + 1]
         except TypeError:
-            raise Exception("File does not exist")
+            raise Exception("File does not exist") from None
         except sqlite3.Error as e:
             self.db_connection.rollback()
             raise e
-
-

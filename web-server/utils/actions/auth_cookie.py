@@ -26,7 +26,8 @@ def auth_cookie(info, response):
     """
     try:
         info = json.loads(info)
-    except Exception as e:
+    except Exception:
+        raise ValueError("Invalid JSON format in request information.")
         pass
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     try:

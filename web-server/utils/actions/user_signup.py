@@ -28,7 +28,7 @@ def signup(info, response):
         response["body"] = json.dumps({"success": "your account was created successfully "})
         response["response_code"] = "200 OK"
         response["cookies"] = [cookie]
-    except Exception as e:
+    except Exception:
         response["body"] = json.dumps({"failed": "couldnt create account","message": "problem creating account, try logging in instead."})
         response["response_code"] = "500"
     

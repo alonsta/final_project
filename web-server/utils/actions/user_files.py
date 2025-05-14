@@ -25,7 +25,7 @@ def get_files_info(info, response):
     database_access = DB(os.getcwd() + "\\web-server\\database\\data")
     try:
         parent = info["query_params"]["parent"]
-    except:
+    except Exception:
         parent = None
         
     try:

@@ -10,6 +10,7 @@ from datetime import datetime
 def main():
     
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # trunk-ignore(bandit/B104)
     server_socket.bind(("0.0.0.0", 8080))
 
     print("Server running with HTTP " + str(datetime.now()), end="\n\n")
@@ -58,7 +59,7 @@ def serve_client(client_socket, client_address):
         data = get()
         response = process_req(data)
         send(response)
-    except Exception as e:
+    except Exception:
         print(f"Connection aborted {client_address} right now it means he sent a request i cant handle")
     finally:
         client_socket.close()

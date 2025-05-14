@@ -25,7 +25,7 @@ def login(info, response):
         response["body"] = json.dumps({"success": "logged in"})
         response["response_code"] = "200 OK"
         response["cookies"] = [cookie]
-    except Exception as e:
+    except Exception:
         response["body"] = json.dumps({"failed": "couldnt create account","message": "error logging in"})
         response["response_code"] = "500"
     

@@ -49,7 +49,7 @@ def get_resource(http_request: dict, response) -> dict:
                 response["headers"]["Content-Type"] = "application/octet-stream"
                 response["body"] = file_content
         return response
-    except Exception as e:
+    except Exception:
         response["response_code"] = "500 Internal Server Error"
         response["headers"]["Content-Type"] = "text/html"
         response["body"] = json.dumps({"failed": "couldn't fetch resource", "message": "couldn't fetch resource"})
