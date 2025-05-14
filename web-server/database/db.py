@@ -14,156 +14,151 @@ class DB:
         self.check_tables()
 
     def check_tables(self) -> None:
-        """Ensures the necessary database tables exist by creating them if they do not already exist.
-        This method defines and executes SQL statements to create the following tables:
-        1. `users`:
-            - Stores user information.
-            - Columns:
-                - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
-                - `username` (TEXT, NOT NULL): Username of the user.
-                - `password` (TEXT, NOT NULL): Hashed password of the user.
-                - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
-                - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
-                - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
-        2. `files`:
-            - Stores information about files uploaded to the server.
-            - Columns:
-                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
-                - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
-                - `size` (INTEGER): Size of the file in bytes.
-                - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
-                - `file_name` (TEXT, NOT NULL): Name of the file.
-                - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
-                - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
-                - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
-                - `type` (INTEGER): Type of the file (e.g., folder, regular file).
-                - `status` (INTEGER): Status of the file (e.g., active, deleted).
-        3. `cookies`:
-            - Stores session cookies for users.
-            - Columns:
-                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
-                - `key` (TEXT, NOT NULL): Key of the cookie.
-                - `value` (TEXT, NOT NULL): Value of the cookie.
-                - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
-                - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
-        After defining the SQL statements, this method executes them to ensure the tables exist.
-        Commits the changes to the database after execution."""
-
-        """Ensures the necessary database tables exist by creating them if they do not already exist.
-        This method defines and executes SQL statements to create the following tables:
-        1. `users`:
-            - Stores user information.
-            - Columns:
-                - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
-                - `username` (TEXT, NOT NULL): Username of the user.
-                - `password` (TEXT, NOT NULL): Hashed password of the user.
-                - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
-                - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
-                - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
-        2. `files`:
-            - Stores information about files uploaded to the server.
-            - Columns:
-                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
-                - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
-                - `size` (INTEGER): Size of the file in bytes.
-                - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
-                - `file_name` (TEXT, NOT NULL): Name of the file.
-                - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
-                - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
-                - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
-                - `type` (INTEGER): Type of the file (e.g., folder, regular file).
-                - `status` (INTEGER): Status of the file (e.g., active, deleted).
-                - 'magic' (TEXT, NOT NULL): the word 'magic' encrypted. to validate the file.
-        3. `cookies`:
-            - Stores session cookies for users.
-            - Columns:
-                - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
-                - `key` (TEXT, NOT NULL): Key of the cookie.
-                - `value` (TEXT, NOT NULL): Value of the cookie.
-                - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
-                - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
-        After defining the SQL statements, this method executes them to ensure the tables exist.
-        Commits the changes to the database after execution."""
-
-        users_table_check_sql = """
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY NOT NULL UNIQUE,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL,
-            creation_time TEXT NOT NULL,
-            data_uploaded INTEGER NOT NULL,
-            data_downloaded INTEGER NOT NULL,
-        )
-        """
-
-        files_table_check_sql = """
-                CREATE TABLE IF NOT EXISTS files (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                server_key TEXT NOT NULL,
-                size INTEGER,
-                created TEXT NOT NULL,
-                file_name TEXT NOT NULL,
-                chunk_count INTEGER NOT NULL,
-                owner_id INTEGER NOT NULL,
-                parent_id TEXT,
-                type INTEGER,
-                status INTEGER,
-                FOREIGN KEY (owner_id) REFERENCES users(id),
-                magic TEXT NOT NULL
+            """Ensures the necessary database tables exist by creating them if they do not already exist.
+            This method defines and executes SQL statements to create the following tables:
+            1. `users`:
+                - Stores user information.
+                - Columns:
+                    - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
+                    - `username` (TEXT, NOT NULL): Username of the user.
+                    - `password` (TEXT, NOT NULL): Hashed password of the user.
+                    - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
+                    - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
+                    - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
+            2. `files`:
+                - Stores information about files uploaded to the server.
+                - Columns:
+                    - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
+                    - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
+                    - `size` (INTEGER): Size of the file in bytes.
+                    - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
+                    - `file_name` (TEXT, NOT NULL): Name of the file.
+                    - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
+                    - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
+                    - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
+                    - `type` (INTEGER): Type of the file (e.g., folder, regular file).
+                    - `status` (INTEGER): Status of the file (e.g., active, deleted).
+            3. `cookies`:
+                - Stores session cookies for users.
+                - Columns:
+                    - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
+                    - `key` (TEXT, NOT NULL): Key of the cookie.
+                    - `value` (TEXT, NOT NULL): Value of the cookie.
+                    - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
+                    - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
+            After defining the SQL statements, this method executes them to ensure the tables exist.
+            Commits the changes to the database after execution."""
+            
+            """Ensures the necessary database tables exist by creating them if they do not already exist.
+            This method defines and executes SQL statements to create the following tables:
+            1. `users`:
+                - Stores user information.
+                - Columns:
+                    - `id` (TEXT, PRIMARY KEY): Unique identifier for the user.
+                    - `username` (TEXT, NOT NULL): Username of the user.
+                    - `password` (TEXT, NOT NULL): Hashed password of the user.
+                    - `creation_time` (TEXT, NOT NULL): Timestamp of when the user was created.
+                    - `data_uploaded` (INTEGER, NOT NULL): Total data uploaded by the user (in bytes).
+                    - `data_downloaded` (INTEGER, NOT NULL): Total data downloaded by the user (in bytes).
+            2. `files`:
+                - Stores information about files uploaded to the server.
+                - Columns:
+                    - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the file.
+                    - `server_key` (TEXT, NOT NULL): Unique key for the file on the server.
+                    - `size` (INTEGER): Size of the file in bytes.
+                    - `created` (TEXT, NOT NULL): Timestamp of when the file was created.
+                    - `file_name` (TEXT, NOT NULL): Name of the file.
+                    - `chunk_count` (INTEGER, NOT NULL): Number of chunks the file is divided into.
+                    - `owner_id` (INTEGER, NOT NULL): ID of the user who owns the file (foreign key referencing `users.id`).
+                    - `parent_id` (INTEGER): ID of the parent file or folder (if applicable).
+                    - `type` (INTEGER): Type of the file (e.g., folder, regular file).
+                    - `status` (INTEGER): Status of the file (e.g., active, deleted).
+            3. `cookies`:
+                - Stores session cookies for users.
+                - Columns:
+                    - `id` (INTEGER, PRIMARY KEY, AUTOINCREMENT): Unique identifier for the cookie.
+                    - `key` (TEXT, NOT NULL): Key of the cookie.
+                    - `value` (TEXT, NOT NULL): Value of the cookie.
+                    - `expiration` (TEXT, NOT NULL): Expiration timestamp of the cookie.
+                    - `owner_id` (TEXT, NOT NULL): ID of the user who owns the cookie (foreign key referencing `users.id`).
+            After defining the SQL statements, this method executes them to ensure the tables exist.
+            Commits the changes to the database after execution."""
+            
+            users_table_check_sql = """
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY NOT NULL UNIQUE,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL,
+                creation_time TEXT NOT NULL,
+                data_uploaded INTEGER NOT NULL,
+                data_downloaded INTEGER NOT NULL
             )
             """
 
-        cookie_table_check_sql = """
-            CREATE TABLE IF NOT EXISTS cookies (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                key TEXT NOT NULL,
-                value TEXT NOT NULL,
-                expiration TEXT NOT NULL,
-                owner_id TEXT NOT NULL,
-                FOREIGN KEY (owner_id) REFERENCES users (id)
-            )
-            """
+            files_table_check_sql = """
+                    CREATE TABLE IF NOT EXISTS files (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    server_key TEXT NOT NULL,
+                    size INTEGER,
+                    created TEXT NOT NULL,
+                    file_name TEXT NOT NULL,
+                    chunk_count INTEGER NOT NULL,
+                    owner_id INTEGER NOT NULL,
+                    parent_id TEXT,
+                    type INTEGER,
+                    status INTEGER,
+                    FOREIGN KEY (owner_id) REFERENCES users(id)
+                )
+                """
 
-        self.cursor.execute(users_table_check_sql)
-        self.cursor.execute(files_table_check_sql)
-        self.cursor.execute(cookie_table_check_sql)
-        self.db_connection.commit()
+            cookie_table_check_sql = """
+                CREATE TABLE IF NOT EXISTS cookies (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key TEXT NOT NULL,
+                    value TEXT NOT NULL,
+                    expiration TEXT NOT NULL,
+                    owner_id TEXT NOT NULL,
+                    FOREIGN KEY (owner_id) REFERENCES users (id)
+                )
+                """
+            
+
+            self.cursor.execute(users_table_check_sql)
+            self.cursor.execute(files_table_check_sql)
+            self.cursor.execute(cookie_table_check_sql)
+            self.db_connection.commit()
 
     def create_cookie(self, user_id: str) -> None:
         """
-        Creates a new authentication cookie for a given user and stores it in the database.
+            Creates a new authentication cookie for a given user and stores it in the database.
 
-        The method generates a unique cookie value, sets an expiration date of 7 days from the
-        current time, and inserts the cookie information into the `cookies` table. If an error
-        occurs during the insertion, the transaction is rolled back.
+            The method generates a unique cookie value, sets an expiration date of 7 days from the 
+            current time, and inserts the cookie information into the `cookies` table. If an error 
+            occurs during the insertion, the transaction is rolled back.
 
-        Args:
-            user_id (str): The unique ID of the user for whom the cookie is being created.
+            Args:
+                user_id (str): The unique ID of the user for whom the cookie is being created.
 
-        Returns:
-            tuple: A tuple containing the key, cookie value, and expiration date of the created cookie.
+            Returns:
+                tuple: A tuple containing the key, cookie value, and expiration date of the created cookie.
 
-        Raises:
-            Exception: If there is any issue during the database operation.
+            Raises:
+                Exception: If there is any issue during the database operation.
         """
-
+        
         create_cookie_sql = """
         INSERT INTO cookies (key, value, expiration, owner_id)
         VALUES (?, ?, ?, ?)
         """
         try:
             cookie_value = str(uuid.uuid4())
-            expiration_date = (datetime.now() + timedelta(days=7)).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-            key = "auth_cookie"
+            expiration_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+            key = 'auth_cookie'
 
-            self.cursor.execute(
-                create_cookie_sql, (key, cookie_value, expiration_date, user_id)
-            )
+            self.cursor.execute(create_cookie_sql, (key, cookie_value, expiration_date, user_id))
             self.db_connection.commit()
-            return (key, cookie_value, expiration_date)
-
+            return (key,cookie_value,expiration_date)
+        
         except Exception as e:
             self.db_connection.rollback()
             raise e
@@ -185,7 +180,7 @@ class DB:
         Raises:
             Exception: If the cookie is invalid or has expired.
         """
-
+        
         check_cookie_sql = """SELECT owner_id, expiration FROM cookies WHERE value = ?
         """
         self.cursor.execute(check_cookie_sql, (cookie_value,))
@@ -198,9 +193,9 @@ class DB:
             if expiration > current_time:
                 return user_id
             else:
-                raise Exception("Cookie has expired")
+                raise Exception("Cookie has expired") from None 
         else:
-            raise Exception("Invalid cookie")
+            raise Exception("Invalid cookie") from None
 
     def add_user(self, username: str, password: str) -> None:
         """
@@ -275,9 +270,11 @@ class DB:
                         database operation.
             sqlite3.Error: If there is an SQLite-related error.
         """
+        hash_str = username + password
+        pass_hash = sha256(hash_str.encode('utf-8')).hexdigest()
         id_retrieving_sql = "SELECT id FROM users WHERE username = ? AND password = ?"
         try:
-            self.cursor.execute(id_retrieving_sql, (username, password))
+            self.cursor.execute(id_retrieving_sql, (username, pass_hash))
             query_result = self.cursor.fetchone()
 
             if query_result is not None:
@@ -378,6 +375,7 @@ class DB:
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
+            status = 0
             if type == 0:
                 status = 1
 

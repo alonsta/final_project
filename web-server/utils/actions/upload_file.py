@@ -20,7 +20,7 @@ def upload_file_info(info, response):
         Exception: If database operation fails or authentication is invalid
     Example:
         >>> info = {
-        ...     "body": '{"file_name": "test.txt", "server_key": "abc123", "chunk_count": 5, "size": 1024, parent_id: "folder123"}',
+        ...     "body": '{"file_name": "test.txt", "server_key": "abc123", "chunk_count": 5, "size": 1024}',
         ...     "cookies": [("auth_cookie", "user123")]
         ... }
         >>> response = {}

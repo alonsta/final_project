@@ -34,7 +34,7 @@ def get_page(http_request: dict, response) -> dict:
                 response["response_code"] = "200 OK"
                 response["headers"]["Content-Type"] = "text/html"
         return response
-    except Exception:
+    except Exception as e:
         response["response_code"] = "500 Internal Server Error"
         response["headers"]["Content-Type"] = "text/html"
         response["body"] = json.dumps({"failed": "couldn't fetch page", "message": "couldn't fetch page"})

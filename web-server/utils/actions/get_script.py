@@ -42,7 +42,7 @@ def get_script(http_request: dict, response) -> dict:
                 response["body"] = file_content
         
         return response
-    except Exception:
+    except Exception as e:
         response["response_code"] = "500 Internal Server Error"
         response["headers"]["Content-Type"] = "text/html"
         response["body"] = json.dumps({"failed": "", "message": "couldn't fetch scripts"})

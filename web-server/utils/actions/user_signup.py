@@ -22,14 +22,13 @@ def signup(info, response):
         Exception: If account creation fails, exception details included in response
     """
     info = json.loads(info)
-    print(os.getcwd() + "\\web-server\\database\\data")
     database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         cookie = database_access.add_user(info["username"], info["password"])
         response["body"] = json.dumps({"success": "your account was created successfully "})
         response["response_code"] = "200 OK"
         response["cookies"] = [cookie]
-    except Exception:
+    except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt create account","message": "problem creating account, try logging in instead."})
         response["response_code"] = "500"
     
