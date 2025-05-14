@@ -430,7 +430,7 @@ class DB:
             SELECT chunk_count FROM files WHERE server_key = ?
             """
             count = self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0] - 1  # Convert to 0-based
-            if index == count:
+            if index + 1 == count:
                 self.cursor.execute("UPDATE files SET status = 1 WHERE server_key = ?", (server_key,))
                 self.db_connection.commit()
 
