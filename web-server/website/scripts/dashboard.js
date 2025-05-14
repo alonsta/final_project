@@ -1,8 +1,4 @@
-const passwordModal = document.getElementById('password-modal');
-const passwordInput = document.getElementById('password');
-const confirmButton = document.getElementById('confirm-button');
-const cancelButton = document.getElementById('cancel-button');
-const storedPassword = sessionStorage.getItem('filePassword');
+const storedPassword = getCookie("pass");
 let folderIdStack = [];
 let currentLoadToken = null; // Token to track the current load operation
 let backButtonCooldown = false;
@@ -90,7 +86,7 @@ async function createFolder(name, parentId) {
     {alert("Folder name too long!"); return;}
 
   let server_key = generateRandomId();
-  let password = sessionStorage.getItem('filePassword');
+  let password = getCookie("pass");
   let key = generateEncryptionKey(password, server_key);
   let encryptedFolderName = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(name), key).toString();
 
@@ -144,10 +140,9 @@ function updateProgress(state, message, percentage = null, isError = false, isDo
 // --- Add this to your existing event listeners ---
 document.addEventListener('DOMContentLoaded', () => {
   switchTab('overview'); // Default tab on load
-  const storedPassword = sessionStorage.getItem('filePassword');
+  const storedPassword = getCookie("pass");
   if (!storedPassword) {
     loadUserStats();
-    showPasswordModal(true);
   } else {
     loadUserStats();
     loadUserFiles();
@@ -159,50 +154,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/**
- * Shows the password modal with appropriate content based on context
- * @param {boolean} isInitial - Whether this is the initial password setup
- */
-function showPasswordModal(isInitial = false) {
-  passwordModal.style.display = 'flex';
-  passwordModal.classList.remove('hidden');
-  
-  const modalTitle = document.querySelector('#password-modal h2');
-  const noteText = document.getElementById('note');
-  
-  if (isInitial) {
-    modalTitle.textContent = 'Set Your File Password';
-    noteText.textContent = 'This password will be used to encrypt all your files. Keep it safe!';
-    cancelButton.style.display = 'none';
-    confirmButton.textContent = 'Set Password';
-  } else {//redundant
-    modalTitle.textContent = 'Confirm File Upload';
-    noteText.textContent = 'Your stored password will be used to encrypt this file.';
-    cancelButton.style.display = 'block';
-    confirmButton.textContent = 'Confirm';
-  }
-}
-
-confirmButton.addEventListener('click', () => {
-  const password = passwordInput.value;
-  
-  if (password.length < 8 || password.length > 32) {
-    alert('Password must be between 8 and 32 characters long.');
-    passwordInput.value = ''; // Clear input
-    passwordInput.focus(); // Focus back on input
-    return;
-  }
-  
-  try {
-    sessionStorage.setItem('filePassword', password);
-    passwordModal.style.display = 'none';
-    loadUserFiles();
-    loadUserStats();
-  } catch (error) {
-    console.error('Error storing password:', error);
-    alert('Failed to store password. Please try again.');
-  }
-});
 
 /**
  * Switches between different content sections
@@ -338,7 +289,7 @@ async function loadUserStats() {
 async function loadUserFiles() {
     const thisToken = Symbol();
     currentLoadToken = thisToken; // Set the current load token
-    const password = sessionStorage.getItem('filePassword');
+    const password = getCookie("pass");
     const fileSection = document.getElementById('files_grid');
 
     fileSection.querySelectorAll('.file-item').forEach(item => item.remove());
@@ -670,4 +621,11 @@ async function decryptFile(base64String, key) {
 
 function generateRandomId() {
   return Math.random().toString(36).substring(2, 15);
+}
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
 }

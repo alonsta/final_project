@@ -152,7 +152,7 @@ class DB:
         """
         try:
             cookie_value = str(uuid.uuid4())
-            expiration_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+            expiration_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
             key = 'auth_cookie'
 
             self.cursor.execute(create_cookie_sql, (key, cookie_value, expiration_date, user_id))
@@ -456,11 +456,11 @@ class DB:
                                 file.write("\n" + content)
                             break
 
-                    time.sleep(0.1)  # Short sleep to prevent CPU thrashing
+                    time.sleep(0.05)  # Short sleep to prevent CPU thrashing
 
                 except Exception as e:
                     print(f"Error writing chunk {index}: {e}")
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                     continue
 
             # Update file status if this was the last chunk
@@ -469,7 +469,6 @@ class DB:
             """
             count = (
                 self.cursor.execute(check_file_complete, (server_key,)).fetchone()[0]
-                - 1
             )  # Convert to 0-based
             if index + 1 == count:
                 self.cursor.execute(
@@ -552,35 +551,34 @@ class DB:
             self.db_connection.rollback()
 
     def get_folders_summary(self, cookie_value: str, parent_id: str = "-1") -> dict:
-        try:
-            user_id = self.check_cookie(cookie_value)
-            get_files_sql = """
-            SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
-            FROM files WHERE owner_id = ? AND parent_id = ? AND status = 1
-            """
+            try:
+                user_id = self.check_cookie(cookie_value)
+                get_files_sql = """
+                SELECT id, server_key, file_name, size, created, parent_id, type, chunk_count
+                FROM files WHERE owner_id = ? AND parent_id = ?
+                """
+                
+                self.cursor.execute(get_files_sql, (user_id, parent_id))
+                rows = self.cursor.fetchall()
 
-            self.cursor.execute(get_files_sql, (user_id, parent_id))
-            rows = self.cursor.fetchall()
-
-            files_summary = {}
-            for row in rows:
-                file_summary = {
-                    "id": row[0],
-                    "server_key": row[1],
-                    "file_name": row[2],
-                    "size": row[3],
-                    "created": row[4],
-                    "parent_id": row[5],
-                    "type": row[6],
-                    "chunk_count": row[7],
-                    "magic": row[9],
-                }
-                files_summary[row[0]] = file_summary
-            return files_summary
-        except sqlite3.Error as e:
-            raise e
-        except Exception as e:
-            raise e
+                files_summary = {}
+                for row in rows:
+                    file_summary = {
+                        'id': row[0],
+                        'server_key': row[1],
+                        'file_name': row[2],
+                        'size': row[3],
+                        'created': row[4],
+                        'parent_id': row[5],
+                        'type': row[6],
+                        'chunk_count': row[7]
+                    }
+                    files_summary[row[0]] = file_summary
+                return files_summary
+            except sqlite3.Error as e:
+                raise e
+            except Exception as e:
+                raise e
 
     def get_file(self, cookie_value: str, server_key: str, index: int) -> str:
         """

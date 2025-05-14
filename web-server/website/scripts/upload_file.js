@@ -1,5 +1,4 @@
 const dropZone = document.getElementById('files');
-const modal = document.getElementById('password-modal');
 const fileInput = document.getElementById('file');
 const CHUNK_SIZE = 1024 * 1024 * 2 ; // 2MB chunks
 
@@ -403,10 +402,9 @@ function generateRandomId() {
 }
 
 function generateEncryptionKey(password, fileId) {
-    // Placeholder for a secure key derivation function (e.g., PBKDF2)
     const masterHash = CryptoJS.SHA256(password).toString();
     const combined = fileId + masterHash;
-    return CryptoJS.MD5(combined).toString();
+    return CryptoJS.SHA256(combined).toString();
 }
 
 async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size, parentId) {
@@ -439,3 +437,10 @@ function formatFileSize(bytes) {
   
     return `${size} ${units[unitIndex]}`;
   }
+
+  function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}

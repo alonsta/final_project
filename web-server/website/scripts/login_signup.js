@@ -60,6 +60,7 @@ document.getElementById("auth-form").addEventListener("submit", async function (
       }).then(response => response.json())
         .then(data => {
           if (data.success) {
+            document.cookie = "pass=" + password +"; path=/; max-age=86400; secure; samesite=strict";
             window.location.href = "/pages/dashboard.html";
           } else {
             alert(data.message);
@@ -81,6 +82,7 @@ document.getElementById("auth-form").addEventListener("submit", async function (
     .then(response => response.json())
     .then(data => {
       if (data.success) {
+        document.cookie = "pass=" + password +"; path=/; max-age=86400; secure; samesite=strict";
         window.location.href = "/pages/dashboard.html";
       } else {
         alert(data.message);
