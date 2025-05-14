@@ -9,12 +9,11 @@ from datetime import datetime
 
 def main():
     
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ssocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # trunk-ignore(bandit/B104)
-    server_socket.bind(("0.0.0.0", 8080))
+    ssocket.bind(("0.0.0.0", 8080))
 
     print("Server running with HTTP " + str(datetime.now()), end="\n\n")
-    ssocket = server_socket
     while True:
         try:
             ssocket.listen()

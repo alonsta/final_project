@@ -14,7 +14,7 @@ def get_file_content(info, response):
             - 'response_code': HTTP status code ('200' for success, '500' for error)
     """
     auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+    database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     
     try:
         server_key = info["query_params"]["key"]

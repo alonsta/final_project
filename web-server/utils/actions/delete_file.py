@@ -24,7 +24,7 @@ def delete_file(info, response):
           and logs the error to the console.
     """
     
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+    database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     server_key = info["query_params"]["key"]
 
     try:

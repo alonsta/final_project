@@ -5,7 +5,7 @@ import os
 def create_folder(info, response):
     
     try:
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
         folder_name = json.loads(info["body"])['folder_name']
         parent_id = json.loads(info["body"])['parent_id']
         server_key = json.loads(info["body"])['server_key']

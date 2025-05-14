@@ -29,7 +29,7 @@ def auth_cookie(info, response):
     except Exception:
         raise ValueError("Invalid JSON format in request information.")
         pass
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+    database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
         database_access.check_cookie(auth_cookie_value)

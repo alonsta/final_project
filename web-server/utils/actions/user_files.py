@@ -22,7 +22,7 @@ def get_files_info(info, response):
         Uses DB class to interface with the database located at 'web-server/database/data'.
     """
     auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+    database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         parent = info["query_params"]["parent"]
     except Exception:

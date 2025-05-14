@@ -27,7 +27,7 @@ def upload_chunk(info, response):
         Exception: Handles any errors during the upload process
     """
     try:
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
         index = json.loads(info["body"])["index"] + 1
         server_key = json.loads(info["body"])["key"]
         content = json.loads(info["body"])["data"]

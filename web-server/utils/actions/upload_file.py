@@ -28,7 +28,7 @@ def upload_file_info(info, response):
         {'body': '{"success": "your file info was uploaded "}', 'response_code': '200 OK'}
     """
     try:
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
         file_name = json.loads(info["body"])['file_name']
         parent_id = json.loads(info["body"])['parent_id']
         server_key = json.loads(info["body"])['server_key']

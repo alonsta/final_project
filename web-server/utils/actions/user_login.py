@@ -19,7 +19,7 @@ def login(info, response):
         Exception: Any database or authentication errors are caught and included in the error response
     """
     info = json.loads(info)
-    database_access = DB(os.getcwd() + "\\web-server\\database\\data")
+    database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         cookie = database_access.login(info["username"], info["password"])
         response["body"] = json.dumps({"success": "logged in"})
