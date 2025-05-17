@@ -12,6 +12,53 @@ function handleFileDrop(e) {
     processFiles(storedPassword, Array.from(fileInput.files));
 }
 
+function handleShare(fileId, key) {
+            fetch('/share', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    password: key,
+                    server_key: fileId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to unlock file. Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.share_link) {
+                    navigator.clipboard.writeText(data.share_link)
+                        .then(() => {
+                            showBubble("✅ Share link copied to clipboard!");
+                        })
+                        .catch(() => {
+                            showBubble("⚠️ Couldn't copy to clipboard");
+                        });
+                } else {
+                    showBubble("❌ Invalid response from server.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showBubble("❌ Failed to unlock or copy link.");
+            });
+        }
+        
+function showBubble(message) {
+    const bubble = document.getElementById("bubble");
+    bubble.textContent = message;
+    bubble.style.opacity = 1;
+
+    setTimeout(() => {
+        bubble.style.opacity = 0;
+    }, 3000); // hide after 3 seconds
+}
+
 
 async function processFiles(password, files) {
     let parent_id = document.getElementById('folder_path').getAttribute("current-id")
@@ -128,10 +175,6 @@ async function processFiles(password, files) {
                      setTimeout(() => updateProgress('hide'), 3000);
                 }
             });
-
-            function handleShare(fileId) {
-                console.log("Share clicked for:", file.name);
-            }
             
             function handleDelete(fileId) {
                 fetch(`/files/delete/file?key=${fileId}`, {
@@ -212,12 +255,12 @@ async function processFiles(password, files) {
     
             shareBtn.onclick = (event) => {
               event.stopPropagation();
-              handleShare();
+              handleShare(fileId, key);
             };
           
             deleteBtn.onclick = (event) => {
               event.stopPropagation();
-              handleDelete();
+              handleDelete(fileId);
             };
     
             dropdownMenu.appendChild(shareBtn);
@@ -241,7 +284,7 @@ async function processFiles(password, files) {
               globalMenu.style.left = `${rect.left}px`;
           
               // Add functionality back to buttons
-              globalMenu.querySelector('.dropdown-btn:nth-child(1)').onclick = () => handleShare(fileId);
+              globalMenu.querySelector('.dropdown-btn:nth-child(1)').onclick = () => handleShare(fileId, key);
               globalMenu.querySelector('.dropdown-btn:nth-child(2)').onclick = () => handleDelete(fileId);
           
               document.body.appendChild(globalMenu);
@@ -370,30 +413,6 @@ async function uploadChunkToServer(fileId, chunkIndex, chunkData) {
         }
     } catch (error) {
         console.error(`Error uploading chunk ${chunkIndex}:`, error);
-    }
-}
-
-async function decryptFile(base64String, key) {
-    try {
-        // Decrypt the base64 string
-        const decrypted = CryptoJS.AES.decrypt(base64String, key);
-
-        // Convert to Uint8Array
-        const bytes = new Uint8Array(decrypted.sigBytes);
-        for (let i = 0; i < decrypted.sigBytes; i++) {
-            bytes[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-        }
-
-        // Decompress the data
-        const decompressed = pako.inflate(bytes, {
-            windowBits: 15,
-            raw: false
-        });
-
-        return new Blob([decompressed]);
-    } catch (error) {
-        console.error('Decryption or decompression failed:', error);
-        throw error;
     }
 }
 

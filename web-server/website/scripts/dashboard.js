@@ -490,7 +490,7 @@ async function loadUserFiles() {
 
         shareBtn.onclick = (event) => {
           event.stopPropagation();
-          handleShare(server_key);
+          handleShare(server_key, encryptionKey);
         };
       
       deleteBtn.onclick = (event) => {
@@ -519,7 +519,7 @@ async function loadUserFiles() {
           globalMenu.style.left = `${rect.left}px`;
       
           // Add functionality back to buttons
-          globalMenu.querySelector('.dropdown-btn:nth-child(1)').onclick = () => handleShare(server_key);
+          globalMenu.querySelector('.dropdown-btn:nth-child(1)').onclick = () => handleShare(server_key, encryptionKey);
           globalMenu.querySelector('.dropdown-btn:nth-child(2)').onclick = () => handleDelete(server_key);
       
           document.body.appendChild(globalMenu);
@@ -560,18 +560,6 @@ async function decryptAndDecompressChunk(encryptedChunk, key) {
     return pako.inflate(bytes);
 }
 
-function decryptChunk(encryptedChunk, key) {
-    const decrypted = CryptoJS.AES.decrypt(encryptedChunk, key);
-    const decryptedData = decrypted.toString(CryptoJS.enc.Utf8);
-
-    const byteCharacters = atob(decryptedData);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    return new Uint8Array(byteNumbers);
-}
-
 function generateEncryptionKey(password, fileId) {
     const masterHash = CryptoJS.SHA256(password).toString();
     const combined = fileId + masterHash;
@@ -584,37 +572,6 @@ async function hashString(password, salt) {
   return hash.toString(CryptoJS.enc.Hex);
 }
 
-async function decryptFile(base64String, key) {
-  try {
-      // 1. Decode Base64 to binary
-      const rawData = atob(base64String);
-      const bytes = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; i++) {
-          bytes[i] = rawData.charCodeAt(i);
-      }
-
-      // 2. Decrypt binary data
-      const decrypted = CryptoJS.AES.decrypt(
-          { ciphertext: CryptoJS.lib.WordArray.create(bytes) },
-          key
-      );
-
-      // 3. Convert to Uint8Array
-      const decryptedBytes = new Uint8Array(decrypted.sigBytes);
-      for (let i = 0; i < decrypted.sigBytes; i++) {
-          decryptedBytes[i] = (decrypted.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
-      }
-
-      // 4. Decompress
-      const decompressed = pako.inflate(decryptedBytes);
-      
-      return new Blob([decompressed]);
-  } catch (error) {
-      console.error('Decryption failed:', error);
-      throw error;
-  }
-}
-
 function generateRandomId() {
   return Math.random().toString(36).substring(2, 15);
 }
@@ -624,4 +581,51 @@ function getCookie(name) {
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(';').shift();
   return null;
+}
+
+function handleShare(fileId, key) {
+            fetch('/share', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    password: key,
+                    server_key: fileId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to unlock file. Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.share_link) {
+                    navigator.clipboard.writeText(data.share_link)
+                        .then(() => {
+                            showBubble("✅ Share link copied to clipboard!");
+                        })
+                        .catch(() => {
+                            showBubble("⚠️ Couldn't copy to clipboard");
+                        });
+                } else {
+                    showBubble("❌ Invalid response from server.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showBubble("❌ Failed to unlock or copy link.");
+            });
+        }
+      
+function showBubble(message) {
+    const bubble = document.getElementById("bubble");
+    bubble.textContent = message;
+    bubble.style.opacity = 1;
+
+    setTimeout(() => {
+        bubble.style.opacity = 0;
+    }, 3000); // hide after 3 seconds
 }

@@ -2,6 +2,7 @@
 /shelf/
 /workspace.xml/
 ./web-server/database/data.sqlite
+./web-server/database/tempdata/
 .web-server/
 /.env/
 /server.key/

@@ -14,6 +14,8 @@ from utils.actions.user_files import get_files_info
 from utils.actions.get_file import get_file_content as download_chunk
 from utils.actions.delete_file import delete_file as delete_file
 from utils.actions.create_folder import create_folder
+from utils.actions.file_unlock import unlock_file
+from utils.actions.serve_shared_file import serve_shared_file
 
 def process_req(http_request: json) -> bytes:
     """
@@ -84,7 +86,11 @@ def process_req(http_request: json) -> bytes:
                         case "info":
                             response = fetch_user_data(http_request, response)
         case "share":
-            #download a file 
+            match http_request["method"]:
+                case "GET":
+                    serve_shared_file(http_request, response)
+                case "POST":
+                    unlock_file(http_request, response)
             pass
 
         case "files":
