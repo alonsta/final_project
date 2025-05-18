@@ -5,6 +5,7 @@ import json
 
 def serve_shared_file(info, response):
     try:
+        temp_file_id = info["path"]
         temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}")
         db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sqlite")
         # Extract file ID from the path
@@ -16,7 +17,7 @@ def serve_shared_file(info, response):
             os.remove(temp_file_path)
             raise ValueError("Invalid cookie")
         
-        temp_file_id = info["path"]
+        
 
         
         
