@@ -128,7 +128,7 @@ class DB:
             self.cursor.execute(cookie_table_check_sql)
             self.db_connection.commit()
 
-    def create_cookie(self, user_id: str) -> None:
+    def create_cookie(self, user_id: str, _cookie_key: str = "auth_cookie") -> None:
         """
             Creates a new authentication cookie for a given user and stores it in the database.
 
@@ -153,7 +153,7 @@ class DB:
         try:
             cookie_value = str(uuid.uuid4())
             expiration_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-            key = 'auth_cookie'
+            key = _cookie_key
 
             self.cursor.execute(create_cookie_sql, (key, cookie_value, expiration_date, user_id))
             self.db_connection.commit()
@@ -163,6 +163,32 @@ class DB:
             self.db_connection.rollback()
             raise e
 
+    def get_metadata(self, server_key, user_id) -> None:
+        """
+        Retrieves metadata for a file based on its server key.
+
+        This method queries the `files` table to get the metadata associated with the provided
+        server key. If the file exists, it returns the metadata; otherwise, it raises an exception.
+
+        Args:
+            server_key (str): The unique key of the file on the server.
+
+        Returns:
+            tuple: A tuple containing the file's metadata.
+
+        Raises:
+            Exception: If the file does not exist or if there is any issue during the database operation.
+        """
+        
+        get_metadata_sql = """SELECT * FROM files WHERE server_key = ? AND owner_id = ?"""
+        self.cursor.execute(get_metadata_sql, (server_key, user_id))
+        query_result = self.cursor.fetchone()
+
+        if query_result:
+            return query_result
+        else:
+            raise Exception("File not found") from None
+        
     def check_cookie(self, cookie_value: str) -> str:
         """
         Checks if the provided cookie value exists in the database and is not expired.

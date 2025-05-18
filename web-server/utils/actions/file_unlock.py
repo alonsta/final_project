@@ -22,6 +22,9 @@ def unlock_file(info, response):
         body_data = json.loads(info["body"])
         server_key = body_data["server_key"]
         password = body_data["password"]
+        
+        metadata = database_access.get_metadata(server_key, user_id)
+        name = metadata[4]
 
     except Exception as e:
         response["body"] = json.dumps({"failed": "missing info or invalid cookie", "message": str(e)})
@@ -50,17 +53,23 @@ def unlock_file(info, response):
         final_content = b''.join(decrypted_chunks)
 
         # Save to tempdata directory
-        temp_file_id = str(uuid.uuid4())
+        
+        # Create a short-lived cookie for the share session
+        share_cookie = database_access.create_cookie(user_id, "share_cookie")
+        
+        decrypted_name = decrypt_string(name, password)
+        file_extension = decrypted_name.split('.')[-1]  # e.g., 'txt', 'png', etc.
+        temp_file_id = f"{share_cookie[1]}.{file_extension}"
         temp_dir = os.path.join("web-server", "tempdata")
         os.makedirs(temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(temp_dir, f"{temp_file_id}.bin")
+        temp_file_path = os.path.join(temp_dir, f"{temp_file_id}")
         print(f"Temp file path: {temp_file_path}")
 
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(final_content)
 
         # Create a short-lived cookie for the share session
-        share_cookie = database_access.create_cookie(user_id)
+        share_cookie = database_access.create_cookie(user_id, "share_cookie")
 
         # Return file share link
         share_link = f"https://a9035.kcyber.net/share/{temp_file_id}"
@@ -89,6 +98,25 @@ def evp_kdf(password, salt, key_size=32, iv_size=16):
         d_i = hashlib.md5(d[-16:] + password + salt) if d else hashlib.md5(password + salt)
         d += d_i.digest()
     return d[:key_size], d[key_size:key_size+iv_size]
+
+def pad(data: bytes, block_size=16):
+    pad_len = block_size - (len(data) % block_size)
+    return data + bytes([pad_len] * pad_len)
+
+def unpad(data: bytes):
+    pad_len = data[-1]
+    return data[:-pad_len]
+
+def decrypt_string(encrypted_b64: str, password: str) -> str:
+    encrypted = base64.b64decode(encrypted_b64)
+    assert encrypted[:8] == b"Salted__", "Invalid header"
+    salt = encrypted[8:16]
+    ciphertext = encrypted[16:]
+    key, iv = evp_kdf(password.encode(), salt)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted_padded = cipher.decrypt(ciphertext)
+    decrypted = unpad(decrypted_padded)
+    return decrypted.decode('utf-8')
 
 def decrypt_and_decompress_chunk(encrypted_chunk: str, key: str) -> bytes:
     try:

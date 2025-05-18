@@ -6,10 +6,10 @@ import json
 def serve_shared_file(info, response):
     try:
         # Extract file ID from the path
-        temp_file_id = ("/").split(info["path"])[1]
+        temp_file_id = info["path"]
 
         
-        temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}.bin")
+        temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}")
 
         if not os.path.exists(temp_file_path):
             raise FileNotFoundError("Shared file not found or expired")
@@ -19,11 +19,11 @@ def serve_shared_file(info, response):
             file_data = f.read()
 
         # Optional: delete file after access (one-time link)
-        # os.remove(temp_file_path)
+        os.remove(temp_file_path)
 
         # Serve file content as download
         response["headers"]["Content-Type"] = "application/octet-stream"
-        response["headers"]["Content-Disposition"] = f'attachment; filename="{temp_file_id}.bin"'
+        response["headers"]["Content-Disposition"] = f'attachment; filename="{temp_file_id}"'
         response["body"] = file_data
         response["response_code"] = "200"
 
