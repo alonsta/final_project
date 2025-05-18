@@ -23,7 +23,7 @@ def main():
             thread.daemon = True
             thread.start()
         except Exception as e:
-            print(e)
+            pass
 
 
 def serve_client(client_socket, client_address):

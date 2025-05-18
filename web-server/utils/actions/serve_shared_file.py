@@ -5,11 +5,21 @@ import json
 
 def serve_shared_file(info, response):
     try:
+        temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}")
+        db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sqlite")
         # Extract file ID from the path
+        cookie = info["path"].split(".")[0]
+        database_access = DB(db_path)
+        try:
+            database_access.check_cookie(cookie)
+        except Exception as e:
+            os.remove(temp_file_path)
+            raise ValueError("Invalid cookie")
+        
         temp_file_id = info["path"]
 
         
-        temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}")
+        
 
         if not os.path.exists(temp_file_path):
             raise FileNotFoundError("Shared file not found or expired")
