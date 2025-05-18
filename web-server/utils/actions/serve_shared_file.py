@@ -30,7 +30,7 @@ def serve_shared_file(info, response):
             file_data = f.read()
 
         # Optional: delete file after access (one-time link)
-        os.remove(temp_file_path)
+        # os.remove(temp_file_path)
 
         # Serve file content as download
         response["headers"]["Content-Type"] = "application/octet-stream"
