@@ -142,5 +142,4 @@ def decrypt_and_decompress_chunk(encrypted_chunk: str, key: str) -> bytes:
         return zlib.decompress(raw_binary)
 
     except Exception as e:
-        print("Error:", e)
         raise Exception("Decryption or decompression failed") from e
