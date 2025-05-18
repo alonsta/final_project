@@ -63,7 +63,6 @@ def unlock_file(info, response):
         temp_dir = os.path.join("web-server", "tempdata")
         os.makedirs(temp_dir, exist_ok=True)
         temp_file_path = os.path.join(temp_dir, f"{temp_file_id}")
-        print(f"Temp file path: {temp_file_path}")
 
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(final_content)
@@ -143,5 +142,4 @@ def decrypt_and_decompress_chunk(encrypted_chunk: str, key: str) -> bytes:
         return zlib.decompress(raw_binary)
 
     except Exception as e:
-        print("Error:", e)
         raise Exception("Decryption or decompression failed") from e
