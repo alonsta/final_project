@@ -8,9 +8,7 @@ import threading
 from datetime import datetime
 
 def main():
-    
     ssocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # trunk-ignore(bandit/B104)
     ssocket.bind(("0.0.0.0", 8080))
 
     print("Server running with HTTP " + str(datetime.now()), end="\n\n")

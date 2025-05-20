@@ -1,38 +1,40 @@
 import os
-from datetime import datetime
+import json
 from database.db import DB
-import json 
 
 def serve_shared_file(info, response):
+    """
+        Serves a shared file if a valid temporary cookie and file ID are provided.
+
+        This function handles HTTP requests for shared files by:
+        - Extracting the cookie and file identifier from the URL path.
+        - Verifying the validity of the cookie using the database.
+        - Checking if the temporary file exists.
+        - Returning the file content as a downloadable attachment if valid.
+        - Returning an error response if the file is missing or the cookie is invalid.
+
+        Parameters:
+            info (dict): Dictionary containing request data, including the file path (`info["path"]`).
+            response (dict): Dictionary to populate with the HTTP response content.
+
+        Returns:
+            dict: Updated `response` dictionary with status code, headers, and either file content or error details.
+    """
     try:
         temp_file_id = info["path"]
-        temp_file_path = os.path.join("web-server", "tempdata", f"{temp_file_id}")
+        cookie_part = temp_file_id.split(".")[0]
+
         db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sqlite")
-        # Extract file ID from the path
-        cookie = info["path"].split(".")[0]
         database_access = DB(db_path)
-        try:
-            database_access.check_cookie(cookie)
-        except Exception as e:
-            os.remove(temp_file_path)
-            raise ValueError("Invalid cookie")
-        
-        
+        database_access.check_cookie(cookie_part)
 
-        
-        
-
+        temp_file_path = os.path.join("web-server", "tempdata", temp_file_id)
         if not os.path.exists(temp_file_path):
             raise FileNotFoundError("Shared file not found or expired")
 
-        # Read file data
         with open(temp_file_path, "rb") as f:
             file_data = f.read()
 
-        # Optional: delete file after access (one-time link)
-        # os.remove(temp_file_path)
-
-        # Serve file content as download
         response["headers"]["Content-Type"] = "application/octet-stream"
         response["headers"]["Content-Disposition"] = f'attachment; filename="{temp_file_id}"'
         response["body"] = file_data
@@ -40,7 +42,10 @@ def serve_shared_file(info, response):
 
     except Exception as e:
         response["headers"]["Content-Type"] = "application/json"
-        response["body"] = json.dumps({"error": "File not found or invalid link", "message": str(e)})
+        response["body"] = json.dumps({
+            "error": "File not found or invalid link",
+            "message": str(e)
+        })
         response["response_code"] = "404"
 
     return response
