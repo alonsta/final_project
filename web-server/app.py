@@ -6,12 +6,17 @@ import json
 import socket
 import threading
 from datetime import datetime
+import file_cleanup
 
 def main():
     ssocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ssocket.bind(("0.0.0.0", 8080))
 
     print("Server running with HTTP " + str(datetime.now()), end="\n\n")
+    cleanup_thread = threading.Thread(target=file_cleanup.main, daemon=True)
+    cleanup_thread.start()
+    print("file cleanup started")
+    
     while True:
         try:
             ssocket.listen()
