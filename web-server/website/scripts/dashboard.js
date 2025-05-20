@@ -158,12 +158,29 @@ document.addEventListener('DOMContentLoaded', () => {
 function switchTab(tabName) {
   const sections = document.querySelectorAll('.content-section');
   sections.forEach(section => section.classList.add('hidden'));
-  
+  const tabs = document.querySelectorAll('.sidebar .tab');
+  tabs.forEach(tab => tab.classList.remove('active'));
   const activeSection = document.getElementById(tabName);
+  const activeTab = document.getElementById(tabName + '-tab');
   if (activeSection) {
     activeSection.classList.remove('hidden');
+    activeTab.classList.add('active');
   }
 }
+
+document.getElementById('logout-btn').addEventListener('click', () => {
+
+  localStorage.clear();
+  sessionStorage.clear();
+
+
+  document.cookie.split(";").forEach(cookie => {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+  });
+  location.reload();
+});
 
 /**
  * Loads and displays user statistics

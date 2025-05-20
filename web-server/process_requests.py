@@ -80,7 +80,8 @@ def process_req(http_request: json) -> bytes:
                         case "signup":
                             response = signup(http_request["body"], response)
                 case "PUT":
-                    response = user_update(http_request["body"], response) # type: ignore
+                    # might add some functions that have to do with the user's account and data
+                    pass
                 case "GET":
                     match http_request["path"]:
                         case "info":
