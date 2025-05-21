@@ -1,25 +1,16 @@
 # File Sharing System
 
-A file management system with a Windows app and web client for quick data storage and cross-PC downloads.
+A file management system with a web client for quick data storage and cross-PC downloads.
 
 ## Components
 
 - **Web Server**: Used for signup/login, manual file upload/download, and sync settings configuration
-- **Windows App**: Background Python process that syncs local files with cloud changes, using signature-based authentication
 
 ## Key Features
 
 - **Encryption**: Files are encrypted and compressed so only the original user can decode
 - **Storage**: Supports most popular file types with automatic compression for better performance
 
-## Technical Notes
-
-### Building the Windows App
-
-To build the executable, run:
-
-
-pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-import keyring.backends.Windows --hidden-import watchdog --hidden-import watchdog.events --hidden-import watchdog.observers --hidden-import tkinter --hidden-import winerror --hidden-import win32api --hidden-import win32event --hidden-import socket --hidden-import pyuac --hidden-import tendo --hidden-import subprocess --hidden-import time --name "SyncApp" --icon=app.ico --noconsole SyncApp.py
 
 
 ## Project Idea
@@ -27,7 +18,6 @@ pyinstaller --onefile --hidden-import httpx --hidden-import win32event --hidden-
 A file management system with a Windows app and a web client that can store data quickly and allow quick download to any PC.
 
 - **Web Server**: Used for signup/login, allows manual file upload to the cloud and download, and configure sync settings.
-- **App**: Python instance that updates local files when changed in the cloud, has a signature so you don't have to enter a password. (feat' gui elements for var setting.)
 
 ### Key Features
 
@@ -52,7 +42,6 @@ i dont think there's a specific part where ill have much more trouble but the wh
 - js
 - HTML
 - CSS
-- py => windows
 
 ### Estimated Time
 

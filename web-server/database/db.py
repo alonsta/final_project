@@ -8,6 +8,9 @@ from hashlib import sha256
 
 
 class DB:
+    
+    MAX_STORAGE_BYTES = 20 * 1024 * 1024 * 1024  # 20 GB
+
     def __init__(self, db_path: str) -> None:
         self.db_connection = sqlite3.connect(db_path)
         self.cursor = self.db_connection.cursor()
@@ -359,6 +362,14 @@ class DB:
         try:
             user_id = self.check_cookie(cookie_value)
 
+            user_upload_sql = """
+            SELECT data_uploaded FROM users WHERE id = ?
+            """
+            data_uploaded = (
+                self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
+            )
+
+
             file_insertion_sql = """
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -384,12 +395,7 @@ class DB:
             makedirs(f"web-server\\database\\files\\{user_id}", exist_ok=True)
             open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
 
-            user_upload_sql = """
-            SELECT data_uploaded FROM users WHERE id = ?
-            """
-            data_uploaded = (
-                self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
-            )
+           
 
             update_user_upload = """
             UPDATE users SET data_uploaded = ? WHERE id = ?
