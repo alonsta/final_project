@@ -22,11 +22,12 @@ def login(info, response):
     database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         cookie = database_access.login(info["username"], info["password"])
-        response["body"] = json.dumps({"success": "logged in"})
+        priv = database_access.check_privilages(cookie[1])
+        response["body"] = json.dumps({"success": "logged in", "elevation": priv })
         response["response_code"] = "200 OK"
         response["cookies"] = [cookie]
     except Exception as e:
-        response["body"] = json.dumps({"failed": "couldnt create account","message": "error logging in"})
+        response["body"] = json.dumps({"failed": "couldnt confirm login attempt","message": "error logging in"})
         response["response_code"] = "500"
     
 

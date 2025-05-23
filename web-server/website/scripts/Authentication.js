@@ -8,8 +8,10 @@ async function checkAuthentication() {
         if (response.status === 401 && window.location.pathname !== '/pages/login.html') {
             window.location.href = '/pages/login.html';
         } else if (response.ok) {
-            if (window.location.pathname === '/pages/login.html') {
+            if (window.location.pathname === '/pages/login.html' && response.elevation == 0) {
                 window.location.href = '/pages/dashboard.html';
+            } else if (window.location.pathname === '/pages/login.html' && response.elevation == 1) {
+                window.location.href = '/pages/admin.html';
             }
         } else {
             console.error("An error occurred:", response.status);

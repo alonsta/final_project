@@ -161,6 +161,69 @@ class DB:
             return query_result
         else:
             raise Exception("File not found") from None
+    
+    def check_privilages(self, cookie_value: str) -> int:
+        """
+            Checks the privileges of a user based on their session cookie.
+
+            Args:
+                cookie_value (str): The value of the cookie to be checked.
+
+            Returns:
+                int: The privilege level of the user (0 for normal user, 1 for admin).
+
+            Raises:
+                Exception: If the cookie is invalid or has expired.
+        """
+        check_cookie_sql = """SELECT owner_id, expiration FROM cookies WHERE value = ?"""
+        self.cursor.execute(check_cookie_sql, (cookie_value,))
+        query_result = self.cursor.fetchone()
+
+        if query_result:
+            owner_id, expiration = query_result
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            if expiration > current_time:
+                check_user_sql = """SELECT is_admin FROM users WHERE id = ?"""
+                self.cursor.execute(check_user_sql, (owner_id,))
+                query_result = self.cursor.fetchone()
+                if query_result:
+                    is_admin = query_result[0]
+                    if is_admin == 1:
+                        return 1
+                    else:
+                        return 0
+                else:
+                    raise Exception("User not found") from None
+            else:
+                raise Exception("Cookie has expired") from None 
+        else:
+            raise Exception("Invalid cookie") from None
+        
+        
+    def get_admin_data(self, cookie_value: str) -> list:  
+        """
+            Retrieves a list of all users from the database.
+
+            This method queries the `users` table to get a list of all users and their associated
+            data. It returns a list of tuples, each containing user information.
+
+            Returns:
+                list: A list of tuples containing user information.
+
+            Raises:
+                sqlite3.Error: If there is an error with the SQLite database operations.
+        """
+        try:
+            if self.check_privilages(cookie_value) == 1:
+                get_users_sql = """SELECT id, username, creation_time, data_uploaded FROM users"""
+                self.cursor.execute(get_users_sql)
+                query_result = self.cursor.fetchall()
+                return query_result
+            else:
+                raise Exception("User is not admin") from None
+        except Exception as e:
+            raise e
         
     def check_cookie(self, cookie_value: str) -> str:
         """
@@ -449,7 +512,6 @@ class DB:
                     time.sleep(0.05)
 
                 except Exception as e:
-                    print(f"Error writing chunk {index}: {e}")
                     time.sleep(0.05)
                     continue
 
@@ -542,7 +604,6 @@ class DB:
             self.db_connection.rollback()
             raise e
         except ValueError as ve:
-            print("remove_file ERROR: " + str(ve))
             self.db_connection.rollback()
 
     def get_folders_summary(self, cookie_value: str, parent_id: str = "-1") -> dict:

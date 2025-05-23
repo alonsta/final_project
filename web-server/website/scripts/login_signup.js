@@ -82,8 +82,12 @@ document.getElementById("auth-form").addEventListener("submit", async function (
     .then(response => response.json())
     .then(data => {
       if (data.success) {
+        if(data.elevation == 0){
         document.cookie = "pass=" + password +"; path=/; max-age=86400; secure; samesite=strict";
         window.location.href = "/pages/dashboard.html";
+        } else if(data.elevation == 1){
+          window.location.href = "/pages/admin.html";
+        }
       } else {
         alert(data.message);
       }

@@ -16,6 +16,7 @@ from utils.actions.delete_file import delete_file as delete_file
 from utils.actions.create_folder import create_folder
 from utils.actions.file_unlock import unlock_file
 from utils.actions.serve_shared_file import serve_shared_file
+from utils.actions.admin_data import admin_data
 
 def process_req(http_request: json) -> bytes:
     """
@@ -86,6 +87,8 @@ def process_req(http_request: json) -> bytes:
                     match http_request["path"]:
                         case "info":
                             response = fetch_user_data(http_request, response)
+                        case "admin":
+                            response = admin_data(http_request, response)
         case "share":
             match http_request["method"]:
                 case "GET":
