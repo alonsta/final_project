@@ -8,7 +8,7 @@ from hashlib import sha256
 
 
 class DB:
-    
+
     MAX_STORAGE_BYTES = 20 * 1024 * 1024 * 1024  # 20 GB
 
     def __init__(self, db_path: str) -> None:
@@ -63,7 +63,8 @@ class DB:
             password TEXT NOT NULL,
             creation_time TEXT NOT NULL,
             data_uploaded INTEGER NOT NULL,
-            data_downloaded INTEGER NOT NULL
+            data_downloaded INTEGER NOT NULL,
+            is_admin BOOLEAN DEFAULT 0
         )
         """
 
