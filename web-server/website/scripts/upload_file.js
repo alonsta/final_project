@@ -391,31 +391,6 @@ async function uploadChunk(fileId, index, chunk) {
     }
 }
 
-async function uploadChunkToServer(fileId, chunkIndex, chunkData) {
-    try {
-        // Convert base64 chunk to a string for the server
-        const base64Chunk = chunkData;
-
-        const response = await fetch('/files/upload/chunk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                server_key: fileId,
-                index: chunkIndex,
-                content: base64Chunk
-            })
-        });
-
-        if (response.ok) {
-            console.log(`Chunk ${chunkIndex} of file ${fileId} uploaded successfully`);
-        } else {
-            console.error(`Upload failed for chunk ${chunkIndex} of file ${fileId}`);
-        }
-    } catch (error) {
-        console.error(`Error uploading chunk ${chunkIndex}:`, error);
-    }
-}
-
 function generateRandomId() {
     return Math.random().toString(36).substring(2, 15);
 }
