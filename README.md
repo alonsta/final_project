@@ -15,9 +15,7 @@ A file management system with a web client for quick data storage and cross-PC d
 
 ## Project Idea
 
-A file management system with a Windows app and a web client that can store data quickly and allow quick download to any PC.
-
-- **Web Server**: Used for signup/login, allows manual file upload to the cloud and download, and configure sync settings.
+A file management system with a web client that can store files quickly and securly, and can grant easy access to them on any pc.
 
 ### Key Features
 
@@ -31,9 +29,12 @@ i dont think there's a specific part where ill have much more trouble but the wh
 
 ### Development Plan
 
-1. Start with a proof of concept to make sure the hardest parts are possible. It will be minimalistic.
-2. Create the API - the web server.
-3. Lastly, develop the app.
+1. Write an MVP - (minimal viable product) with the ability to digest files and store them in the server.
+2. create a database system and implement user login and signup.
+3. write html,js,css for onboarding and getting into the main page.
+4. start testing encrypting, compressing methods that work best for my usecase.
+5. work on the storing system - add support for folders.
+6. finishing touches.
 
 ### New Technologies to Learn
 
@@ -49,8 +50,6 @@ I think this project, if executed to the fullest, will take over 400 hours.
 
 ### Encryption and File Sharing
 
-דיברתי עם מוטי. הבנו דרך מעניינת לבצע הצפנה ואת השיתוף של קבצים.
-בזמן העלאה ראשונה המשתמש יזין מאסטר פסוורד בגאווה אני אעשה האש לסיסמאת מאסטר והאש לאיי די מגונרט של הקובץ. אני אחבר אותם ואמעך בעזרת האש כדי להשיג סיסמה מיוחדת לאיי אי אס להצפנת הקובץ. שם הקובץ שישלח לשרת והתוכן יוצפנו עם הסיסמא המיוחדת.
-בזמן שיתוף המשתמש יקבל מייל עם יו אר אל עם ה איי די הספציפי של הקובץ המשותף וסיסמא לתוכן שלו לאחר פתיחת הקישור יתבקש להזין את הסיסמא ויקבל קובץ להורדה.
-
-
+Shared files will be kept localy as a one time download asset. for minimal security risk the time it's on our system is minimal.
+Encryption of common files is done using AES on chunked parts of each file with the key being a hash of the user's password his username some known salt, and lastly the id of the file - in a certain combination.
+this way even in a case of database\file system leak no one will be able to regain the original content of the file.
