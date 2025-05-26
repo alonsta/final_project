@@ -372,8 +372,13 @@ function generateRandomId() {
 }
 
 function generateEncryptionKey(password, fileId) {
-    const masterHash = CryptoJS.SHA256(password + fileId).toString();
-    return CryptoJS.SHA256(masterHash).toString();
+    const salt = CryptoJS.enc.Utf8.parse(fileId);
+    const key = CryptoJS.PBKDF2(password, salt, {
+        keySize: 256 / 32,
+        iterations: 100000,
+        hasher: CryptoJS.algo.SHA256
+    });
+    return key.toString();
 }
 
 async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size, parentId) {

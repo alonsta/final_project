@@ -607,10 +607,14 @@ async function decryptAndDecompressChunk(encryptedChunk, key) {
 }
 
 function generateEncryptionKey(password, fileId) {
-    const masterHash = CryptoJS.SHA256(password + fileId).toString();
-    return CryptoJS.MD5(masterHash).toString();
+    const salt = CryptoJS.enc.Utf8.parse(fileId); // סלט ייחודי לכל קובץ
+    const key = CryptoJS.PBKDF2(password, salt, {
+        keySize: 256 / 32,
+        iterations: 100000,
+        hasher: CryptoJS.algo.SHA256
+    });
+    return key.toString();
 }
-
 async function hashString(password, salt) {
   let saltedInput = salt + password;
   let hash = CryptoJS.SHA256(saltedInput);
