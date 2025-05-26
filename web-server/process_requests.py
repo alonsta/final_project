@@ -1,21 +1,7 @@
 import json
-from utils.actions.get_page import get_page
-from utils.actions.get_resource import get_resource
-from utils.actions.get_style import get_style
-from utils.actions.get_script import get_script
-from utils.actions.user_signup import signup
-from utils.actions.user_login import login
-from utils.actions.auth_cookie import auth_cookie
-from utils.actions.upload_chunk import upload_chunk
-from utils.actions.upload_file import upload_file_info
-from utils.actions.user_data import user_data as fetch_user_data
-from utils.actions.user_files import get_files_info
-from utils.actions.get_file import get_file_content as download_chunk
-from utils.actions.delete_file import delete_file as delete_file
-from utils.actions.create_folder import create_folder
-from utils.actions.file_unlock import unlock_file
-from utils.actions.serve_shared_file import serve_shared_file
-from utils.actions.admin_data import admin_data
+from utils.Core import Core
+from utils.Files import Files
+from utils.User import User
 
 def process_req(http_request: json) -> bytes:
     """
@@ -50,50 +36,50 @@ def process_req(http_request: json) -> bytes:
         case "auth":
             match http_request["method"]:
                 case "GET":
-                    response = auth_cookie(http_request, response)
+                    response = User.auth(http_request, response)
         case "pages":
             match http_request["method"]:
                 case "GET":
-                    response = get_page(http_request, response)
+                    response = Core.get_page(http_request, response)
                             
         case "resources":
             match http_request["method"]:
                 case "GET":
-                    response = get_resource(http_request, response)
+                    response = Core.get_resource(http_request, response)
                     
         case "scripts":
             match http_request["method"]:
                 case "GET":
-                    response = get_script(http_request, response)
+                    response = Core.get_script(http_request, response)
                     
         case "styles":
             match http_request["method"]:
                 case "GET":
-                    response = get_style(http_request, response)
+                    response = Core.get_style(http_request, response)
                     
         case "users":
             match http_request["method"]:
                 case "POST":
                     match http_request["path"]:
                         case "login":
-                            response = login(http_request["body"], response)
+                            response = User.login(http_request["body"], response)
                         case "signup":
-                            response = signup(http_request["body"], response)
+                            response = User.signup(http_request["body"], response)
                 case "PUT":
                     # might add some functions that have to do with the user's account and data
                     pass
                 case "GET":
                     match http_request["path"]:
                         case "info":
-                            response = fetch_user_data(http_request, response)
+                            response = User.info(http_request, response)
                         case "admin":
-                            response = admin_data(http_request, response)
+                            response = User.admin_info(http_request, response)
         case "share":
             match http_request["method"]:
                 case "GET":
-                    serve_shared_file(http_request, response)
+                    Files.get_shared_file(http_request, response)
                 case "POST":
-                    unlock_file(http_request, response)
+                    Files.unlock_file(http_request, response)
             pass
 
         case "files":
@@ -101,30 +87,24 @@ def process_req(http_request: json) -> bytes:
                 case "POST":
                     match http_request["path"]:
                         case "upload/file":
-                            response = upload_file_info(http_request, response)
+                            response = Files.upload_file_info(http_request, response)
 
                         case "upload/chunk":
-                            response = upload_chunk(http_request, response)
+                            response = Files.upload_chunk(http_request, response)
                         
                         case "create/folder":
-                            response = create_folder(http_request, response)
+                            response = Files.create_folder(http_request, response)
                 case "GET":
                     match http_request["path"]:
                         case "download":
-                            response = download_chunk(http_request, response)
+                            response = Files.get_file_content(http_request, response)
                         case "folder":
-                            response = get_files_info(http_request, response)
+                            response = Files.folder_content(http_request, response)
                 case "DELETE":
                     match http_request["path"]:
                         case "delete/file":
-                            response = delete_file(http_request, response)
+                            response = Files.delete_file(http_request, response)
                     
     
 
     return response
-
-def main():
-    pass        
-        
-if __name__ == "__main__":
-    main()

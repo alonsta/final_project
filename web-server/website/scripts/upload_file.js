@@ -347,37 +347,6 @@ async function compressAndEncryptChunk(chunkData, key) {
     return CryptoJS.AES.encrypt(base64, key).toString();
 }
 
-async function compressAndEncryptFile(fileData, key) {
-    try {
-        // Compress first
-        const compressed = pako.deflate(new Uint8Array(fileData), {
-            level: 6,
-            windowBits: 15,
-            memLevel: 8,
-            strategy: 2,
-            raw: false
-        });
-
-        // Encrypt the compressed data
-        const wordArray = CryptoJS.lib.WordArray.create(compressed);
-        const encrypted = CryptoJS.AES.encrypt(wordArray, key);
-        const encryptedBase64 = encrypted.toString();
-
-        return encryptedBase64;
-    } catch (error) {
-        console.error("Error compressing or encrypting file:", error);
-        throw new Error('Failed to compress or encrypt file');
-    }
-}
-
-function readFile(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-    });
-}
 
 async function uploadChunk(fileId, index, chunk) {
     const response = await fetch('/files/upload/chunk', {
@@ -452,10 +421,3 @@ function formatFileSize(bytes) {
   
     return `${size} ${units[unitIndex]}`;
   }
-
-  function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-  return null;
-}

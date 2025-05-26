@@ -1,7 +1,5 @@
-from utils.http_utils.serialize_http import serialize_http
-from utils.http_utils.unserialize_http import unserialize_http
+from utils.Http import *
 from process_requests import process_req
-from utils.recvall import recvall
 import json
 import socket
 import threading
@@ -43,7 +41,7 @@ def serve_client(client_socket, client_address):
         Returns:
             None
         """
-        http_response = unserialize_http(http_response)
+        http_response = d2h(http_response)
         client_socket.sendall(http_response)
 
     def get() -> json:
@@ -54,7 +52,7 @@ def serve_client(client_socket, client_address):
             dict: A dictionary containing parsed JSON data received from the client socket.
         """
         data = recvall(client_socket).decode()
-        data = serialize_http(data)
+        data = h2d(data)
         return json.loads(data)
 
     try:
