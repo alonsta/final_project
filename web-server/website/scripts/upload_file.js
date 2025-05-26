@@ -372,9 +372,8 @@ function generateRandomId() {
 }
 
 function generateEncryptionKey(password, fileId) {
-    const masterHash = CryptoJS.SHA256(password).toString();
-    const combined = fileId + masterHash;
-    return CryptoJS.SHA256(combined).toString();
+    const masterHash = CryptoJS.SHA256(password + fileId).toString();
+    return CryptoJS.SHA256(masterHash).toString();
 }
 
 async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size, parentId) {

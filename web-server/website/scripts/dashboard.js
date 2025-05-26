@@ -607,9 +607,8 @@ async function decryptAndDecompressChunk(encryptedChunk, key) {
 }
 
 function generateEncryptionKey(password, fileId) {
-    const masterHash = CryptoJS.SHA256(password).toString();
-    const combined = fileId + masterHash;
-    return CryptoJS.MD5(combined).toString();
+    const masterHash = CryptoJS.SHA256(password + fileId).toString();
+    return CryptoJS.MD5(masterHash).toString();
 }
 
 async function hashString(password, salt) {
