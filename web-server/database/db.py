@@ -354,12 +354,6 @@ class DB:
             self.db_connection.rollback()
             raise e
 
-    def update_password(self, user_id: str, password: str) -> str:
-        pass
-
-    def delete_user(self, user_id: str, username: str) -> None:
-        pass
-
     def get_user_info(self, cookie_value: str) -> str:
         """
             Retrieves user information based on the provided cookie value.
@@ -408,7 +402,7 @@ class DB:
         except Exception as e:
             raise Exception(f"An unexpected error occurred: {e}") from None
 
-    def add_file(self,cookie_value: str,file_name: str,parent_id: str,server_key: str,chunk_count: int,size: int,type=1,) -> None:
+    def add_file(self, cookie_value: str, file_name: str, parent_id: str, server_key: str, chunk_count: int, size: int, type=1) -> None:
         """
             Adds a file entry to the database and creates the corresponding file on the server.
             Args:
@@ -422,6 +416,7 @@ class DB:
             Raises:
                 sqlite3.Error: If there is an error with the SQLite database operations.
                 ValueError: If there is a value error during the process.
+                Exception: If the user's total data usage would exceed 20GB.
         """
         try:
             user_id = self.check_cookie(cookie_value)
@@ -429,10 +424,11 @@ class DB:
             user_upload_sql = """
             SELECT data_uploaded FROM users WHERE id = ?
             """
-            data_uploaded = (
-                self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0] + size
-            )
+            current_uploaded = self.cursor.execute(user_upload_sql, (user_id,)).fetchone()[0]
+            new_total = current_uploaded + size
 
+            if new_total > self.MAX_STORAGE_BYTES:
+                raise Exception("Upload denied: user storage quota exceeded (20GB limit).")
 
             file_insertion_sql = """
             INSERT INTO files (owner_id, file_name,  server_key, chunk_count, size, created, parent_id, type, status)
@@ -459,12 +455,10 @@ class DB:
             makedirs(f"web-server\\database\\files\\{user_id}", exist_ok=True)
             open(f"web-server\\database\\files\\{user_id}\\{server_key}.txt", "wb")
 
-           
-
             update_user_upload = """
             UPDATE users SET data_uploaded = ? WHERE id = ?
             """
-            self.cursor.execute(update_user_upload, (data_uploaded, user_id))
+            self.cursor.execute(update_user_upload, (new_total, user_id))
 
             self.db_connection.commit()
 
@@ -474,6 +468,9 @@ class DB:
         except ValueError as ve:
             self.db_connection.rollback()
             raise ve
+        except Exception as ex:
+            self.db_connection.rollback()
+            raise ex
 
     def upload_chunk(self, cookie_value: str, server_key: str, index: int, content: str) -> None:
         """

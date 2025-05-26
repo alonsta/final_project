@@ -11,6 +11,7 @@ def admin_data(info, response):
     database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
     try:
         response["body"] = json.dumps(database_access.get_admin_data(auth_cookie_value))
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200"
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt fetch data","message": "problem fetching data"})

@@ -25,16 +25,14 @@ def get_file_content(info, response):
         return response
 
     try:
-        # Get the file content - it's already in hex format from upload
         file_content = database_access.get_file(auth_cookie_value, server_key, int(index))
         response["headers"]["Content-Type"] = "text/plain"
-        # Send the content as is - it's already in hex format.
         response["body"] = file_content
         response["response_code"] = "200"
         
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldn't fetch file content", "message": str(e)})
-        print(f"get_file ERORR: {e}")
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "500"
 
     return response

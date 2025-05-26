@@ -21,11 +21,12 @@ def create_folder(info, response):
         database_access.add_file(auth_cookie_value, folder_name, parent_id, server_key, 0, 0, 0)
         
         response["body"] = json.dumps({"success": "your file info was uploaded "})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
         return response
 
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldn't upload file", "message": "problem uploading file info"})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "500"
-        print("upload file " + str(e))
         return response

@@ -34,6 +34,7 @@ def auth_cookie(info, response):
         database_access.check_cookie(auth_cookie_value)
         priv = database_access.check_privilages(auth_cookie_value)
         response["body"] = json.dumps({"success": "logged in", "elevation": priv})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt authenticate", "message": str(e)})

@@ -24,10 +24,12 @@ def login(info, response):
         cookie = database_access.login(info["username"], info["password"])
         priv = database_access.check_privilages(cookie[1])
         response["body"] = json.dumps({"success": "logged in", "elevation": priv })
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
         response["cookies"] = [cookie]
     except Exception as e:
         response["body"] = json.dumps({"failed": "couldnt confirm login attempt","message": "error logging in"})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "500"
     
 

@@ -36,7 +36,8 @@ def unlock_file(info, response):
 
     except Exception as e:
         response["body"] = json.dumps({"failed": "missing info or invalid cookie", "message": str(e)})
-        response["response_code"] = "500"
+        response["headers"] = {"Content-Type": "application/json"}
+        response["response_code"] = "400"
         return response
 
     try:

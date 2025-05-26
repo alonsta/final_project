@@ -77,10 +77,17 @@ async function processFiles(password, files) {
             updateProgress('show', `Starting upload: ${file.name}`, 0);
 
             // Send file metadata first
-            const metadataOk = await sendFileMetadata(fileId, encryptedFileName, totalChunks, file.size, parent_id); // Use totalChunks
-            if (!metadataOk) {
-                 throw new Error('Failed to send file metadata.');
+            const metadataResult = await sendFileMetadata(fileId, encryptedFileName, totalChunks, file.size, parent_id);
+
+            if (!metadataResult.ok) {
+                if (metadataResult.reason === "quota") {
+                    showBubble("🚫 Upload denied: you've reached your 20GB storage limit.");
+                } else {
+                    showBubble("❌ Failed to send file metadata.");
+                }
+                return; 
             }
+
 
             // Process file in chunks
             for (let i = 0; i < totalChunks; i++) { // Use totalChunks
@@ -414,13 +421,27 @@ async function sendFileMetadata(fileId, encryptedFileName, chunkCount, size, par
                 parent_id: parentId
             })
         });
+
+        const result = await response.json();
+
+        if (!response.ok || result.failed) {
+            // Check if the message contains quota exceeded info
+            const msg = result.message?.toString() || "";
+            if (msg.includes("quota")) {
+                return { ok: false, reason: "quota" };
+            }
+
+            return { ok: false };
+        }
+
         console.log("File metadata uploaded");
-        return response.ok;
+        return { ok: true };
     } catch (error) {
         console.error('Error sending file metadata:', error);
-        return false;
+        return { ok: false };
     }
 }
+
 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';

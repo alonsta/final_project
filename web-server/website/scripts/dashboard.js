@@ -188,13 +188,44 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 let userChart = null; // Store the Chart instance globally
 
 async function loadUserStats() {
-  const overviewDiv = document.getElementById('overview');
-  const canvas = document.getElementById('statsChart');
-  const ctx = canvas?.getContext('2d');
-  const fileCountDiv = document.getElementById('file_count');
-  
+  function waitForElement(id, timeout = 3000) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      (function check() {
+        const el = document.getElementById(id);
+        if (el) return resolve(el);
+        if (Date.now() - start > timeout) return reject(`Element #${id} not found`);
+        requestAnimationFrame(check);
+      })();
+    });
+  }
+
+  const overviewDiv = await waitForElement('overview');
+  const fileCountDiv = await waitForElement('file_count');
+
   if (!overviewDiv || !fileCountDiv) {
     console.error('Required DOM elements not found');
+    showBubble("❌ Failed to load user stats. Please try again later.");
+    return;
+  }
+
+  // Clear and recreate layout
+  overviewDiv.innerHTML = `
+    <div id="overviewStats"></div>
+    <canvas id="statsChart" style="max-width: 600px; margin: 30px auto; display: block;"></canvas>
+    <div id="overviewError" style="color: red; text-align: center; margin-top: 10px;"></div>
+  `;
+
+  const canvas = document.getElementById('statsChart');
+  const ctx = canvas?.getContext('2d');
+  const statsDiv = document.getElementById('overviewStats');
+  const errorDiv = document.getElementById('overviewError');
+  fileCountDiv.innerHTML = '';
+  errorDiv.innerHTML = '';
+
+  if (!ctx || !statsDiv) {
+    console.error('Failed to prepare layout for stats');
+    errorDiv.textContent = 'Internal layout error. Please reload.';
     return;
   }
 
@@ -204,67 +235,66 @@ async function loadUserStats() {
     userChart = null;
   }
 
-  // Clear previous content safely
-  overviewDiv.innerHTML = '';
-  fileCountDiv.innerHTML = '';
-
   try {
     const response = await fetch('/users/info', {
       credentials: 'include',
       method: 'GET'
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const stats = await response.json();
-    let { username, uploaded, downloaded, fileCount } = stats;
+    let { username, uploaded, downloaded, fileCount, creation_time } = stats;
 
     let uploadeds = formatFileSize(uploaded);
     let downloadeds = formatFileSize(downloaded);
+    function formatCustomDate(dateStr) {
+  // Expects "DD/MM/YYYY HH:mm"
+      const [datePart, timePart] = dateStr.split(' ');
+      const [day, month, year] = datePart.split('/').map(Number);
+      const [hours, minutes] = timePart.split(':').map(Number);
 
-    overviewDiv.innerHTML = `
+      const dateObj = new Date(year, month - 1, day, hours, minutes);
+      return dateObj.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    let accountAge = formatCustomDate(creation_time);
+
+    statsDiv.innerHTML = `
       <h2 style="text-align:center;">Welcome back, <strong>${username}</strong>! 🎉</h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 20px;">
-      
-        <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; text-align: center;">
           <h3>📂 Files</h3>
-          <p style="font-size: 1.5em; margin: 10px 0;">${fileCount}</p>
+          <p style="font-size: 1.5em;">${fileCount}</p>
           <small>Total files on system</small>
         </div>
-
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <h3>☁️ Uploaded</h3>
-          <p style="font-size: 1.5em; margin: 10px 0;">${uploadeds}</p>
-          <small>Data stored</small>
+        <div style="background: #fff8e1; padding: 15px; border-radius: 10px; text-align: center;">
+          <h3>📅 Account creation</h3>
+          <p style="font-size: 1.5em;">${accountAge}</p>
         </div>
-
-        <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          <h3>🔻 Downloaded</h3>
-          <p style="font-size: 1.5em; margin: 10px 0;">${downloadeds}</p>
-          <small>Data received</small>
-        </div>
-
-        <div style="background: #fff3e0; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <div style="background: #fff3e0; padding: 15px; border-radius: 10px; text-align: center;">
           <h3>💾 Server Space</h3>
-          <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; height: 20px; width: 100%; margin: 10px 0;">
-            <div style="background: #4caf50; width: ${Math.min((uploaded / (20 * 1024 ** 3)) * 100, 100).toFixed(2)}%; height: 100%; transition: width 0.5s;"></div>
+          <div style="background: #e0e0e0; border-radius: 10px; overflow: hidden; height: 20px;">
+            <div style="background: #4caf50; width: ${Math.min((uploaded / (20 * 1024 ** 3)) * 100, 100).toFixed(2)}%; height: 100%;"></div>
           </div>
           <small>Space used out of 20GB</small>
         </div>
-
       </div>
     `;
 
-    // Create a new chart and store the reference
     userChart = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: ['Uploaded', 'Downloaded'],
         datasets: [{
           label: 'Data Transfer (in MB)',
-          data: [uploaded, downloaded],
+          data: [uploaded / (1024 * 1024), downloaded / (1024 * 1024)],
           backgroundColor: ['#4caf50', '#2196f3'],
           borderRadius: 10,
         }]
@@ -281,22 +311,22 @@ async function loadUserStats() {
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              stepSize: 50
-            }
+            ticks: { stepSize: 50 }
           }
         }
       }
     });
 
-    // Update file count separately at the bottom
     fileCountDiv.innerHTML = `<strong>📂 Total Files:</strong> ${fileCount}`;
 
   } catch (error) {
     console.error('Error loading user stats:', error);
-    overviewDiv.innerHTML = 'Failed to load user statistics. 😢';
+    errorDiv.textContent = '❌ Failed to load user statistics. Retrying in 3s...';
+    await new Promise(r => setTimeout(r, 3000));
+    loadUserStats(); // Retry
   }
 }
+
 
 
 async function loadUserFiles() {

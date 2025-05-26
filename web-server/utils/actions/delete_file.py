@@ -32,11 +32,13 @@ def delete_file(info, response):
         database_access.remove_file(auth_cookie_value, server_key)
         
         response["body"] = json.dumps({"success": "this file just got deleted"})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
         return response
 
     except Exception as e:
         response["body"] = json.dumps({"failed": "encountered an error while deleting a file."})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "505 OK"
         print("delete file " + str(e))
         return response

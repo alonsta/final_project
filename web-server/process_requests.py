@@ -9,7 +9,6 @@ from utils.actions.auth_cookie import auth_cookie
 from utils.actions.upload_chunk import upload_chunk
 from utils.actions.upload_file import upload_file_info
 from utils.actions.user_data import user_data as fetch_user_data
-from utils.actions.get_app import get_app
 from utils.actions.user_files import get_files_info
 from utils.actions.get_file import get_file_content as download_chunk
 from utils.actions.delete_file import delete_file as delete_file
@@ -119,10 +118,6 @@ def process_req(http_request: json) -> bytes:
                     match http_request["path"]:
                         case "delete/file":
                             response = delete_file(http_request, response)
-        case "app":
-            match http_request["method"]:
-                case "GET":
-                    response = get_app(response)
                     
     
 

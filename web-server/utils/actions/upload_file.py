@@ -45,11 +45,13 @@ def upload_file_info(info, response):
         database_access.add_file(auth_cookie_value, file_name, parent_id, server_key, chunk_count, size)
         
         response["body"] = json.dumps({"success": "your file info was uploaded "})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
         return response
 
     except Exception as e:
-        response["body"] = json.dumps({"failed": "couldn't upload file", "message": "problem uploading file info"})
-        response["response_code"] = "500"
+        response["body"] = json.dumps({"failed": "couldn't upload file", "message": "problem uploading file info {" + str(e) + "}"})
+        response["headers"] = {"Content-Type": "application/json", }
+        response["response_code"] = "403 Forbidden"
         print("upload file " + str(e))
         return response

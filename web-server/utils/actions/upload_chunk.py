@@ -41,11 +41,12 @@ def upload_chunk(info, response):
         database_access.upload_chunk(auth_cookie_value, server_key, index, content)
         
         response["body"] = json.dumps({"success": "your chunk was uploaded "})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "200 OK"
         return response
 
     except Exception as e:
-        print("upload chunk " + str(e))
         response["body"] = json.dumps({"failed": "couldn't upload chunk", "message": "problem uploading chunk"})
+        response["headers"] = {"Content-Type": "application/json"}
         response["response_code"] = "500"
         return response
