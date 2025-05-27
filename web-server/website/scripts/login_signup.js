@@ -45,9 +45,9 @@ document.getElementById("toggle-link").addEventListener("click", function (e) {
 document.getElementById("auth-form").addEventListener("submit", async function (e) {
   e.preventDefault();
   const formTitle = document.getElementById("form-title");
-  const username = document.getElementById("username").value;
-  let password = document.getElementById("password").value;
-  const Repassword = document.getElementById("Re_enter_password")?.value;
+  const username = sanitizeInput(document.getElementById("username").value);
+  let password = sanitizeInput(document.getElementById("password").value);
+  const Repassword = sanitizeInput(document.getElementById("Re_enter_password")?.value || '');
 
   if (formTitle.textContent === "Sign Up" && Repassword) {
     if (Repassword === password && password.length >= 8) {
@@ -99,3 +99,9 @@ document.getElementById("auth-form").addEventListener("submit", async function (
     alert("Please fill out both fields.");
   }
 });
+
+function sanitizeInput(input) {
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(input));
+  return div.innerHTML;
+}

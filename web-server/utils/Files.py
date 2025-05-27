@@ -11,7 +11,7 @@ class Files:
     def create_folder(info, response):
         
         try:
-            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
             folder_name = json.loads(info["body"])['folder_name']
             parent_id = json.loads(info["body"])['parent_id']
             server_key = json.loads(info["body"])['server_key']
@@ -26,9 +26,9 @@ class Files:
             auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
             database_access.add_file(auth_cookie_value, folder_name, parent_id, server_key, 0, 0, 0)
             
-            response["body"] = json.dumps({"success": "your file info was uploaded "})
+            response["body"] = json.dumps({"success": "folder created "})
             response["headers"] = {"Content-Type": "application/json"}
-            response["response_code"] = "200 OK"
+            response["response_code"] = "201 CREATED"
             return response
 
         except Exception as e:
@@ -55,7 +55,7 @@ class Files:
             Uses DB class to interface with the database located at 'web-server/database/data'.
         """
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             parent = info["query_params"]["parent"]
         except:
@@ -97,7 +97,7 @@ class Files:
             and logs the error to the console.
         """
         
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         server_key = info["query_params"]["key"]
 
         try:
@@ -250,7 +250,7 @@ class Files:
         #end helper functions
         try:
             auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-            db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sqlite")
+            db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sql")
             database_access = DB(db_path)
 
             user_id = database_access.check_cookie(auth_cookie_value)
@@ -332,7 +332,7 @@ class Files:
                 - 'response_code': HTTP status code ('200' for success, '500' for error)
         """
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         
         try:
             server_key = info["query_params"]["key"]
@@ -379,7 +379,7 @@ class Files:
             temp_file_id = info["path"]
             cookie_part = temp_file_id.split(".")[0]
 
-            db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sqlite")
+            db_path = os.path.join(os.getcwd(), "web-server", "database", "data.sql")
             database_access = DB(db_path)
             database_access.check_cookie(cookie_part)
 
@@ -432,7 +432,7 @@ class Files:
             Exception: Handles any errors during the upload process
         """
         try:
-            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
             index = json.loads(info["body"])["index"] + 1
             server_key = json.loads(info["body"])["key"]
             content = json.loads(info["body"])["data"]
@@ -484,7 +484,7 @@ class Files:
             {'body': '{"success": "your file info was uploaded "}', 'response_code': '200 OK'}
         """
         try:
-            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+            database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
             file_name = json.loads(info["body"])['file_name']
             parent_id = json.loads(info["body"])['parent_id']
             server_key = json.loads(info["body"])['server_key']
@@ -502,7 +502,7 @@ class Files:
             
             response["body"] = json.dumps({"success": "your file info was uploaded "})
             response["headers"] = {"Content-Type": "application/json"}
-            response["response_code"] = "200 OK"
+            response["response_code"] = "201"
             return response
 
         except Exception as e:

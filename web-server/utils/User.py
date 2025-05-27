@@ -18,7 +18,7 @@ class User:
         """
         
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             response["body"] = json.dumps(database_access.get_admin_data(auth_cookie_value))
             response["headers"] = {"Content-Type": "application/json"}
@@ -53,7 +53,7 @@ class User:
             info = json.loads(info)
         except Exception as e:
             pass
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
             database_access.check_cookie(auth_cookie_value)
@@ -85,7 +85,7 @@ class User:
             Uses DB class to interface with the database located at 'web-server/database/data'.
         """
         auth_cookie_value = next((cookie for cookie in info["cookies"] if cookie[0] == "auth_cookie"), None)[1]
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             response["body"] = json.dumps(database_access.get_user_info(auth_cookie_value))
             response["headers"] = {"Content-Type": "application/json"}
@@ -115,7 +115,7 @@ class User:
             Exception: Any database or authentication errors are caught and included in the error response
         """
         info = json.loads(info)
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             cookie = database_access.login(info["username"], info["password"])
             priv = database_access.check_privilages(cookie[1])
@@ -151,7 +151,7 @@ class User:
             Exception: If account creation fails, exception details included in response
         """
         info = json.loads(info)
-        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sqlite")
+        database_access = DB(os.getcwd() + "\\web-server\\database\\data.sql")
         try:
             cookie = database_access.add_user(info["username"], info["password"])
             response["body"] = json.dumps({"success": "your account was created successfully "})
