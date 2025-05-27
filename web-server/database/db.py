@@ -79,7 +79,7 @@ class DB:
                 owner_id INTEGER NOT NULL,
                 parent_id TEXT,
                 type INTEGER,
-                status INTEGER,
+                status BOOLEAN DEFAULT 0,
                 FOREIGN KEY (owner_id) REFERENCES users(id)
             )
             """

@@ -105,6 +105,4 @@ def process_req(http_request: json) -> bytes:
                         case "delete/file":
                             response = Files.delete_file(http_request, response)
                     
-    
-
     return response

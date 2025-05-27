@@ -184,7 +184,7 @@ def recvall(sock):
         return buffer
 
     def parse_headers(header_bytes):
-        header_text = header_bytes.decode('iso-8859-1')  # safer than utf-8 for raw HTTP
+        header_text = header_bytes.decode('iso-8859-1')
         headers = {}
         lines = header_text.split("\r\n")
         for line in lines[1:]:
@@ -193,7 +193,6 @@ def recvall(sock):
                 headers[key.lower()] = value
         return headers
 
-    # Step 1: Receive headers
     response = recv_until_delimiter(b"\r\n\r\n")
     header_end = response.find(b"\r\n\r\n") + 4
     headers_raw = response[:header_end]
@@ -201,7 +200,6 @@ def recvall(sock):
 
     headers = parse_headers(headers_raw)
 
-    # Step 2: Receive body
     if 'content-length' in headers:
         content_length = int(headers['content-length'])
         while len(body) < content_length:
@@ -211,22 +209,18 @@ def recvall(sock):
             body += chunk
 
     elif headers.get('transfer-encoding', '').lower() == 'chunked':
-        # Chunked transfer decoding
         body = b""
         while True:
-            # Read chunk size line
             chunk_size_line = b""
             while not chunk_size_line.endswith(b"\r\n"):
                 chunk_size_line += sock.recv(1)
             chunk_size = int(chunk_size_line.strip(), 16)
             if chunk_size == 0:
-                # Final chunk
-                sock.recv(2)  # Discard the trailing \r\n after the zero-size chunk
+                sock.recv(2) 
                 break
-            # Read chunk data and trailing \r\n
             chunk_data = b""
             while len(chunk_data) < chunk_size + 2:
                 chunk_data += sock.recv(chunk_size + 2 - len(chunk_data))
-            body += chunk_data[:-2]  # Strip \r\n
+            body += chunk_data[:-2] 
 
     return headers_raw + body
