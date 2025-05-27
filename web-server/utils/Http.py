@@ -165,45 +165,68 @@ def d2h(response: dict) -> bytes:
 
 def recvall(sock):
     """
-    Receives all data from a socket, including HTTP headers and body.
-    This function reads from the given socket until the end of the HTTP headers
-    (delimited by '\r\n\r\n'), then parses the headers to determine the Content-Length.
-    If a Content-Length header is present, it reads the specified number of bytes from
-    the socket as the body.
-    Args:
-        sock (socket.socket): The socket object to read from.
-    Returns:
-        bytes: The complete HTTP request or response, including headers and body.
-    """
+    Efficiently receives all HTTP data from a socket, handling both Content-Length and chunked encoding.
     
-    def recv_until(sock, terminator):
-        data = b""
-        while not data.endswith(terminator):
-            chunk = sock.recv(1)
+    Args:
+        sock (socket.socket): The socket to read from.
+
+    Returns:
+        bytes: The complete HTTP response, including headers and body.
+    """
+
+    def recv_until_delimiter(delimiter):
+        buffer = b""
+        while delimiter not in buffer:
+            chunk = sock.recv(4096)
             if not chunk:
                 break
-            data += chunk
-        return data
+            buffer += chunk
+        return buffer
 
-    headers = recv_until(sock, b"\r\n\r\n")
+    def parse_headers(header_bytes):
+        header_text = header_bytes.decode('iso-8859-1')  # safer than utf-8 for raw HTTP
+        headers = {}
+        lines = header_text.split("\r\n")
+        for line in lines[1:]:
+            if ": " in line:
+                key, value = line.split(": ", 1)
+                headers[key.lower()] = value
+        return headers
 
-    header_text = headers.decode("utf-8")
-    headers_lines = header_text.split("\r\n")
-    
-    content_length = 0
-    for line in headers_lines:
-        if line.lower().startswith("content-length:"):
-            content_length = int(line.split(":")[1].strip())
-            break
+    # Step 1: Receive headers
+    response = recv_until_delimiter(b"\r\n\r\n")
+    header_end = response.find(b"\r\n\r\n") + 4
+    headers_raw = response[:header_end]
+    body = response[header_end:]
 
-    body = b""
-    if content_length > 0:
-        remaining = content_length
-        while remaining > 0:
-            chunk = sock.recv(min(4096, remaining))
+    headers = parse_headers(headers_raw)
+
+    # Step 2: Receive body
+    if 'content-length' in headers:
+        content_length = int(headers['content-length'])
+        while len(body) < content_length:
+            chunk = sock.recv(4096)
             if not chunk:
                 break
             body += chunk
-            remaining -= len(chunk)
 
-    return headers + body
+    elif headers.get('transfer-encoding', '').lower() == 'chunked':
+        # Chunked transfer decoding
+        body = b""
+        while True:
+            # Read chunk size line
+            chunk_size_line = b""
+            while not chunk_size_line.endswith(b"\r\n"):
+                chunk_size_line += sock.recv(1)
+            chunk_size = int(chunk_size_line.strip(), 16)
+            if chunk_size == 0:
+                # Final chunk
+                sock.recv(2)  # Discard the trailing \r\n after the zero-size chunk
+                break
+            # Read chunk data and trailing \r\n
+            chunk_data = b""
+            while len(chunk_data) < chunk_size + 2:
+                chunk_data += sock.recv(chunk_size + 2 - len(chunk_data))
+            body += chunk_data[:-2]  # Strip \r\n
+
+    return headers_raw + body
