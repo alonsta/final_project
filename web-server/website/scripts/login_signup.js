@@ -90,6 +90,11 @@ document.getElementById("auth-form").addEventListener("submit", async function (
         }
       } else {
         alert(data.message);
+        new Promise(resolve => setTimeout(resolve, 1000));
+        alert("You have been locked out for 5 seconds due to failed login attempt.");
+        // Wait for 10 seconds before allowing another attempt
+        new Promise(resolve => setTimeout(resolve, 10000));
+        alert("You can try again now.");
       }
     })
     .catch(error => {
