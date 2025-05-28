@@ -1,9 +1,5 @@
 libsass
-filelock
-psutil
-httpx
-pyuac
-watchdog
-keyring
-pywin32
+zlib
+pycrypto
 pytz
+hashlib
